@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Overview · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading dashboard-heading">
+  <div>
+    <p class="eyebrow">RETAIL GENIE · FLASK EDITION</p>
+    <h1>Welcome, {{ current_user.username }}</h1>
+    <p class="muted">Your signed-in role is <strong>{{ current_user.role|replace('_', ' ')|title }}</strong>. Account checks happen on the server.</p>
+  </div>
+  <span class="pill pill-success">Account active</span>
+</section>
+
+<section class="card milestone-card">
+  <div class="milestone-icon" aria-hidden="true">✓</div>
+  <div>
+    <p class="eyebrow">PHASE 1 FOUNDATION</p>
+    <h2>Shared-account foundation is ready</h2>
+    <p class="muted">Flask is configured for the central MySQL database. The current milestone provides secure sign-in, account management, server-side permissions, and health checks.</p>
+  </div>
+</section>
+
+<section class="section-heading">
+  <div>
+    <h2>Migration roadmap</h2>
+    <p class="muted">Business modules will be added in tested stages. The existing Node version remains the behavior reference.</p>
+  </div>
+</section>
+<div class="roadmap-grid">
+  <article class="card roadmap-item"><span class="step-number">01</span><div><h3>Accounts & access</h3><p>Central accounts, secure sessions, roles, and permission checks.</p></div><span class="pill pill-success">Foundation</span></article>
+  <article class="card roadmap-item"><span class="step-number">02</span><div><h3>Products & stock</h3><p>Catalog, barcode lookup, stock controls, and CSV tools.</p></div><span class="pill">Next</span></article>
+  <article class="card roadmap-item"><span class="step-number">03</span><div><h3>Sales & checkout</h3><p>Orders, payments, invoices, returns, and transaction safety.</p></div><span class="pill">Planned</span></article>
+  <article class="card roadmap-item"><span class="step-number">04</span><div><h3>Live sync</h3><p>Authorized real-time events with reconnect and change recovery.</p></div><span class="pill">Planned</span></article>
+</div>
+{% endblock %}

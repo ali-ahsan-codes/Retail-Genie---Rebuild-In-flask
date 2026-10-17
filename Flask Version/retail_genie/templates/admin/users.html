@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Accounts · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Accounts</h1>
+    <p class="muted">All accounts live in the central database. Passwords are hashed and never shown here.</p>
+  </div>
+  <span class="pill">{{ users|length }} account{% if users|length != 1 %}s{% endif %}</span>
+</section>
+
+<div class="admin-grid">
+  <section class="card create-account-card">
+    <div class="card-heading">
+      <p class="eyebrow">NEW TEAM MEMBER</p>
+      <h2>Create account</h2>
+      <p class="muted">The user must change this temporary password at first sign-in.</p>
+    </div>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="field">
+        {{ form.username.label }}
+        {{ form.username(class="control", autocomplete="off", autocapitalize="none", spellcheck="false") }}
+        {% for error in form.username.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.role.label }}
+        {{ form.role(class="control") }}
+        {% for error in form.role.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        {{ form.password.label }}
+        {{ form.password(class="control", autocomplete="new-password", minlength="12") }}
+        <span class="field-help">At least 12 characters.</span>
+        {% for error in form.password.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+      <fieldset class="permission-fieldset">
+        <legend>Additional permissions</legend>
+        <p class="field-help">Only permissions permitted for the selected role can be saved.</p>
+        <div class="permission-list">
+          {% for value, label in form.permissions.choices %}
+            <label class="checkline">
+              <input type="checkbox" name="{{ form.permissions.name }}" value="{{ value }}" {% if value in (form.permissions.data or []) %}checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+          {% else %}
+            <p class="muted small-copy">No extra permissions are available to assign.</p>
+          {% endfor %}
+        </div>
+        {% for error in form.permissions.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </fieldset>
+      <button class="button button-primary button-full" type="submit">Create account</button>
+    </form>
+  </section>
+
+  <section class="card accounts-card">
+    <div class="card-heading">
+      <p class="eyebrow">CENTRAL USER DIRECTORY</p>
+      <h2>Team accounts</h2>
+    </div>
+    {% if users %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Account action</th></tr></thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td><strong>{{ user.username }}</strong></td>
+                <td>{{ role_labels.get(user.role, user.role|title) }}</td>
+                <td><span class="pill {{ 'pill-success' if user.is_active else 'pill-muted' }}">{{ 'Active' if user.is_active else 'Inactive' }}</span></td>
+                <td>
+                  {% if user.id == current_user.id %}
+                    <span class="muted small-copy">You</span>
+                  {% else %}
+                    <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="button button-small {{ 'button-danger' if user.is_active else 'button-secondary' }}" type="submit">{{ 'Deactivate' if user.is_active else 'Activate' }}</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">No accounts have been created yet.</p>
+    {% endif %}
+    <p class="field-help table-note">Deactivating an account invalidates its existing sessions. The last active administrator cannot be disabled.</p>
+  </section>
+</div>
+{% endblock %}
