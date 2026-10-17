@@ -1,6 +1,6 @@
 # Retail Genie: Flask + MySQL Migration Plan
 
-**Status:** Repository audit and proposed plan only. No Flask application code has been implemented yet.
+**Status:** Phase 1 foundation is implemented; business modules and real-time data events remain to be migrated. Automated tests currently use an isolated test database; a live office MySQL server has not been configured in this workspace.
 
 **Target directory:** `Flask Version/`
 **Migration principle:** Keep `Node Js Version/` unchanged as the reference and rollback copy until the Flask version passes feature and data checks.
@@ -43,7 +43,7 @@ These are reasons to redesign authentication and access control server-side, not
 
 ### Authentication, files, and operations
 
-- Add a Flask login/logout flow with Argon2id password hashes, secure server-managed sessions, `HttpOnly`/`Secure`/`SameSite` cookies, CSRF protection, login rate limits, and server-side role/permission decorators. Do not trust `X-User-ID` for authentication.
+- Add a Flask login/logout flow with Argon2id password hashes, signed `HttpOnly`/`Secure`/`SameSite` cookies, CSRF protection, login rate limits, and server-side role/permission decorators. Keep only the user ID and a revocable authentication-version marker in the signed session; reload role, permissions, and account status from MySQL. Do not trust `X-User-ID` for authentication.
 - Use environment-based secrets/configuration. Do not ship default production credentials or commit `.env` files.
 - Initially keep uploaded media in a configured persistent `UPLOADS_DIR`, with MySQL storing metadata and relative paths. Apply file-size/type validation and authorization checks to downloads. Back up uploads with the database; object storage can be added later if needed.
 - Use a single authoritative deployment (an office server reachable by all devices, or a cloud VPS). Installing a separate Flask + MySQL database on every client would recreate the current data-isolation problem.
@@ -60,10 +60,10 @@ These are reasons to redesign authentication and access control server-side, not
 
 ### Phase 1 — Flask foundation
 
-- Create the Flask app factory, configuration, logging, health/readiness checks, Python dependency file, and development/production run instructions inside `Flask Version/`.
-- Add SQLAlchemy, Alembic migrations, MySQL configuration via environment variables, CSRF/session handling, and a pytest test setup.
-- Implement secure login, logout, current-user lookup, role/permission decorators, and admin account management before porting business APIs.
-- Prove that two separate browsers can log in to the same deployed instance and see the same central data.
+- [x] Add the Flask app factory, environment configuration, request security headers, health/readiness checks, Python dependency file, and setup/run instructions inside `Flask Version/`.
+- [x] Add SQLAlchemy, an initial Alembic migration, MySQL URL configuration, CSRF protection, revocable signed sessions, and a pytest suite.
+- [x] Implement Argon2id login/logout, safe current-user lookup, server-side permission decorators, first-admin provisioning, and account create/activate/deactivate workflows.
+- [ ] Verify two separate browsers against the same central office MySQL instance. This requires the office MySQL server/network configuration, which is not available in this workspace yet.
 
 ### Phase 2 — MySQL schema and safe data import
 

@@ -1,0 +1,148 @@
+/* The UI deliberately uses local/system fonts and static assets only: no Node build and no CDN dependency. */
+:root {
+  color-scheme: light;
+  --ink: #14243b;
+  --muted: #63738a;
+  --line: #dce5f0;
+  --surface: #ffffff;
+  --canvas: #f3f6fb;
+  --blue: #1d62b3;
+  --blue-dark: #14477f;
+  --blue-pale: #e9f2fc;
+  --green: #16845b;
+  --green-pale: #e7f6ee;
+  --red: #ba3840;
+  --red-pale: #fff0f0;
+  --shadow: 0 18px 55px rgba(17, 44, 77, .08);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--canvas); }
+a { color: var(--blue); text-decoration: none; }
+a:hover { color: var(--blue-dark); text-decoration: underline; }
+button, input, select { font: inherit; }
+
+.topbar { display: flex; align-items: center; gap: 30px; min-height: 76px; padding: 12px clamp(20px, 4vw, 56px); background: #fff; border-bottom: 1px solid var(--line); }
+.brand { display: flex; gap: 11px; align-items: center; color: var(--ink); white-space: nowrap; }
+.brand:hover { text-decoration: none; }
+.brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: #fff; background: linear-gradient(145deg, #287bd0, #104779); font: 800 13px "Segoe UI", sans-serif; letter-spacing: -.04em; }
+.brand strong, .brand small, .account-name small { display: block; }
+.brand strong { font-size: 15px; font-weight: 700; }
+.brand small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.main-nav { display: flex; gap: 8px; margin-left: 10px; }
+.main-nav a, .quiet-link { padding: 9px 12px; border-radius: 9px; color: #45566d; font-weight: 600; font-size: 13px; }
+.main-nav a:hover, .quiet-link:hover { background: var(--blue-pale); color: var(--blue-dark); text-decoration: none; }
+.account-nav { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.account-name { padding-right: 6px; font-size: 13px; font-weight: 700; }
+.account-name small { color: var(--muted); font-size: 11px; font-weight: 500; }
+.account-nav form { margin: 0; }
+.page-shell { width: min(1240px, calc(100% - 40px)); min-height: calc(100vh - 138px); margin: 0 auto; padding: 38px 0 70px; }
+.site-footer { padding: 20px; border-top: 1px solid var(--line); color: #718198; text-align: center; font-size: 12px; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-family: "Segoe UI", Arial, sans-serif; letter-spacing: -.035em; }
+h1 { margin-bottom: 8px; font-size: clamp(28px, 4vw, 38px); line-height: 1.14; }
+h2 { margin-bottom: 8px; font-size: 22px; }
+h3 { margin-bottom: 6px; font-size: 16px; }
+.muted { color: var(--muted); line-height: 1.6; }
+.eyebrow { margin-bottom: 8px; color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .15em; }
+.small-copy { font-size: 12px; }
+.page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+.page-heading > div > .muted { margin-bottom: 0; }
+.narrow-page { width: min(600px, 100%); margin: 0 auto; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 25px; }
+.card-heading { margin-bottom: 20px; }
+.card-heading h2 { margin-bottom: 5px; }
+.card-heading .muted { margin-bottom: 0; font-size: 13px; }
+.button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 9px 15px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; transition: transform .12s ease, background .12s ease; }
+.button:hover { transform: translateY(-1px); text-decoration: none; }
+.button-primary { color: white; background: var(--blue); }
+.button-primary:hover { color: white; background: var(--blue-dark); }
+.button-secondary { color: var(--blue-dark); background: var(--blue-pale); border-color: #c9def5; }
+.button-danger { color: var(--red); background: var(--red-pale); border-color: #f4c9ca; }
+.button-quiet { min-height: 34px; padding: 7px 10px; color: #4c5b70; background: transparent; }
+.button-small { min-height: 31px; padding: 6px 9px; font-size: 11px; }
+.button-full { width: 100%; }
+.field { display: grid; gap: 7px; margin-bottom: 17px; }
+.field > label, .field-label { color: #34445a; font-size: 12px; font-weight: 700; }
+.control { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid #cdd8e5; border-radius: 10px; outline: none; color: var(--ink); background: #fff; }
+.control:focus { border-color: #5795d5; box-shadow: 0 0 0 3px rgba(29, 98, 179, .12); }
+.field-error { color: var(--red); font-size: 12px; }
+.field-help { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.permission-fieldset { margin: 5px 0 19px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+.permission-fieldset legend { padding: 0 5px; color: #34445a; font-size: 12px; font-weight: 700; }
+.permission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-top: 12px; }
+.checkline { display: flex; gap: 8px; align-items: flex-start; color: #44546a; font-size: 11px; line-height: 1.4; }
+.checkline input { margin: 2px 0 0; accent-color: var(--blue); }
+.flash-stack { display: grid; gap: 8px; margin-bottom: 20px; }
+.flash { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 13px; }
+.flash-success { color: #126342; background: var(--green-pale); border-color: #bfebd1; }
+.flash-error { color: #992830; background: var(--red-pale); border-color: #f1c5c7; }
+.flash-info { color: #1e507f; background: var(--blue-pale); border-color: #c9def5; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; color: #54657b; background: #eef2f7; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.pill-success { color: #126342; background: var(--green-pale); }
+.pill-muted { color: #6b7788; background: #edf0f4; }
+.status-note { display: inline-flex; gap: 8px; align-items: center; margin-top: 25px; color: #d9e8f8; font-size: 12px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #7ee0ad; box-shadow: 0 0 0 4px rgba(126, 224, 173, .13); }
+.auth-layout { display: grid; grid-template-columns: 1fr minmax(340px, 450px); gap: clamp(30px, 8vw, 110px); align-items: center; min-height: min(620px, 75vh); }
+.auth-aside { max-width: 530px; padding: 30px 0; }
+.auth-aside h1 { max-width: 470px; margin-bottom: 17px; font-size: clamp(38px, 6vw, 56px); }
+.auth-aside > .muted { max-width: 440px; font-size: 16px; }
+.auth-card { padding: clamp(24px, 4vw, 35px); }
+.auth-card .card-heading { margin-bottom: 26px; }
+.auth-card .card-heading h2 { font-size: 27px; }
+.security-hint { margin: 18px 0 0; color: #74839a; text-align: center; font-size: 11px; line-height: 1.5; }
+.dashboard-heading { align-items: center; }
+.milestone-card { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 33px; padding: 25px; }
+.milestone-card h2 { margin-bottom: 6px; }
+.milestone-card .muted { margin-bottom: 0; max-width: 780px; font-size: 13px; }
+.milestone-icon { flex: 0 0 42px; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: var(--green); background: var(--green-pale); font-size: 21px; font-weight: 800; }
+.section-heading { margin-bottom: 16px; }
+.section-heading h2 { margin-bottom: 5px; }
+.section-heading .muted { margin-bottom: 0; font-size: 13px; }
+.roadmap-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.roadmap-item { display: flex; gap: 13px; align-items: flex-start; padding: 19px; }
+.roadmap-item .pill { margin-left: auto; }
+.roadmap-item p { margin-bottom: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.step-number { flex: 0 0 34px; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--blue); background: var(--blue-pale); font: 800 12px "Segoe UI", sans-serif; }
+.admin-grid { display: grid; grid-template-columns: minmax(290px, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.create-account-card { position: sticky; top: 18px; }
+.accounts-card { min-width: 0; }
+.table-wrap { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 13px 10px; border-bottom: 1px solid #edf1f6; vertical-align: middle; }
+th { color: #74839a; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+td { color: #34445a; font-size: 12px; }
+td form { margin: 0; }
+.table-note { display: block; margin-top: 14px; }
+.empty-state { padding: 25px 8px; color: var(--muted); text-align: center; font-size: 13px; }
+.error-page { display: grid; justify-items: center; align-content: center; min-height: 100vh; padding: 25px; text-align: center; }
+.error-code { color: var(--blue); font: 800 14px "Segoe UI", sans-serif; letter-spacing: .16em; }
+.error-page h1 { margin: 10px 0; }
+.error-page .muted { margin-bottom: 22px; }
+@media (max-width: 850px) {
+  .auth-layout { grid-template-columns: 1fr; gap: 15px; max-width: 540px; margin: 0 auto; }
+  .auth-aside { padding: 5px 0; }
+  .auth-aside h1 { font-size: 38px; }
+  .auth-aside > .muted { font-size: 14px; }
+  .status-note { margin-top: 10px; }
+  .admin-grid { grid-template-columns: 1fr; }
+  .create-account-card { position: static; }
+}
+@media (max-width: 600px) {
+  .topbar { flex-wrap: wrap; gap: 7px 12px; padding: 11px 16px; }
+  .brand { margin-right: auto; }
+  .main-nav { order: 3; width: 100%; margin: 0; }
+  .main-nav a { padding-left: 0; }
+  .account-nav { gap: 4px; margin-left: 0; }
+  .account-name, .quiet-link { display: none; }
+  .page-shell { width: calc(100% - 28px); padding-top: 25px; }
+  .page-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .roadmap-grid { grid-template-columns: 1fr; }
+  .roadmap-item { flex-wrap: wrap; }
+  .roadmap-item .pill { margin-left: auto; }
+  .permission-list { grid-template-columns: 1fr; }
+  .card { padding: 19px; border-radius: 15px; }
+  .table-wrap { margin: 0 -6px; width: calc(100% + 12px); }
+  th, td { padding: 11px 7px; }
+}
