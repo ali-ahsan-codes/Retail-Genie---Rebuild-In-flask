@@ -2,6 +2,8 @@
 
 This is the reviewed mapping for the 27 tables in `Node Js Version/netpos.db`. The target metadata is implemented in `retail_genie/models/user.py` and `retail_genie/models/legacy_schema.py`; the importer and field conversions are in `retail_genie/migrations/legacy_import.py`. The checked-in SQLite database is sample data only.
 
+**Scope warning:** this is the current single-company Phase 2 landing schema. It does not yet contain company/store tenancy, manager-to-store assignments, cross-store open-bill permissions, or separate payment-class invoice series. The multi-company requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md); a reviewed schema migration is required before implementing those workflows or using the app for multiple companies.
+
 ## Mapping and type rules
 
 - Table names are retained. Most legacy `camelCase` column names become `snake_case` (for example, `createdAt` → `created_at`, `userId` → `user_id`). IDs remain stable strings, with 64-character target columns.

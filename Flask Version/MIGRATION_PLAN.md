@@ -1,6 +1,8 @@
 # Retail Genie: Flask + MySQL Migration Plan
 
-**Status:** Phase 1 is complete. Phase 2 now includes the typed 27-table MySQL landing schema, a read-only/repeatable SQLite importer, and administrator-configurable automatic MySQL backups. Phase 2 remains in progress: uploaded-file migration, staging/independent reconciliation sign-off, and live office-MySQL verification are not complete. Automated tests use isolated SQLite; no live office MySQL server is available in this workspace.
+**Status:** Phase 1 implementation is complete, with shared-office MySQL validation still pending. Phase 2 code now includes the typed 27-table MySQL landing schema, a read-only/repeatable SQLite importer, and administrator-configurable automatic MySQL backups; staging/reconciliation sign-off, uploaded-file migration, and live office-MySQL verification remain. The current schema is still single-company. New multi-company/multi-store requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md), not implemented, and the tenant/store foundation must be designed and tested before Phase 3 business modules. Tests use isolated SQLite; no live office MySQL server is available here.
+
+**Remaining phases:** Phase 2 is still in progress; Phases 3–6 have not started. Therefore five phase groups still have work (the remainder of Phase 2 plus four full phases, 3–6). Phase 1 also has one environment-validation item outstanding.
 
 **Target directory:** `Flask Version/`
 **Migration principle:** Keep `Node Js Version/` unchanged as the reference and rollback copy until the Flask version passes feature and data checks.
@@ -34,12 +36,12 @@ These are reasons to redesign authentication and access control server-side, not
 
 ### Shared data and real-time updates
 
-- Use **one central MySQL 8 / InnoDB database as the source of truth**. All user accounts and all cashier, sales, inventory, audit, SCM, and other clients connect to the same Flask server; browser clients never connect directly to MySQL.
-- Use SQLAlchemy 2.x and Alembic/Flask-Migrate. Store OMR money as `DECIMAL` (not floating-point), preserve stable existing IDs and document-number series, add foreign keys/indexes, and normalize important transactional data such as order lines and payments where that improves reporting and integrity.
+- All devices connect to one authoritative Flask server; browser clients never connect directly to MySQL. The existing Phase 2 app uses one business database and is single-tenant. For the new multi-company requirement, the recommended design is a platform/control database plus one MySQL 8 / InnoDB database per company, with all of that company's stores sharing its tenant database and a least-privilege tenant connection. This storage choice is **recommended but not yet approved**; see [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). A shared database with mandatory `company_id` keys is an alternative that requires explicit approval and equally strong isolation tests.
+- Use SQLAlchemy 2.x and Alembic/Flask-Migrate. Store OMR money as `DECIMAL` (not floating-point), preserve stable existing IDs and document-number series, add foreign keys/indexes, and normalize important transactional data such as order lines and payments where that improves reporting and integrity. Scope every company-owned row and query to its company; scope manager data, reports, files, and events to the manager's admin-assigned store(s).
 - Run sales, payments, returns, stock deductions/receipts, and document-number allocation in database transactions. Add idempotency keys to operations that may be retried so an offline retry or dropped response cannot create a duplicate sale/payment.
 - Add authenticated real-time events using Flask-SocketIO (or an equivalent WebSocket/SSE design). After a database transaction commits, emit a minimal event to the correct authorized users/store, then let the UI update or fetch the changed record. Persist event/outbox rows with the transaction so a process restart does not silently lose notifications.
 - Reconnect with a last-seen event cursor and fetch missed changes. Keep a slower polling/revalidation fallback for disconnected clients. If the production deployment runs multiple Socket.IO workers, use Redis only as the event fan-out/message queue; **MySQL remains the business-data database**.
-- “All accounts sync” means every account sees authorized changes from the same central database. It does not mean sending passwords or sessions between accounts. Role and permission changes should take effect server-side and invalidate or refresh affected sessions.
+- “All accounts sync” means an account receives only changes it is authorized to see within its company and store assignment. It does not mean sending passwords or sessions between accounts or exposing one tenant's events to another. Role, tenant, and store-assignment changes must take effect server-side and invalidate or refresh affected sessions.
 
 ### Authentication, files, and operations
 
@@ -52,11 +54,13 @@ These are reasons to redesign authentication and access control server-side, not
 
 ### Phase 0 — Confirm scope and protect existing data
 
-- Confirm whether the checked-in SQLite snapshot is demo data or the source to migrate.
-- Identify the real SQLite database and all upload/media folders; create a verified, restorable backup before any conversion.
-- Confirm whether “remove Node.js” means no Node at runtime **and** no Node build dependency. The recommended plan assumes both are removed.
-- Confirm the first deployment target: a shared local-office server or a cloud server.
-- Build a role-by-role workflow inventory from the existing pages and API routes; agree which features are must-have for the first usable release.
+- [x] Confirm the checked-in SQLite snapshot is demo/sample data only; do not treat it as the production dataset.
+- [ ] Identify any real SQLite database and upload/media folders; create a verified, restorable backup before conversion.
+- [x] Confirm the strict no-Node requirement: no Node runtime and no Node/npm frontend build dependency.
+- [x] Confirm the initial deployment target is a shared office/local-network server; confirm OS, LAN access, HTTPS/TLS, and backup placement during deployment planning.
+- [x] Document the multi-company role hierarchy, admin-controlled manager/store assignments, phone-only open-bill lookup, and separate payment-class invoice series in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md).
+- [ ] Before coding the tenant schema, approve the isolation architecture, decide the manager exception/approval scope for cross-store bill continuation, clarify the daily manager “return/as per collection,” and confirm invoice-series scope/numbering time.
+- [ ] Complete a role-by-role workflow inventory from the existing pages and API routes and agree the must-have features for the first usable release.
 
 ### Phase 1 — Flask foundation
 
@@ -75,11 +79,22 @@ These are reasons to redesign authentication and access control server-side, not
 - [ ] Run the importer against an approved staging MySQL instance, independently sign off the reconciliation, and rehearse backup restore/rollback. Only offline migration generation and isolated SQLite importer tests have run in this workspace.
 - [ ] Migrate uploaded files separately and verify every database path resolves to a real file. The Phase 2 importer preserves path metadata but does not copy files.
 
+#### Multi-company/store foundation — required before Phase 3 (not implemented)
+
+- [ ] Approve the tenant storage architecture. The current implementation is single-tenant; the recommendation is a platform/control database plus a database per company.
+- [ ] Add the company/store registry, tenant resolution, company-admin hierarchy, and explicit manager-to-store assignments. Enforce the assignment in server-side page/API queries, exports, files, reports, and live events.
+- [ ] Design the company-shared open-bill workflow: phone-only lookup within one company, store-of-origin versus acting/payment store, partial payments, manager-approved/audited removals, and no closure until fully settled or formally voided.
+- [ ] Add independent Cash, Bank, and Bank Transfer invoice counters plus admin-configured mixed-tender classification; decide company-wide versus per-store numbering and when the final invoice number is allocated.
+- [ ] Update importer/data-mapping rules so every imported company and store is explicitly identified; do not import data into production until that mapping and reconciliation are approved.
+- [ ] Extend backup/restore and operational validation to cover platform data and every company database.
+
+See [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md) for the complete requirements and acceptance checks.
+
 ### Phase 3 — Port business modules in dependency order
 
-1. Users, sessions, roles, permissions, settings, and activity/audit logging.
-2. Products, categories, search/barcode lookup, stock, and CSV import/export.
-3. Orders, checkout, payments, invoice numbering, returns/exchanges, and receipt printing.
+1. Tenant-scoped users, sessions, roles, permissions, company/store assignments, settings, and activity/audit logging (building on the Phase 2 tenant foundation).
+2. Products, categories, search/barcode lookup, store-scoped stock, and CSV import/export.
+3. Company-shared open orders, phone lookup, cross-store checkout/payments, manager-approved removals, mixed-tender invoice series, returns/exchanges, and receipt printing.
 4. Demand notices and quotations, including conversion workflows.
 5. Suppliers, purchase orders, receiving, attachments, and logistics tracking.
 6. Attendance, breaks, stock audits, evidence images, messaging, cloud files, and reports.
@@ -110,18 +125,23 @@ For every module, port the rules and permissions, not just the visible page. Use
 ## 4. Definition of done
 
 - The `Flask Version/` app runs and is deployed without a Node server or Node build step (if strict no-Node is confirmed).
-- All authorized devices use one MySQL source of truth; a change made by one user reaches authorized connected clients in near real time, with reconnect/replay fallback.
+- All authorized devices use one MySQL-backed Flask source of truth; a change made by one user reaches authorized connected clients in near real time, with reconnect/replay fallback.
+- Company data is isolated; managers can read only their admin-assigned store data, and the limited cross-store open-bill exception cannot grant access to other branch records or other companies.
+- Company Admins and the Main Admin can administer the role/store assignments described in `MULTI_TENANT_PLAN.md`; all assignment and approval changes are auditable.
+- Phone-only bill lookup works across stores within the same company; unpaid bills remain open until settled, removals/cancellations have manager approval and audit records, and Cash/Bank/Bank Transfer plus mixed-tender invoice series reconcile correctly.
 - Existing required roles and workflows are covered, including sales, inventory, finance, accounts, audits, SCM, messaging/files, reports, and printing.
 - Passwords are never returned by an API, stored in plaintext, or used as client-side authentication; every protected operation is checked server-side.
 - Concurrent checkout, returns, and stock receiving preserve correct totals and stock; retrying the same request does not duplicate a financial operation.
 - The SQLite-to-MySQL importer is repeatable and its reconciliation report matches the approved source data; upload backups and database restore have been tested.
 - Automated tests cover the critical workflows, and deployment/configuration/backup instructions are documented.
 
-## 5. Confirmed planning decisions
+## 5. Confirmed requirements and pending decisions
 
 - **Frontend:** Follow the strict no-Node path. Rebuild the UI in Flask/Jinja with HTMX and/or vanilla JavaScript; the delivered app must not need Node or npm to run or build.
 - **Deployment:** Use one shared office/local-network server as the source of truth for all devices. Confirm the server OS, LAN access, HTTPS/TLS, and backup location during deployment planning.
 - **Current database:** The checked-in `Node Js Version/netpos.db` is demo/sample data, not the production dataset. Use it only for development and migration tests. If real production data or uploads are found later, back them up and assess them separately before importing.
 - **Automatic backups:** An administrator configures the backup interval and retention in Flask; a separate scheduler process writes private MySQL dumps to `Flask Version/backup/` by default. Keep the backup directory persistent and private, and replicate backups off-host for disaster recovery.
+- **Multi-company product requirements:** Companies are isolated tenants; each may have multiple stores. The hierarchy is Main Admin/Super Admin → Company Admin/Sub Admin → managers → sales/cashiers. Main Admin and Company Admin control manager-to-store assignments; managers see only their assigned-store data. A phone number alone finds open bills within the same company; an unpaid bill stays open until settlement. Removals/cancellations require manager approval and audit. Cash, Bank, and Bank Transfer use separate billing series; the admin preconfigures the classification for mixed-method payments. These requirements are recorded in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md), not yet implemented.
+- **Pending tenancy choices:** The user has not yet approved database-per-company versus a shared tenant-key database. The meaning of the daily manager “return/as per collection,” manager permissions for the narrow cross-store bill workflow, invoice-sequence scope, and final invoice-number allocation time also remain to be confirmed.
 
-Phase 1 has delivered the Flask foundation and secure MySQL configuration. Continue with Phase 2 reconciliation, upload migration, office-MySQL validation, and a tested backup/restore rehearsal; keep the Node version unchanged until feature parity and final data checks are approved.
+Phase 1 foundation code and Phase 2 schema/import/backup code are in place. The remaining Phase 2 operational checks and multi-tenant foundation must be completed before Phase 3 business modules; Phases 3–6 have not started. Keep the Node version unchanged until feature parity and final data checks are approved.

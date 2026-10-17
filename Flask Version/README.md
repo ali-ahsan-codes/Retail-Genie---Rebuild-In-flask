@@ -1,6 +1,6 @@
 # Retail Genie — Flask Version
 
-This directory is the **Node-free Flask rebuild**. Phase 1 supplies the Flask app factory, secure account authentication, server-side permissions, health endpoints, and tests. Phase 2 now adds administrator-configurable MySQL backups, a separate scheduler worker, a typed landing schema for the 27-table SQLite source, and a read-only dry-run / insert-only importer. The business modules, upload migration, live MySQL validation, and real-time business events are still outstanding. `Node Js Version/` remains the unchanged behavior reference.
+This directory is the **Node-free Flask rebuild**. Phase 1 supplies the Flask app factory, secure account authentication, server-side permissions, health endpoints, and tests. Phase 2 adds administrator-configurable MySQL backups, a separate scheduler worker, a typed landing schema for the 27-table SQLite source, and a read-only dry-run / insert-only importer. Multi-company/multi-store requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md) but are **not implemented**; the current schema and app remain single-tenant. The business modules, upload migration, live MySQL validation, and real-time business events are still outstanding. `Node Js Version/` remains the unchanged behavior reference.
 
 The application does not use Node.js, npm, React, or a frontend build step. Flask serves the HTML templates and static CSS. The browser never connects directly to MySQL.
 
@@ -90,6 +90,10 @@ flask --app wsgi reset-imported-password --username approved.admin
 The user must replace that temporary password after signing in. For a vetted production source only, `--password-policy hash --confirm-legacy-passwords` explicitly retains legacy passwords as Argon2 hashes while still requiring a change at next sign-in. Do not apply the checked-in demo database to production. No password or password hash is printed by the import command.
 
 For an approved data migration, run `db upgrade` first, then import before creating an initial admin if possible. The default reset policy imports legacy administrators with unknown passwords; use `reset-imported-password` for the approved admin account. If you create a separate admin before importing, choose a username not already present in the source so the unique username constraint cannot cause a conflict.
+
+## Multi-company and multi-store status
+
+The next multi-tenant work is specified in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md), but has not been built. Requirements include a Main Admin and company-admin hierarchy, admin-managed manager-to-store assignments, managers scoped to assigned shops, company-isolated data, phone-only lookup of open customer bills across branches within one company, manager-approved/audited removals, unpaid bills staying open until settled, and separate Cash/Bank/Bank Transfer invoice series with admin-configured mixed-payment classification. Do not treat the current single-tenant schema or app as production-ready for multiple companies. The tenant storage choice and the meaning of “daily return/as per collection” remain to be confirmed.
 
 ## Run tests
 
