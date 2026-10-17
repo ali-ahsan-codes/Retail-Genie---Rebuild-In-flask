@@ -96,3 +96,22 @@ def test_deactivating_account_invalidates_existing_session(app, create_user):
         staff = db.session.get(User, staff_id)
         assert staff.is_active is False
         assert staff.auth_version == 2
+
+
+def test_operator_can_reset_imported_password_interactively(app, create_user):
+    create_user("import.admin", role="admin", force_password_change=True)
+    runner = app.test_cli_runner()
+    new_temporary_password = "A-new-imported-admin-password-8!"
+
+    result = runner.invoke(
+        args=["reset-imported-password", "--username", "import.admin"],
+        input=f"{new_temporary_password}\n{new_temporary_password}\n",
+    )
+
+    assert result.exit_code == 0
+    assert new_temporary_password not in result.output
+    with app.app_context():
+        account = User.query.filter_by(username="import.admin").one()
+        assert account.check_password(new_temporary_password) is True
+        assert account.force_password_change is True
+        assert account.auth_version == 2

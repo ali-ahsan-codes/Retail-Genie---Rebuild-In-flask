@@ -1,6 +1,6 @@
 # Retail Genie: Flask + MySQL Migration Plan
 
-**Status:** Phase 1 foundation is implemented; business modules and real-time data events remain to be migrated. Automated tests currently use an isolated test database; a live office MySQL server has not been configured in this workspace.
+**Status:** Phase 1 is complete. Phase 2 now includes the typed 27-table MySQL landing schema, a read-only/repeatable SQLite importer, and administrator-configurable automatic MySQL backups. Phase 2 remains in progress: uploaded-file migration, staging/independent reconciliation sign-off, and live office-MySQL verification are not complete. Automated tests use isolated SQLite; no live office MySQL server is available in this workspace.
 
 **Target directory:** `Flask Version/`
 **Migration principle:** Keep `Node Js Version/` unchanged as the reference and rollback copy until the Flask version passes feature and data checks.
@@ -65,12 +65,15 @@ These are reasons to redesign authentication and access control server-side, not
 - [x] Implement Argon2id login/logout, safe current-user lookup, server-side permission decorators, first-admin provisioning, and account create/activate/deactivate workflows.
 - [ ] Verify two separate browsers against the same central office MySQL instance. This requires the office MySQL server/network configuration, which is not available in this workspace yet.
 
-### Phase 2 — MySQL schema and safe data import
+### Phase 2 — MySQL schema and safe data import (in progress)
 
-- Map the 27 SQLite tables and their JSON/text fields into a documented MySQL schema. Preserve foreign-key relationships, existing IDs, invoice/quotation/PO/audit sequences, and historical timestamps.
-- Write a **dry-run, repeatable importer** from SQLite to MySQL. Hash legacy passwords during import, remove/reset any demo/default credentials, and avoid logging password values.
-- Validate table counts, foreign keys, order totals, payment totals, stock totals, and document-number counters. Run the importer on a backup first and rehearse rollback before cutover.
-- Migrate uploaded files separately and verify every database path resolves to a real file.
+- [x] Map all 27 checked-in SQLite tables into a documented MySQL/InnoDB landing schema (`LEGACY_SCHEMA_MAP.md`). Preserve stable IDs, foreign-key relationships, date/time values normalized to UTC, JSON payloads, and document-number counter rows; monetary columns use `DECIMAL` rather than floating point.
+- [x] Add a read-only, immutable-source dry run and insert-only transactional importer. It checks the reviewed source schema, foreign-key integrity, JSON, numeric precision, usernames, and permission mappings. A matching existing ID is skipped; a conflict rolls back the whole import rather than overwriting target data.
+- [x] Reset legacy credentials to random unknown values by default and hash them with Argon2; force a password change. An explicitly confirmed option can hash vetted legacy credentials, and operators can interactively provision a temporary password for approved imported accounts. No credentials are printed or logged.
+- [x] Add the requested admin-configurable automatic MySQL backup interval, dedicated single-instance scheduler/worker, private `.sql.gz` files under `Flask Version/backup/` by default, SHA-256/run history, and configurable file retention. Backup files are ignored by Git; the worker is not started inside web workers.
+- [x] Add source-to-target row-count/ID checks, target foreign-key checks, and reconciliation of order totals, nested payment amounts, aggregate product stock, and invoice-number counters; the import transaction rolls back on mismatch.
+- [ ] Run the importer against an approved staging MySQL instance, independently sign off the reconciliation, and rehearse backup restore/rollback. Only offline migration generation and isolated SQLite importer tests have run in this workspace.
+- [ ] Migrate uploaded files separately and verify every database path resolves to a real file. The Phase 2 importer preserves path metadata but does not copy files.
 
 ### Phase 3 — Port business modules in dependency order
 
@@ -119,5 +122,6 @@ For every module, port the rules and permissions, not just the visible page. Use
 - **Frontend:** Follow the strict no-Node path. Rebuild the UI in Flask/Jinja with HTMX and/or vanilla JavaScript; the delivered app must not need Node or npm to run or build.
 - **Deployment:** Use one shared office/local-network server as the source of truth for all devices. Confirm the server OS, LAN access, HTTPS/TLS, and backup location during deployment planning.
 - **Current database:** The checked-in `Node Js Version/netpos.db` is demo/sample data, not the production dataset. Use it only for development and migration tests. If real production data or uploads are found later, back them up and assess them separately before importing.
+- **Automatic backups:** An administrator configures the backup interval and retention in Flask; a separate scheduler process writes private MySQL dumps to `Flask Version/backup/` by default. Keep the backup directory persistent and private, and replicate backups off-host for disaster recovery.
 
-The first development milestone should therefore be the Flask foundation, secure MySQL configuration, and a local office-server deployment runbook. Keep the Node version unchanged until feature parity and the final data checks are approved.
+Phase 1 has delivered the Flask foundation and secure MySQL configuration. Continue with Phase 2 reconciliation, upload migration, office-MySQL validation, and a tested backup/restore rehearsal; keep the Node version unchanged until feature parity and final data checks are approved.

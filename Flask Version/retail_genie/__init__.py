@@ -60,6 +60,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
         return redirect(url_for("auth.login"))
 
+    from .admin.backup_routes import backup_admin_bp
     from .admin.routes import admin_bp
     from .auth.routes import auth_bp
     from .health.routes import health_bp
@@ -69,6 +70,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(backup_admin_bp)
 
     @app.before_request
     def require_temporary_password_change():
@@ -119,7 +121,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
 
 def register_cli_commands(app: Flask) -> None:
-    """Register safe first-admin provisioning without shipping default credentials."""
+    """Register safe account, backup-worker, and one-time import commands."""
     import click
 
     from .models import User
@@ -134,7 +136,9 @@ def register_cli_commands(app: Flask) -> None:
         if not is_valid_username(normalized_username):
             raise click.ClickException("Username must be 3–48 characters using letters, numbers, dots, underscores, or hyphens.")
         if User.query.filter_by(role="admin", is_active=True).count():
-            raise click.ClickException("An active administrator already exists; use Accounts to manage users.")
+            raise click.ClickException(
+                "An active administrator already exists; use Accounts or reset-imported-password for a migrated account."
+            )
         if User.query.filter_by(username=normalized_username).first():
             raise click.ClickException("That username already exists.")
 
@@ -153,3 +157,105 @@ def register_cli_commands(app: Flask) -> None:
             raise click.ClickException("Administrator creation failed. Check database connectivity and migration status.") from None
 
         click.echo(f"Administrator '{normalized_username}' created.")
+
+    @app.cli.command("backup-scheduler")
+    @click.option("--once", "run_once", is_flag=True, help="Check for one due backup and exit.")
+    def backup_scheduler(run_once: bool) -> None:
+        """Run the separate MySQL backup scheduler/worker process."""
+        from .backups.scheduler import run_backup_scheduler
+
+        try:
+            run_backup_scheduler(app, once=run_once)
+        except RuntimeError as error:
+            raise click.ClickException(str(error)) from None
+        except Exception as error:
+            app.logger.error("Backup scheduler could not start (%s)", type(error).__name__)
+            raise click.ClickException("Backup scheduler could not start; verify MySQL connectivity and configuration.") from None
+        if run_once:
+            click.echo("Backup scheduler check completed.")
+
+    @app.cli.command("import-sqlite")
+    @click.option("--source", "source_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+    @click.option("--apply", "apply_import", is_flag=True, help="Apply the import; otherwise perform a read-only dry run.")
+    @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
+    @click.option("--password-policy", type=click.Choice(["reset", "hash"]), default="reset", show_default=True)
+    @click.option("--confirm-legacy-passwords", is_flag=True, help="Required with --password-policy=hash on apply.")
+    def import_sqlite(
+        source_path: Path,
+        apply_import: bool,
+        confirm_apply: bool,
+        password_policy: str,
+        confirm_legacy_passwords: bool,
+    ) -> None:
+        """Validate or import the reviewed legacy SQLite database."""
+        from .migrations.legacy_import import LegacyImportError, import_sqlite_database
+
+        if apply_import and not confirm_apply:
+            raise click.ClickException("Review a dry run first, then pass --apply --confirm-apply.")
+        if apply_import and password_policy == "hash" and not confirm_legacy_passwords:
+            raise click.ClickException(
+                "Preserving legacy passwords requires --confirm-legacy-passwords; the default policy resets them."
+            )
+        try:
+            report = import_sqlite_database(
+                source_path,
+                apply=apply_import,
+                password_policy=password_policy,
+            )
+        except LegacyImportError as error:
+            raise click.ClickException(str(error)) from None
+        except Exception as error:
+            app.logger.error(
+                "SQLite import failed and the target transaction was rolled back (%s)",
+                type(error).__name__,
+            )
+            raise click.ClickException(
+                f"SQLite import failed ({type(error).__name__}); check server logs."
+            ) from None
+
+        click.echo("Import mode: " + ("APPLIED" if apply_import else "DRY RUN — no target rows changed"))
+        click.echo(f"Password policy: {password_policy}; accounts will require a password change.")
+        click.echo("Table counts:")
+        for table_name in sorted(report.source_counts):
+            inserted = report.inserted_counts.get(table_name, 0)
+            skipped = report.skipped_counts.get(table_name, 0)
+            click.echo(
+                f"  {table_name}: source={report.source_counts[table_name]}, "
+                f"inserted={inserted}, skipped={skipped}"
+            )
+        click.echo(
+            f"User credentials reset={report.user_passwords_reset}, "
+            f"legacy credentials hashed={report.user_passwords_hashed}."
+        )
+        orders = report.reconciliation.get("orders", {})
+        payments = report.reconciliation.get("payments", {})
+        stock = report.reconciliation.get("stock", {})
+        counters = report.reconciliation.get("invoice_counters", {})
+        click.echo(
+            "Reconciliation: "
+            f"orders={orders.get('rows', 0)} total_OMR={orders.get('total_omr', '0')}; "
+            f"payments_OMR={payments.get('combined_total_omr', '0')}; "
+            f"stock_units={stock.get('quantity_total', 0)}; "
+            f"invoice_counter_rows={counters.get('rows', 0)}."
+        )
+
+    @app.cli.command("reset-imported-password")
+    @click.option("--username", required=True, help="Imported account to reset.")
+    @click.option("--activate/--no-activate", default=True, show_default=True)
+    def reset_imported_password(username: str, activate: bool) -> None:
+        """Set an interactive temporary password for a migrated account."""
+        from .models.user import normalize_username
+
+        normalized_username = normalize_username(username)
+        target = User.query.filter_by(username=normalized_username).first()
+        if target is None:
+            raise click.ClickException("No account with that username exists.")
+        password = click.prompt("Temporary password (minimum 12 characters)", hide_input=True, confirmation_prompt=True)
+        if len(password) < 12:
+            raise click.ClickException("Password must be at least 12 characters.")
+        target.set_password(password)
+        target.is_active = activate
+        target.force_password_change = True
+        target.auth_version += 1
+        db.session.commit()
+        click.echo(f"Password reset for '{normalized_username}'. The account must change it at next sign-in.")

@@ -116,6 +116,32 @@ td { color: #34445a; font-size: 12px; }
 td form { margin: 0; }
 .table-note { display: block; margin-top: 14px; }
 .empty-state { padding: 25px 8px; color: var(--muted); text-align: center; font-size: 13px; }
+.backup-panel, .backup-history-card { margin-bottom: 20px; }
+.panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 16px; }
+.panel-heading h2 { margin-bottom: 0; }
+.status-pill { display: inline-flex; align-items: center; width: max-content; padding: 6px 9px; border-radius: 999px; color: #65748a; background: #eef2f7; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.status-success, .status-succeeded { color: #126342; background: var(--green-pale); }
+.status-failed { color: #992830; background: var(--red-pale); }
+.status-running { color: #815516; background: #fff4dc; }
+.status-queued { color: #1e507f; background: var(--blue-pale); }
+.status-neutral { color: #65748a; background: #eef2f7; }
+.backup-callout { max-width: 920px; margin-bottom: 19px; font-size: 12px; }
+.backup-settings-form { display: grid; grid-template-columns: minmax(180px, .8fr) repeat(2, minmax(190px, 1fr)); gap: 12px 18px; align-items: start; }
+.backup-settings-form .field { margin-bottom: 3px; }
+.backup-settings-form .field small, .backup-now-form small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.checkbox-row { display: flex; gap: 9px; align-items: center; min-height: 43px; color: #34445a; font-size: 12px; font-weight: 700; }
+.checkbox-row input { width: 17px; height: 17px; accent-color: var(--blue); }
+.form-actions { grid-column: 1 / -1; }
+.backup-schedule-meta { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.backup-schedule-meta strong { color: #34445a; }
+.backup-now-form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 18px; }
+.backup-history-card { overflow: hidden; }
+.backup-history-table { min-width: 800px; }
+.backup-history-table th, .backup-history-table td { padding-right: 13px; }
+.backup-history-table code { color: #34445a; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.backup-history-table .checksum { display: block; max-width: 180px; overflow-wrap: anywhere; }
+.table-subtext { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+.backup-error { display: block; max-width: 370px; color: #992830; font-size: 11px; line-height: 1.5; }
 .error-page { display: grid; justify-items: center; align-content: center; min-height: 100vh; padding: 25px; text-align: center; }
 .error-code { color: var(--blue); font: 800 14px "Segoe UI", sans-serif; letter-spacing: .16em; }
 .error-page h1 { margin: 10px 0; }
@@ -127,6 +153,7 @@ td form { margin: 0; }
   .auth-aside > .muted { font-size: 14px; }
   .status-note { margin-top: 10px; }
   .admin-grid { grid-template-columns: 1fr; }
+  .backup-settings-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .create-account-card { position: static; }
 }
 @media (max-width: 600px) {
@@ -142,6 +169,8 @@ td form { margin: 0; }
   .roadmap-item { flex-wrap: wrap; }
   .roadmap-item .pill { margin-left: auto; }
   .permission-list { grid-template-columns: 1fr; }
+  .backup-settings-form { grid-template-columns: 1fr; }
+  .form-actions { grid-column: 1; }
   .card { padding: 19px; border-radius: 15px; }
   .table-wrap { margin: 0 -6px; width: calc(100% + 12px); }
   th, td { padding: 11px 7px; }

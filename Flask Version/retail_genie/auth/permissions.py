@@ -22,3 +22,15 @@ def permission_required(permission: str):
         return cast(View, wrapped)
 
     return decorator
+
+
+def admin_required(view: View) -> View:
+    """Require an authenticated administrator, regardless of client-supplied data."""
+    @wraps(view)
+    @login_required
+    def wrapped(*args, **kwargs):
+        if current_user.role != "admin":
+            abort(403)
+        return view(*args, **kwargs)
+
+    return cast(View, wrapped)
