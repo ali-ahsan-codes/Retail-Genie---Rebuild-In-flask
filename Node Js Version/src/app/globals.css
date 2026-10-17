@@ -1,0 +1,459 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 220 40% 98%;      /* Very light blue-gray, base for gradient */
+    --foreground: 222 47% 11%;     /* Dark slate blue for text */
+
+    --card: 220 40% 100%;            /* White, but we'll often use bg-card/70 for blur */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 220 40% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 211 51% 48%;        /* UPDATED COLOR: #3c79ba */
+    --primary-foreground: 210 40% 98%; /* White */
+
+    --secondary: 220 15% 90%;         /* Light gray-blue */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 15% 94%;             /* Lighter gray-blue */
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 211 51% 55%;         /* Made accent color stronger and closer to primary */
+    --accent-foreground: 210 40% 98%; /* White */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 211 51% 48%;           /* Ring color matches primary */
+
+    --radius: 0.5rem;
+
+    /* Chart colors (can be adjusted or expanded) */
+    --chart-1: 283 30% 45%;
+    --chart-2: 210 70% 60%;
+    --chart-3: 120 60% 50%;
+    --chart-4: 40 80% 60%;
+    --chart-5: 0 70% 60%;
+
+    /* Sidebar specific theme */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--secondary);
+    --sidebar-accent-foreground: var(--primary);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+  }
+
+  .dark {
+    --background: 222 47% 11%;      /* Dark slate blue */
+    --foreground: 210 40% 98%;     /* White */
+
+    --card: 222 40% 18%;            /* Slightly lighter dark slate blue */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 40% 18%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 211 60% 55%;        /* Brighter version for dark mode */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 222 40% 25%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 40% 22%;
+    --muted-foreground: 210 40% 60%;
+
+    --accent: 211 51% 55%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 40% 30%;
+    --input: 222 40% 30%;
+    --ring: 211 60% 55%;
+
+    /* Sidebar specific theme for dark mode */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--secondary);
+    --sidebar-accent-foreground: var(--primary);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Simpler 4-box 3D Tower Loader Styles */
+.tower-loader-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loader { /* Styles for the simpler tower loader's main container */
+  scale: 2; /* Adjusted scale for visibility */
+  height: 50px;
+  width: 40px;
+  position: relative;
+}
+
+.loader .box { /* Styles for each box in the simpler tower */
+  position: relative;
+  opacity: 0;
+  left: 10px;
+}
+
+.loader .side-left {
+  position: absolute;
+  background-color: hsl(var(--primary) / 0.8); /* Use primary color with opacity */
+  width: 19px;
+  height: 5px;
+  transform: skew(0deg, -25deg);
+  top: 14px;
+  left: 10px;
+}
+
+.loader .side-right {
+  position: absolute;
+  background-color: hsl(var(--primary)); /* Use primary color */
+  width: 19px;
+  height: 5px;
+  transform: skew(0deg, 25deg);
+  top: 14px;
+  left: -9px;
+}
+
+.loader .side-top {
+  position: absolute;
+  background-color: hsl(var(--primary)); /* Use primary color */
+  width: 20px;
+  height: 20px;
+  transform: rotate(45deg) skew(-20deg, -20deg);
+}
+
+/* Keyframes for the simpler 4-box tower loader */
+.loader .box-1 {
+  animation: tower-from-left 4s infinite;
+}
+
+.loader .box-2 {
+  animation: tower-from-right 4s infinite;
+  animation-delay: 1s;
+}
+
+.loader .box-3 {
+  animation: tower-from-left 4s infinite;
+  animation-delay: 2s;
+}
+
+.loader .box-4 {
+  animation: tower-from-right 4s infinite;
+  animation-delay: 3s;
+}
+
+@keyframes tower-from-left {
+  0% {
+    z-index: 20;
+    opacity: 0;
+    transform: translate(-20px, -6px);
+  }
+
+  20% {
+    z-index: 10;
+    opacity: 1;
+    transform: translate(0px, 0px);
+  }
+
+  40% {
+    z-index: 9;
+    transform: translate(0px, 4px);
+  }
+
+  60% {
+    z-index: 8;
+    transform: translate(0px, 8px);
+  }
+
+  80% {
+    z-index: 7;
+    opacity: 1;
+    transform: translate(0px, 12px);
+  }
+
+  100% {
+    z-index: 5;
+    transform: translate(0px, 30px);
+    opacity: 0;
+  }
+}
+
+@keyframes tower-from-right {
+  0% {
+    z-index: 20;
+    opacity: 0;
+    transform: translate(20px, -6px);
+  }
+
+  20% {
+    z-index: 10;
+    opacity: 1;
+    transform: translate(0px, 0px);
+  }
+
+  40% {
+    z-index: 9;
+    transform: translate(0px, 4px);
+  }
+
+  60% {
+    z-index: 8;
+    transform: translate(0px, 8px);
+  }
+
+  80% {
+    z-index: 7;
+    opacity: 1;
+    transform: translate(0px, 12px);
+  }
+
+  100% {
+    z-index: 5;
+    transform: translate(0px, 30px);
+    opacity: 0;
+  }
+}
+/* End of Simpler 4-box 3D Tower Loader Styles */
+
+/* LCD Display Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+
+/* Print specific styles */
+@media print {
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important; 
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+  header, nav, aside, footer, button:not(.print-button-explicit), .no-print {
+    display: none !important;
+  }
+
+  .label-grid {
+    display: grid !important;
+    gap: 0 !important;
+    padding: 0.1in !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    grid-template-columns: repeat(auto-fill, minmax(40mm, 1fr)) !important;
+  }
+  
+  .label-container {
+    width: 40mm !important;
+    height: 27mm !important;
+    background: white !important;
+    border: 1px dashed black !important;
+    border-radius: 3px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    padding: 2mm !important;
+    page-break-inside: avoid !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+  }
+  
+  .delivery-instructions {
+    font-size: 8px !important;
+    color: #6c757d !important;
+    margin-top: auto !important;
+    padding: 2px 5px !important;
+    text-align: center !important;
+  }
+  
+  /* --- Invoice ID Label Styles --- */
+  .label-header {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding-bottom: 5px !important;
+    border-bottom: 1px solid #ddd !important;
+  }
+  
+  .logo {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #333 !important;
+  }
+  
+  .from-to {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 5px !important;
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+    color: #555 !important;
+  }
+  
+  .from, .to { width: 50% !important; }
+  
+  .fragile-section {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 8px !important;
+    padding: 0 5px !important;
+  }
+  
+  .tracking-code {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    text-transform: uppercase !important;
+  }
+  
+  .barcode-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 8px 0 !important;
+    height: 25px !important;
+    width: 100% !important;
+  }
+  
+  .barcode {
+    max-width: 95% !important;
+    max-height: 100% !important;
+    height: auto !important;
+  }
+  
+  .item-number {
+    font-size: 8px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-top: 3px !important;
+    padding: 0 5px !important;
+    text-align: center !important;
+  }
+  
+  /* --- Product Label Styles --- */
+  .product-label {
+    text-align: center !important;
+  }
+  
+  .product-name {
+    font-size: 8pt !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    line-height: 1.2;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    word-wrap: break-word;
+  }
+  
+  .price {
+    font-size: 10pt !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+  }
+  
+  .product-barcode-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    margin: 1mm 0 !important;
+    height: 20px !important; /* Reduced height for smaller label */
+    width: 100%;
+  }
+  
+  .product-barcode {
+    max-width: 95% !important;
+    max-height: 100% !important;
+    height: auto !important;
+  }
+  
+  .product-code {
+    font-size: 10px !important;
+    text-align: center !important;
+    color: #333 !important;
+    font-family: 'Courier New', monospace !important;
+  }
+
+  /* --- Thermal Receipt / Invoice Styles --- */
+  .receipt-header, .section, .totals-section, .notes-section, .footer {
+    padding: 1.5mm;
+    margin-bottom: 2mm;
+    border-bottom: 1px dashed #999;
+  }
+
+  .section:last-of-type, .footer {
+    border-bottom: none;
+  }
+
+  .items-container .item-box {
+    border-bottom: 1px dotted #ccc;
+  }
+
+  .totals-section .grand-total {
+    border-top: 1px solid #000;
+  }
+
+  .totals-section .balance-due {
+     border-top: 1px dashed #000;
+  }
+
+}

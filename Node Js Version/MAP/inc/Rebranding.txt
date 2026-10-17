@@ -1,0 +1,49 @@
+
+The file you need to modify is:
+
+src/config/branding.ts
+
+How to modify it:
+
+Open the src/config/branding.ts file in your code editor. You will see an object called brandingConfig. It looks like this:
+
+// src/config/branding.ts
+
+interface BrandingConfig {
+  appName: string;
+  companyNameForInvoice: string;
+  companyAddressForInvoice: string;
+  companyPhoneForInvoice: string;
+  companyWebsiteForInvoice?: string;
+  logoPath: string; // Relative to /public directory
+  faviconPath: string; // Relative to /public directory
+}
+
+export const brandingConfig: BrandingConfig = {
+  appName: "Retail Genie", // <-- CHANGE THIS for app name
+  companyNameForInvoice: "Retail Genie Solutions", // <-- CHANGE THIS for invoice
+  companyAddressForInvoice: "Muscat, Oman", // <-- CHANGE THIS for invoice
+  companyPhoneForInvoice: "+968-94700685", // <-- CHANGE THIS for invoice
+  companyWebsiteForInvoice: "www.retailgenie.example", // <-- CHANGE THIS (optional)
+  logoPath: "/assets/logo.svg", // <-- CHANGE THIS to your logo file path
+  faviconPath: "/assets/favicon.svg", // <-- CHANGE THIS to your favicon file path
+};
+To change the details for a new vendor:
+
+Edit the values for the properties inside the brandingConfig object. For example:
+
+To change the app name: appName: "New Vendor App Name",
+To change the company name on the invoice: companyNameForInvoice: "New Vendor Company Inc.",
+To change the phone number on the invoice: companyPhoneForInvoice: "+1-555-123-4567",
+To change the logo: logoPath: "/new_vendor_assets/new_logo.png",
+To change the favicon: faviconPath: "/new_vendor_assets/new_favicon.ico",
+Place your logo and favicon files:
+
+Make sure the actual image files (e.g., new_logo.png, new_favicon.ico) exist in your public directory at the paths you specified in logoPath and faviconPath. For instance, if logoPath is /new_vendor_assets/new_logo.png, you should create a folder named new_vendor_assets inside your public folder and place new_logo.png there.
+Remember that EPS files are not directly web-compatible. You'll need to convert your logo to SVG (recommended) or PNG for the main app logo, and to SVG, ICO, or PNG for the favicon.
+Restart your application:
+
+If you're running the development server (npm run dev), stop it (Ctrl+C or Cmd+C) and restart it.
+If you're running a production build, you'll need to rebuild (npm run build) and restart your server (npm run start).
+    
+  

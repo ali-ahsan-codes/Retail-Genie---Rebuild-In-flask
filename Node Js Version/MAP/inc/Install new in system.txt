@@ -1,0 +1,30 @@
+NETPOS SYSTEM REQUIREMENTS & INSTALLATION
+
+1. INSTALL NODE.JS
+   - Download and install Node.js LTS from https://nodejs.org/
+   - This will automatically install 'npm'.
+   - Verify installation in Terminal:
+     node -v
+     npm -v
+
+2. CONFIGURE POWERSHELL (For the Launcher)
+   - Open PowerShell as Administrator.
+   - Run the following command to allow the setup script to execute:
+     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   - Type 'Y' and press Enter when prompted.
+
+3. INITIAL SETUP (Manual Method)
+   - Open the project directory in a terminal.
+   - Run: npm install
+   - Run: npm run recreate-db
+   - Run: npm run build
+   - Start for testing: npm run dev
+
+4. SILENT DEPLOYMENT (One-Click Method)
+   - Ensure steps 1 & 2 are complete.
+   - Double-click 'launcher.vbs' in the root folder.
+   - The system will install dependencies, build the app, clean the source, and start the server in the background.
+
+5. ACCESS THE APP
+   - Once running, open your browser to: http://localhost:3000
+   - Default Admin: admin / password123

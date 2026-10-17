@@ -1,0 +1,14 @@
+
+mkdir uploads
+mkdir uploads/products
+mkdir uploads/cloud
+mkdir uploads/attendance
+mkdir uploads/audits
+mkdir uploads/audits/selfies
+mkdir uploads/audits/item_images
+mkdir uploads/csv
+mkdir -p uploads/messaging
+mkdir -p uploads/scm/documents
+mkdir -p uploads/scm/po_invoices
+mkdir -p uploads/scm/po_attachments
+mkdir -p uploads/scm/storage_evidence
