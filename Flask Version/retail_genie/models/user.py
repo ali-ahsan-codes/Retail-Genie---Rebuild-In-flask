@@ -125,6 +125,8 @@ class User(UserMixin, db.Model):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     force_password_change: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    active_break_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    auto_enter_after_scan: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
 

@@ -19,6 +19,9 @@
         {% if current_user.has_permission('manage_users') %}
           <a href="{{ url_for('admin.users') }}">Accounts</a>
         {% endif %}
+        {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin_backups.settings') }}">Database backups</a>
+        {% endif %}
       </nav>
       <div class="account-nav">
         <span class="account-name">{{ current_user.username }}<small>{{ current_user.role|replace('_', ' ')|title }}</small></span>

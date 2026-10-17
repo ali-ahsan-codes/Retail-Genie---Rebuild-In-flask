@@ -2,6 +2,7 @@
 
 import os
 from datetime import timedelta
+from pathlib import Path
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -31,3 +32,13 @@ class Config:
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_HEADERS_ENABLED = True
     SOCKETIO_ASYNC_MODE = os.getenv("SOCKETIO_ASYNC_MODE", "threading")
+
+    # Backups are intentionally written outside Flask's static directory and are
+    # never exposed by a download route. Override on shared/production hosts if
+    # the app directory itself is not a suitable persistent storage location.
+    BACKUP_DIR = os.getenv("BACKUP_DIR") or str(Path(__file__).resolve().parents[1] / "backup")
+    BACKUP_DATABASE_URL = os.getenv("BACKUP_DATABASE_URL") or None
+    MYSQLDUMP_PATH = os.getenv("MYSQLDUMP_PATH", "mysqldump")
+    BACKUP_TIMEOUT_SECONDS = int(os.getenv("BACKUP_TIMEOUT_SECONDS", "7200"))
+    BACKUP_SCHEDULER_POLL_SECONDS = int(os.getenv("BACKUP_SCHEDULER_POLL_SECONDS", "15"))
+    BACKUP_LOCK_NAME = os.getenv("BACKUP_LOCK_NAME", "retail_genie_backup_scheduler")
