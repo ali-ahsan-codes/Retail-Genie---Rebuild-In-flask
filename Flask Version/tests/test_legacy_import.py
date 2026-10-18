@@ -10,7 +10,7 @@ from retail_genie.migrations.legacy_import import (
     _financial_reconciliation,
     import_sqlite_database,
 )
-from retail_genie.models import User, legacy_tables
+from retail_genie.models import User, UserStoreAssignment, legacy_tables
 
 SAMPLE_DATABASE = Path(__file__).resolve().parents[2] / "Node Js Version" / "netpos.db"
 
@@ -53,6 +53,10 @@ def test_import_hashes_reset_accounts_preserves_ids_and_is_repeatable(app):
         assert all(user.password_hash.startswith("$argon2id$") for user in imported_users)
         assert all(user.force_password_change is True for user in imported_users)
         assert all(user.is_active is True for user in imported_users)
+        assert all(user.company_id == "test-company" for user in imported_users)
+        assignments = UserStoreAssignment.query.filter_by(company_id="test-company", store_id="test-store", is_active=True).all()
+        assert len(assignments) == 12
+        assert all(assignment.can_view_shared_bills is False for assignment in assignments)
         assert db.session.execute(select(func.count()).select_from(legacy_tables["orders"])).scalar_one() == 1
         assert db.session.execute(select(func.count()).select_from(legacy_tables["demand_notices"])).scalar_one() == 2
 
@@ -77,7 +81,13 @@ def test_target_conflict_rolls_back_whole_import_without_overwriting(app):
 
     with app.app_context():
         db.session.execute(
-            legacy_tables["products"].insert().values(id=product_id, name="Existing target record")
+            legacy_tables["products"].insert().values(
+                id=product_id,
+                name="Existing target record",
+                tenant_container_id="test-container",
+                company_id="test-company",
+                store_id="test-store",
+            )
         )
         db.session.commit()
 

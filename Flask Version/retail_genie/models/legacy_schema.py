@@ -13,6 +13,8 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
+    Index,
     Integer,
     JSON,
     Numeric,
@@ -45,7 +47,37 @@ def _column(
 
 
 def _table(name: str, *columns: Column) -> Table:
-    return Table(name, _METADATA, *columns, **_TABLE_OPTIONS)
+    """Attach required company scope and an optional company-owned store scope."""
+    return Table(
+        name,
+        _METADATA,
+        *columns,
+        Column("tenant_container_id", String(64), ForeignKey("tenant_containers.id", ondelete="CASCADE"), nullable=False),
+        Column("company_id", String(64), ForeignKey(f"companies.id", ondelete="CASCADE", name=f"fk_{name}_company"), nullable=False),
+        Column("store_id", String(64), nullable=True),
+        ForeignKeyConstraint(
+            ["tenant_container_id", "company_id"],
+            ["companies.tenant_container_id", "companies.id"],
+            name=f"fk_{name}_company_container",
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["company_id", "store_id"],
+            ["stores.company_id", "stores.id"],
+            name=f"fk_{name}_store_company",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_container_id", "company_id", "store_id"],
+            ["stores.tenant_container_id", "stores.company_id", "stores.id"],
+            name=f"fk_{name}_store_container",
+            ondelete="RESTRICT",
+        ),
+        Index(f"ix_{name}_tenant_container_id", "tenant_container_id"),
+        Index(f"ix_{name}_company_id", "company_id"),
+        Index(f"ix_{name}_company_store", "tenant_container_id", "company_id", "store_id"),
+        **_TABLE_OPTIONS,
+    )
 
 
 def _id() -> Column:

@@ -8,6 +8,7 @@ from ..models import is_valid_username
 
 
 class CreateUserForm(FlaskForm):
+    company_id = SelectField("Company", choices=[], validators=[Optional()])
     username = StringField(
         "Username",
         validators=[

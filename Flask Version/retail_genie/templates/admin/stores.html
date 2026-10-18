@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Stores · {{ company.name }}{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">{{ company.name }} · COMPANY STORES</p><h1>Stores</h1><p class="muted">Managers and sales staff can access only the shops assigned to them.</p></div>
+  <a class="button button-secondary" href="{{ url_for('tenancy_admin.store_assignments', company_id=company.id) }}">Manage store access</a>
+</section>
+<div class="admin-grid">
+  <section class="card create-account-card">
+    <div class="card-heading"><p class="eyebrow">NEW BRANCH</p><h2>Add store</h2></div>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {% for field in [form.name, form.code] %}
+        <div class="field">{{ field.label }}{{ field(class="control") }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% endfor %}
+      <button class="button button-primary button-full" type="submit">Add store</button>
+    </form>
+  </section>
+  <section class="card accounts-card">
+    <div class="card-heading"><p class="eyebrow">COMPANY DATA SCOPE</p><h2>{{ stores|length }} store{% if stores|length != 1 %}s{% endif %}</h2></div>
+    {% if stores %}
+      <div class="table-wrap"><table><thead><tr><th>Code</th><th>Store</th><th>Status</th></tr></thead><tbody>
+        {% for store in stores %}<tr><td><strong>{{ store.code }}</strong></td><td>{{ store.name }}</td><td><span class="pill {{ 'pill-success' if store.is_active else 'pill-muted' }}">{{ 'Active' if store.is_active else 'Inactive' }}</span></td></tr>{% endfor %}
+      </tbody></table></div>
+    {% else %}<p class="empty-state">No stores are registered.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

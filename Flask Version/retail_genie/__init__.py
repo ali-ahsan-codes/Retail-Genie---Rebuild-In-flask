@@ -44,9 +44,24 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User | None:
+        from .auth.tenant_context import available_memberships, current_membership
+
         user = db.session.get(User, user_id)
-        if user is None:
+        if user is None or not user.is_active:
             return None
+        if user.is_super_admin:
+            if user.company_id is not None:
+                return None
+        else:
+            selected_container_id = session.get("active_container_id")
+            if selected_container_id:
+                if current_membership(user, tenant_container_id=selected_container_id) is None:
+                    return None
+            elif session.get("pending_tenant_selection"):
+                if not available_memberships(user.id):
+                    return None
+            else:
+                return None
         authenticated_version = session.get("auth_version")
         if authenticated_version is None or str(authenticated_version) != str(user.auth_version):
             return None
@@ -62,22 +77,36 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     from .admin.backup_routes import backup_admin_bp
     from .admin.routes import admin_bp
+    from .admin.tenancy_routes import tenancy_admin_bp
     from .auth.routes import auth_bp
     from .health.routes import health_bp
     from .main.routes import main_bp
+    from .sales import sales_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(sales_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(tenancy_admin_bp)
     app.register_blueprint(backup_admin_bp)
 
     @app.before_request
-    def require_temporary_password_change():
+    def require_tenant_context_and_password_change():
         if current_user.is_authenticated and current_user.force_password_change:
-            allowed_endpoints = {"auth.change_password", "auth.logout", "static", "health.liveness", "health.readiness"}
+            allowed_endpoints = {"auth.change_password", "auth.logout", "auth.select_tenant", "static", "health.liveness", "health.readiness"}
             if request.endpoint not in allowed_endpoints:
                 return redirect(url_for("auth.change_password"))
+        if current_user.is_authenticated and not current_user.is_super_admin:
+            from .auth.tenant_context import current_membership
+
+            if current_membership(current_user) is None:
+                if request.endpoint in {"auth.select_tenant", "auth.logout", "auth.change_password", "static", "health.liveness", "health.readiness"}:
+                    return None
+                if session.get("pending_tenant_selection"):
+                    return redirect(url_for("auth.select_tenant"))
+                session.clear()
+                return redirect(url_for("auth.login"))
         return None
 
     @app.after_request
@@ -135,9 +164,9 @@ def register_cli_commands(app: Flask) -> None:
         normalized_username = normalize_username(username)
         if not is_valid_username(normalized_username):
             raise click.ClickException("Username must be 3–48 characters using letters, numbers, dots, underscores, or hyphens.")
-        if User.query.filter_by(role="admin", is_active=True).count():
+        if User.query.filter_by(role="super_admin", is_active=True).count():
             raise click.ClickException(
-                "An active administrator already exists; use Accounts or reset-imported-password for a migrated account."
+                "An active Main Admin already exists; use company administration or reset-imported-password for an approved account."
             )
         if User.query.filter_by(username=normalized_username).first():
             raise click.ClickException("That username already exists.")
@@ -146,7 +175,7 @@ def register_cli_commands(app: Flask) -> None:
         if len(password) < 12:
             raise click.ClickException("Password must be at least 12 characters.")
 
-        user = User(username=normalized_username, role="admin", permissions=[])
+        user = User(username=normalized_username, role="super_admin", company_id=None, permissions=[])
         user.set_password(password)
         db.session.add(user)
         try:
@@ -156,7 +185,7 @@ def register_cli_commands(app: Flask) -> None:
             app.logger.error("Could not create initial administrator: %s", type(error).__name__)
             raise click.ClickException("Administrator creation failed. Check database connectivity and migration status.") from None
 
-        click.echo(f"Administrator '{normalized_username}' created.")
+        click.echo(f"Main Admin '{normalized_username}' created.")
 
     @app.cli.command("backup-scheduler")
     @click.option("--once", "run_once", is_flag=True, help="Check for one due backup and exit.")
@@ -180,12 +209,16 @@ def register_cli_commands(app: Flask) -> None:
     @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
     @click.option("--password-policy", type=click.Choice(["reset", "hash"]), default="reset", show_default=True)
     @click.option("--confirm-legacy-passwords", is_flag=True, help="Required with --password-policy=hash on apply.")
+    @click.option("--company-id", help="Company to receive the legacy rows; required when multiple companies exist.")
+    @click.option("--store-id", help="Store to receive legacy store-scoped rows; required when multiple stores exist.")
     def import_sqlite(
         source_path: Path,
         apply_import: bool,
         confirm_apply: bool,
         password_policy: str,
         confirm_legacy_passwords: bool,
+        company_id: str | None,
+        store_id: str | None,
     ) -> None:
         """Validate or import the reviewed legacy SQLite database."""
         from .migrations.legacy_import import LegacyImportError, import_sqlite_database
@@ -201,6 +234,8 @@ def register_cli_commands(app: Flask) -> None:
                 source_path,
                 apply=apply_import,
                 password_policy=password_policy,
+                company_id=company_id,
+                store_id=store_id,
             )
         except LegacyImportError as error:
             raise click.ClickException(str(error)) from None

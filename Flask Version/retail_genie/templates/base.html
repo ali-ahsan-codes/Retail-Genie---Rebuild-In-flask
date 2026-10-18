@@ -16,11 +16,22 @@
     {% if current_user.is_authenticated %}
       <nav class="main-nav" aria-label="Main navigation">
         <a href="{{ url_for('main.dashboard') }}">Overview</a>
+        {% if current_user.company_id or current_user.is_super_admin %}<a href="{{ url_for('sales.point_of_sale') }}">Sales / POS</a>{% endif %}
+        {% if current_user.role == 'manager' or current_user.is_company_admin or current_user.is_super_admin %}
+          <a href="{{ url_for('sales.daily_cashup_page') }}">Daily cashup</a>
+          <a href="{{ url_for('sales.removal_approvals_page') }}">Removals</a>
+        {% endif %}
         {% if current_user.has_permission('manage_users') %}
           <a href="{{ url_for('admin.users') }}">Accounts</a>
         {% endif %}
-        {% if current_user.role == 'admin' %}
+        {% if current_user.is_super_admin %}
+          <a href="{{ url_for('tenancy_admin.companies') }}">Companies</a>
           <a href="{{ url_for('admin_backups.settings') }}">Database backups</a>
+        {% endif %}
+        {% if current_user.is_company_admin and current_user.company_id %}
+          <a href="{{ url_for('tenancy_admin.store_assignments', company_id=current_user.company_id) }}">Store access</a>
+          <a href="{{ url_for('tenancy_admin.stores', company_id=current_user.company_id) }}">Stores</a>
+          <a href="{{ url_for('tenancy_admin.billing_settings', company_id=current_user.company_id) }}">Billing setup</a>
         {% endif %}
       </nav>
       <div class="account-nav">
@@ -47,5 +58,6 @@
     {% block content %}{% endblock %}
   </main>
   <footer class="site-footer">Retail Genie · Flask + MySQL foundation</footer>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

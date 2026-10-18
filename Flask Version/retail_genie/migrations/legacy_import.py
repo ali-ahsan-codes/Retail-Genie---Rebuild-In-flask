@@ -18,13 +18,14 @@ from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from argon2 import PasswordHasher
 from sqlalchemy import Boolean, Date, DateTime, Integer, Numeric, String, Text, insert, select, update
 from sqlalchemy.types import JSON as JSONType
 
 from ..extensions import db
-from ..models import PERMISSIONS, ROLE_PERMISSION_LIMITS, ROLES, User, legacy_tables
+from ..models import Company, ContainerMembership, PERMISSIONS, ROLE_PERMISSION_LIMITS, ROLES, Store, User, UserStoreAssignment, legacy_tables
 from ..models.user import is_valid_username, normalize_username, utc_now
 
 IMPORT_ORDER = (
@@ -124,7 +125,7 @@ def _validate_source_schema(connection: sqlite3.Connection) -> dict[str, list[st
             expected = {"id", "username", "password", "role", "permissions", "activeBreakId", "auto_enter_after_scan"}
         else:
             expected = {_snake_case(name) for name in names}
-            target = set(legacy_tables[table_name].c.keys())
+            target = set(legacy_tables[table_name].c.keys()) - {"tenant_container_id", "company_id", "store_id"}
             if expected != target:
                 raise LegacyImportError(f"Reviewed column map mismatch for SQLite table '{table_name}'.")
             continue
@@ -253,7 +254,14 @@ def _convert_value(value: Any, column, *, table: str, row_id: str) -> Any:
     return value
 
 
-def _user_values(row: sqlite3.Row, *, password_policy: str, dry_run: bool, hasher: PasswordHasher) -> dict[str, Any]:
+def _user_values(
+    row: sqlite3.Row,
+    *,
+    password_policy: str,
+    dry_run: bool,
+    hasher: PasswordHasher,
+    company_id: str,
+) -> dict[str, Any]:
     row_id = str(row["id"])
     username = normalize_username(str(row["username"] or ""))
     if not is_valid_username(username):
@@ -262,6 +270,8 @@ def _user_values(row: sqlite3.Row, *, password_policy: str, dry_run: bool, hashe
     role = str(row["role"] or "")
     if role not in ROLES:
         raise LegacyImportError(f"Legacy user row {row_id} has an unsupported role.")
+    if role == "super_admin":
+        raise LegacyImportError("Provision the platform Main Admin separately; do not import it from a legacy company database.")
     permissions = _parse_json(row["permissions"], table="users", column="permissions", row_id=row_id)
     if permissions is None:
         permissions = []
@@ -282,6 +292,7 @@ def _user_values(row: sqlite3.Row, *, password_policy: str, dry_run: bool, hashe
     now = utc_now()
     return {
         "id": row_id,
+        "company_id": company_id,
         "username": username,
         "password_hash": password_hash,
         "role": role,
@@ -312,6 +323,7 @@ def _same_existing_row(table_name: str, existing, incoming: dict[str, Any]) -> b
     if table_name == "users":
         stable_fields = (
             "id",
+            "company_id",
             "username",
             "role",
             "permissions",
@@ -470,11 +482,53 @@ def _target_reconciliation(connection, rows_by_table: dict[str, list[dict[str, A
     return _financial_reconciliation(target_rows)
 
 
+def _resolve_import_scope(company_id: str | None, store_id: str | None, *, apply: bool) -> tuple[str, str, str]:
+    """Resolve one company/store explicitly; a dry-run can use non-persisted IDs."""
+    active_companies = Company.query.filter_by(is_active=True).order_by(Company.slug.asc()).all()
+    if company_id is None:
+        if len(active_companies) == 1:
+            company_id = active_companies[0].id
+        elif len(active_companies) > 1:
+            raise LegacyImportError("Choose a target company with --company-id; the database contains multiple active companies.")
+        elif apply:
+            raise LegacyImportError("Create an active company before applying an import.")
+        else:
+            company_id = "dry-run-company"
+
+    company = db.session.get(Company, company_id)
+    if apply and (company is None or not company.is_active):
+        raise LegacyImportError("The import target company does not exist or is inactive.")
+    tenant_container_id = company.tenant_container_id if company is not None else "dry-run-container"
+
+    if store_id is None:
+        active_stores = Store.query.filter_by(company_id=company_id, is_active=True).order_by(Store.code.asc()).all()
+        if len(active_stores) == 1:
+            store_id = active_stores[0].id
+        elif len(active_stores) > 1:
+            raise LegacyImportError("Choose a target store with --store-id; the target company has multiple active stores.")
+        elif apply:
+            raise LegacyImportError("Create an active store in the target company before applying an import.")
+        else:
+            store_id = "dry-run-store"
+
+    store = db.session.get(Store, store_id)
+    if apply and (
+        store is None
+        or not store.is_active
+        or store.company_id != company_id
+        or store.tenant_container_id != tenant_container_id
+    ):
+        raise LegacyImportError("The import target store does not exist, is inactive, or belongs to another company/container.")
+    return company_id, store_id, tenant_container_id
+
+
 def import_sqlite_database(
     source_path: str | Path,
     *,
     apply: bool = False,
     password_policy: str = "reset",
+    company_id: str | None = None,
+    store_id: str | None = None,
     allow_non_mysql_target: bool = False,
 ) -> ImportReport:
     """Preflight and optionally apply the reviewed 27-table SQLite import.
@@ -485,6 +539,7 @@ def import_sqlite_database(
     if password_policy not in {"reset", "hash"}:
         raise LegacyImportError("Password policy must be either 'reset' or 'hash'.")
 
+    company_id, store_id, tenant_container_id = _resolve_import_scope(company_id, store_id, apply=apply)
     source = _open_sqlite_snapshot(source_path)
     hasher = PasswordHasher()
     try:
@@ -519,6 +574,7 @@ def import_sqlite_database(
                         password_policy=password_policy,
                         dry_run=not apply,
                         hasher=hasher,
+                        company_id=company_id,
                     )
                     username = converted["username"]
                     if username in normalized_usernames:
@@ -528,6 +584,8 @@ def import_sqlite_database(
                     converted = {}
                     source_to_target = {_snake_case(name): name for name in source_columns[table_name]}
                     for target_name, column in target.c.items():
+                        if target_name in {"tenant_container_id", "company_id", "store_id"}:
+                            continue
                         source_name = source_to_target.get(target_name)
                         if source_name is None:
                             raise LegacyImportError(f"No reviewed source column mapping exists for {table_name}.{target_name}.")
@@ -538,6 +596,9 @@ def import_sqlite_database(
                             table=table_name,
                             row_id=row_id,
                         )
+                    converted["tenant_container_id"] = tenant_container_id
+                    converted["company_id"] = company_id
+                    converted["store_id"] = store_id
                     if converted.get("id") in (None, ""):
                         raise LegacyImportError(f"SQLite row in table '{table_name}' is missing its ID.")
                 converted_rows.append(converted)
@@ -587,6 +648,67 @@ def import_sqlite_database(
                     .where(legacy_tables["orders"].c.id == order_id)
                     .values(linked_demand_notice_id=demand_notice_id)
                 )
+
+            # Legacy accounts become explicit members of the selected container.
+            # Membership is inserted before store grants because the latter carry
+            # a composite foreign key to this table.
+            membership_table = ContainerMembership.__table__
+            assignment_table = UserStoreAssignment.__table__
+            for imported_user in rows_by_table["users"]:
+                if imported_user["role"] == "super_admin":
+                    continue
+                existing_membership = connection.execute(
+                    select(membership_table.c.id).where(
+                        membership_table.c.tenant_container_id == tenant_container_id,
+                        membership_table.c.user_id == imported_user["id"],
+                    )
+                ).scalar_one_or_none()
+                if existing_membership is None:
+                    now = utc_now()
+                    connection.execute(
+                        insert(membership_table).values(
+                            id=imported_user["id"],
+                            tenant_container_id=tenant_container_id,
+                            user_id=imported_user["id"],
+                            company_id=company_id,
+                            role=imported_user["role"],
+                            permissions=imported_user["permissions"],
+                            is_default=True,
+                            is_active=True,
+                            created_at=now,
+                            updated_at=now,
+                        )
+                    )
+
+            # Legacy accounts have no store assignments. Scope each imported user
+            # to the selected target store, but never grant shared-bill access by
+            # implication; the Main Admin must decide that separately.
+            for imported_user in rows_by_table["users"]:
+                if imported_user["role"] == "super_admin":
+                    continue
+                existing_assignment = connection.execute(
+                    select(assignment_table.c.id).where(
+                        assignment_table.c.tenant_container_id == tenant_container_id,
+                        assignment_table.c.user_id == imported_user["id"],
+                        assignment_table.c.store_id == store_id,
+                    )
+                ).scalar_one_or_none()
+                if existing_assignment is None:
+                    now = utc_now()
+                    connection.execute(
+                        insert(assignment_table).values(
+                            id=str(uuid4()),
+                            tenant_container_id=tenant_container_id,
+                            company_id=company_id,
+                            user_id=imported_user["id"],
+                            store_id=store_id,
+                            assigned_by_id=None,
+                            can_view_shared_bills=False,
+                            is_active=True,
+                            created_at=now,
+                            updated_at=now,
+                        )
+                    )
 
             _validate_target_payloads(connection, rows_by_table)
             _validate_target_foreign_keys(connection, rows_by_table)

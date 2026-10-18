@@ -2,7 +2,7 @@
 
 This is the reviewed mapping for the 27 tables in `Node Js Version/netpos.db`. The target metadata is implemented in `retail_genie/models/user.py` and `retail_genie/models/legacy_schema.py`; the importer and field conversions are in `retail_genie/migrations/legacy_import.py`. The checked-in SQLite database is sample data only.
 
-**Scope warning:** this is the current single-company Phase 2 landing schema. It does not yet contain company/store tenancy, manager-to-store assignments, cross-store open-bill permissions, or separate payment-class invoice series. The multi-company requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md); a reviewed schema migration is required before implementing those workflows or using the app for multiple companies.
+**Scope warning:** this mapping documents the original 27-table legacy payload; the target schema adds company, store, membership, and `tenant_container_id` ownership. Revision `ba2fd4c7e8a1` backfills each pre-existing company into its own logical container, and the importer resolves/validates a target company, store, and container before writing memberships and assignments. The checked-in SQLite database remains sample data only. Local SQLite migration/import tests and offline MySQL DDL generation are not a production import: review [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), reconcile on approved staging MySQL, and validate all foreign keys before any production migration.
 
 ## Mapping and type rules
 
