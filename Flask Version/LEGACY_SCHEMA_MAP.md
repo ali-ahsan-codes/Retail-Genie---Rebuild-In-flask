@@ -2,7 +2,7 @@
 
 This is the reviewed mapping for the 27 tables in `Node Js Version/netpos.db`. The target metadata is implemented in `retail_genie/models/user.py` and `retail_genie/models/legacy_schema.py`; the importer and field conversions are in `retail_genie/migrations/legacy_import.py`. The checked-in SQLite database is sample data only.
 
-**Scope warning:** this is the current single-company Phase 2 landing schema. It does not yet contain company/store tenancy, manager-to-store assignments, cross-store open-bill permissions, or separate payment-class invoice series. The multi-company requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md); a reviewed schema migration is required before implementing those workflows or using the app for multiple companies.
+**Scope warning:** this mapping documents the original 27-table legacy payload; the target schema adds company, store, membership, and `tenant_container_id` ownership. Revision `ba2fd4c7e8a1` backfills each pre-existing company into its own logical container, and the importer resolves/validates a target company, store, and container before writing memberships and assignments. The checked-in SQLite database remains sample data only. Local SQLite migration/import tests and offline MySQL DDL generation are not a production import: review [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), reconcile on approved staging MySQL, and validate all foreign keys before any production migration.
 
 ## Mapping and type rules
 
@@ -10,7 +10,7 @@ This is the reviewed mapping for the 27 tables in `Node Js Version/netpos.db`. T
 - Every target table uses InnoDB and `utf8mb4`. JSON payloads are native MySQL JSON; paths and ordinary text remain text. Long message text, embedded selfie data, and product image data use MySQL `LONGTEXT` variants.
 - Legacy monetary `REAL` columns become `DECIMAL(14,3)` for OMR. Percentage/rate columns use `DECIMAL(12,8)`. SQLite floating-point artifacts within a small rounding tolerance are normalized; values outside target precision/range fail preflight rather than being silently truncated.
 - Legacy ISO date/time values become UTC `DATETIME`. Date-only values are represented at midnight UTC. Time-of-day settings remain text. Booleans and integer counters are validated during import.
-- `users.password` is never copied into the new schema. By default, a random unknown password is Argon2-hashed and `force_password_change` is enabled. A separately confirmed policy may Argon2-hash vetted legacy passwords. Legacy paths are retained as metadata; this importer does not copy upload files.
+- `users.password` is never copied into the new schema. By default, a random unknown password is Argon2-hashed and `force_password_change` is enabled. A separately confirmed policy may Argon2-hash vetted legacy passwords. The SQLite importer preserves file-path metadata but does not copy uploads. Run the separate `migrate-media` command after importing; it copies verified local files into tenant/company-scoped private storage and transactionally rewrites matching path metadata.
 
 ## Table and column inventory
 
@@ -53,3 +53,7 @@ The MySQL schema keeps these source relationships: `attachments.message_id → m
 ## Import safety and reconciliation
 
 `flask --app wsgi import-sqlite --source PATH` is a read-only dry run. `--apply --confirm-apply` is required to write to MySQL/MariaDB. The importer checks the source schema and foreign keys, validates conversions, inserts in dependency order, preserves IDs, verifies every target payload and FK, and compares source/target row counts plus aggregate order totals, nested payment totals, stock units, and invoice-number counters. It never updates or deletes target rows; a conflicting ID aborts the transaction. The source file is opened with SQLite `mode=ro` and `immutable=1`, so use only a verified, closed/checkpointed SQLite backup.
+
+## Media migration
+
+After the importer has applied the same SQLite snapshot to its target company, run `flask --app wsgi migrate-media --source PATH --source-uploads UPLOADS_DIR` for a read-only check. The CLI validates all reviewed media path columns and every referenced local file. It also validates the legacy per-user `cloud_files_metadata.ndjson` manifests and all cloud paths, then copies the complete uploads tree so orphaned assets are retained and reported. Use `--company-id ID --apply --confirm-apply` only after resolving missing files and reviewing unreferenced uploads and orphaned cloud owners. Files are copied by content hash into `tenants/<container-hash>/companies/<company-hash>/...` under private `UPLOADS_DIR`; cloud manifest `public_url` fields are rewritten to the new scoped paths, and database path updates are scoped to the selected company and committed together. Re-running is safe. Traversal, symlink, checksum, target-row, and destination-content conflicts fail without overwriting existing business data. Remote URLs and embedded image data are not local filesystem references and are preserved unchanged. This tool does not expose a file-serving endpoint; downloads must independently apply tenant/company policy and authorization.

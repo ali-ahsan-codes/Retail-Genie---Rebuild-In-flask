@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Demand Notices · Retail Genie{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Phase 3 · Customer demand</p>
+    <h1>Demand notices</h1>
+    <p class="muted">Record customer requests for products, track expected availability, and convert an open catalog-linked notice into a stock-backed open bill.</p>
+  </div>
+</section>
+
+<input type="hidden" data-commercial-csrf value="{{ csrf_token() }}">
+{% if current_user.is_super_admin and not company %}
+  <section class="panel">
+    <form method="get" action="{{ url_for('commercial.demand_notices_page') }}" class="catalog-filter-form">
+      <label for="company-choice">Company</label>
+      <select id="company-choice" name="company_id" required>
+        <option value="">Select a company</option>
+        {% for item in companies %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+      </select>
+      <button class="button button-primary" type="submit">Continue</button>
+    </form>
+  </section>
+{% elif not stores %}
+  <section class="panel empty-state"><h2>No store access</h2><p>Ask a Company Admin or Main Admin to grant store access before managing notices.</p></section>
+{% else %}
+  <section class="panel catalog-toolbar">
+    <form method="get" action="{{ url_for('commercial.demand_notices_page') }}" class="catalog-filter-form">
+      {% if current_user.is_super_admin %}<input type="hidden" name="company_id" value="{{ company.id }}">{% endif %}
+      <label for="notice-store">Store</label>
+      <select id="notice-store" name="store_id" required>
+        <option value="">Select a store</option>
+        {% for store in stores %}<option value="{{ store.id }}" {% if store.id == selected_store_id %}selected{% endif %}>{{ store.name }} · {{ store.code }}</option>{% endfor %}
+      </select>
+      <button class="button button-primary" type="submit">View notices</button>
+    </form>
+  </section>
+
+  {% if selected_store_id %}
+    {% if current_user.has_permission('sales.add') or current_user.has_permission('manage_demand_notices') %}
+      <section class="panel catalog-create-panel">
+        <div class="section-heading"><div><h2>Record a customer request</h2><p class="muted">Catalog links are optional; unlinked requests need a product name before later conversion.</p></div></div>
+        <form method="post" action="{{ url_for('commercial.create_demand_notice_page') }}" class="catalog-create-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="company_id" value="{{ company.id }}">
+          <input type="hidden" name="store_id" value="{{ selected_store_id }}">
+          <div class="form-grid">
+            <div class="form-field"><label for="notice-phone">Customer phone</label><input id="notice-phone" name="customer_phone" maxlength="64" required></div>
+            <div class="form-field"><label for="notice-customer">Customer name</label><input id="notice-customer" name="customer_name" maxlength="160"></div>
+            <div class="form-field"><label for="notice-product">Catalog product (optional)</label><select id="notice-product" name="product_id"><option value="">Unlisted / new product</option>{% for product in products %}<option value="{{ product.id }}">{{ product.name }}{% if product.sku %} · {{ product.sku }}{% endif %}</option>{% endfor %}</select></div>
+            <div class="form-field"><label for="notice-product-name">Requested product name</label><input id="notice-product-name" name="product_name" maxlength="255" placeholder="Required for an unlisted product"></div>
+            <div class="form-field"><label for="notice-sku">SKU / details</label><input id="notice-sku" name="product_sku" maxlength="128"></div>
+            <div class="form-field"><label for="notice-qty">Quantity requested</label><input id="notice-qty" name="quantity_requested" type="number" min="1" step="1" required></div>
+            <div class="form-field"><label for="notice-price">Agreed unit price (OMR, optional)</label><input id="notice-price" name="agreed_price" type="number" min="0.001" step="0.001"></div>
+            <div class="form-field"><label for="notice-date">Expected availability</label><input id="notice-date" name="expected_availability_date" type="date"></div>
+            <div class="form-field"><label for="notice-notes">Notes</label><input id="notice-notes" name="notes" maxlength="2000"></div>
+          </div>
+          <button class="button button-primary" type="submit">Save demand notice</button>
+        </form>
+      </section>
+    {% endif %}
+
+    <section class="panel catalog-list-panel">
+      <div class="section-heading"><div><h2>{{ records|length }} notice{% if records|length != 1 %}s{% endif %}</h2><p class="muted">{{ company.name }} · {{ selected_store_id }}</p></div></div>
+      {% if records %}
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr><th>Reference</th><th>Customer</th><th>Requested product</th><th>Qty</th><th>Agreed price</th><th>Expected</th><th>Status / actions</th></tr></thead>
+          <tbody>
+          {% for item in records %}
+            <tr>
+              <td><strong>{{ item.notice_number }}</strong><small class="table-subtext">{{ item.created_at[:10] if item.created_at else '' }}</small></td>
+              <td>{{ item.customer_name or '—' }}<small class="table-subtext">{{ item.customer_phone }}</small></td>
+              <td>{{ item.product_name }}<small class="table-subtext">{{ item.product_sku or 'No SKU' }}{% if item.is_new_product %} · new product{% endif %}</small></td>
+              <td>{{ item.quantity_requested }}</td>
+              <td>{{ item.agreed_price or 'Not set' }}</td>
+              <td>{{ item.expected_availability_date or '—' }}</td>
+              <td><span class="status-pill">{{ item.status|replace('_', ' ')|title }}</span>
+                {% if item.status == 'open' and item.product_id and current_user.has_permission('sales.add') %}
+                  <button class="button button-secondary commercial-action" type="button" data-endpoint="{{ url_for('commercial.api_convert_demand_notice', notice_id=item.id) }}" data-kind="convert-notice" data-company-id="{{ company.id }}">Convert to bill</button>
+                {% endif %}
+                {% if item.status == 'open' and current_user.has_permission('sales.edit') %}
+                  <button class="button button-quiet commercial-action" type="button" data-endpoint="{{ url_for('commercial.api_cancel_demand_notice', notice_id=item.id) }}" data-kind="cancel-notice" data-company-id="{{ company.id }}">Cancel</button>
+                {% endif %}
+                <span class="commercial-action-result" aria-live="polite"></span>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+      {% else %}<p class="empty-state">No demand notices match this store.</p>{% endif %}
+    </section>
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const token = document.querySelector('[data-commercial-csrf]')?.value || '';
+  document.querySelectorAll('.commercial-action').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const data = {company_id: button.dataset.companyId};
+      if (button.dataset.kind === 'cancel-notice') {
+        data.reason = window.prompt('Why is this demand notice being cancelled?') || '';
+        if (!data.reason.trim()) return;
+      }
+      const row = button.closest('tr');
+      const result = row?.querySelector('.commercial-action-result');
+      button.disabled = true;
+      try {
+        const response = await fetch(button.dataset.endpoint, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': token},
+          body: JSON.stringify(data),
+          credentials: 'same-origin'
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'The action could not be completed.');
+        if (result) result.textContent = button.dataset.kind === 'convert-notice' ? ` Open bill ${payload.order.order_number} created.` : ' Cancelled.';
+        window.setTimeout(() => window.location.reload(), 800);
+      } catch (error) {
+        if (result) result.textContent = ` ${error.message}`;
+        button.disabled = false;
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

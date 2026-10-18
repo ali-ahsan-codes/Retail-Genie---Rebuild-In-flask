@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -224,6 +225,16 @@ def create_mysql_backup() -> BackupArtifact:
             if detail:
                 message = f"{message} {detail}"
             raise BackupError(message)
+
+        try:
+            uncompressed_size = 0
+            with gzip.open(temporary_path, "rb") as compressed_backup:
+                for chunk in iter(lambda: compressed_backup.read(1024 * 1024), b""):
+                    uncompressed_size += len(chunk)
+        except (gzip.BadGzipFile, EOFError, OSError, zlib.error) as exc:
+            raise BackupError("mysqldump did not produce a complete, valid gzip database dump.") from exc
+        if uncompressed_size == 0:
+            raise BackupError("mysqldump produced an empty database dump.")
 
         if os.name != "nt":
             os.chmod(temporary_path, 0o600)

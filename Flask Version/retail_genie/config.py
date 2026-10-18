@@ -37,6 +37,8 @@ class Config:
     # never exposed by a download route. Override on shared/production hosts if
     # the app directory itself is not a suitable persistent storage location.
     BACKUP_DIR = os.getenv("BACKUP_DIR") or str(Path(__file__).resolve().parents[1] / "backup")
+    # Uploads are private persistent files, never Flask static assets.
+    UPLOADS_DIR = os.getenv("UPLOADS_DIR") or str(Path(__file__).resolve().parents[1] / "uploads")
     BACKUP_DATABASE_URL = os.getenv("BACKUP_DATABASE_URL") or None
     MYSQLDUMP_PATH = os.getenv("MYSQLDUMP_PATH", "mysqldump")
     BACKUP_TIMEOUT_SECONDS = int(os.getenv("BACKUP_TIMEOUT_SECONDS", "7200"))

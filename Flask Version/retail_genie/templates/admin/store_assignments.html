@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Store access · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">{{ company.name }} · ACCESS CONTROL</p><h1>Store access</h1><p class="muted">Administrators explicitly decide which shop data each manager or staff member can access.</p></div>
+  {% if is_super_admin %}<span class="pill pill-success">Main Admin control</span>{% endif %}
+</section>
+
+{% if is_super_admin and companies|length > 1 %}
+  <form method="get" class="card company-picker">
+    <label class="field"><span>Company</span><select class="control" name="company_id" onchange="this.form.submit()">{% for item in companies %}<option value="{{ item.id }}" {% if item.id == company.id %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+  </form>
+{% endif %}
+
+<div class="admin-grid">
+  <section class="card create-account-card">
+    <div class="card-heading"><p class="eyebrow">ASSIGN A SHOP</p><h2>Grant store access</h2><p class="muted">Only the Main Admin can grant the additional shared-bill lookup permission.</p></div>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {% if is_super_admin %}<div class="field">{{ form.company_id.label }}{{ form.company_id(class="control") }}{% for error in form.company_id.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% else %}<input type="hidden" name="company_id" value="{{ company.id }}">{% endif %}
+      {% for field in [form.user_id, form.store_id] %}<div class="field">{{ field.label }}{{ field(class="control") }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}
+      {% if is_super_admin %}<label class="checkline assignment-check">{{ form.can_view_shared_bills() }}<span>{{ form.can_view_shared_bills.label.text }}</span></label>{% else %}<p class="field-help">Cross-store open-bill access can only be set by the Main Admin.</p>{% endif %}
+      {% for error in form.can_view_shared_bills.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      <button class="button button-primary button-full" type="submit">Save assignment</button>
+    </form>
+  </section>
+
+  <section class="card accounts-card">
+    <div class="card-heading"><p class="eyebrow">CURRENT ASSIGNMENTS</p><h2>{{ assignments|length }} assignment{% if assignments|length != 1 %}s{% endif %}</h2></div>
+    {% if assignments %}
+      <div class="table-wrap"><table><thead><tr><th>User</th><th>Store</th><th>Access</th><th>Action</th></tr></thead><tbody>
+        {% for row in assignments %}
+          <tr>
+            <td><strong>{{ row.user.username }}</strong><small class="table-subtext">{{ row.user.role|replace('_', ' ')|title }}</small></td>
+            <td>{{ row.store.code }} — {{ row.store.name }}</td>
+            <td>{% if row.assignment.is_active %}{{ 'Open-bill lookup enabled' if row.assignment.can_view_shared_bills else 'Assigned-store only' }}{% else %}Revoked{% endif %}</td>
+            <td>{% if row.assignment.is_active %}<form method="post" action="{{ url_for('tenancy_admin.revoke_store_assignment', assignment_id=row.assignment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-danger" type="submit">Revoke</button></form>{% else %}<span class="muted small-copy">Inactive</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody></table></div>
+    {% else %}<p class="empty-state">No store assignments yet. Unassigned managers and staff receive no store data access.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}
