@@ -44,9 +44,24 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User | None:
+        from .auth.tenant_context import available_memberships, current_membership
+
         user = db.session.get(User, user_id)
-        if user is None:
+        if user is None or not user.is_active:
             return None
+        if user.is_super_admin:
+            if user.company_id is not None:
+                return None
+        else:
+            selected_container_id = session.get("active_container_id")
+            if selected_container_id:
+                if current_membership(user, tenant_container_id=selected_container_id) is None:
+                    return None
+            elif session.get("pending_tenant_selection"):
+                if not available_memberships(user.id):
+                    return None
+            else:
+                return None
         authenticated_version = session.get("auth_version")
         if authenticated_version is None or str(authenticated_version) != str(user.auth_version):
             return None
@@ -61,23 +76,45 @@ def create_app(test_config: dict | None = None) -> Flask:
         return redirect(url_for("auth.login"))
 
     from .admin.backup_routes import backup_admin_bp
+    from .catalog import catalog_bp
     from .admin.routes import admin_bp
+    from .admin.tenancy_routes import tenancy_admin_bp
     from .auth.routes import auth_bp
+    from .commercial import commercial_bp
     from .health.routes import health_bp
     from .main.routes import main_bp
+    from .realtime import realtime_bp
+    from .realtime.service import initialize_realtime_registry
+    from .sales import sales_bp
 
+    initialize_realtime_registry(app)
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(sales_bp)
+    app.register_blueprint(commercial_bp)
+    app.register_blueprint(realtime_bp)
+    app.register_blueprint(catalog_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(tenancy_admin_bp)
     app.register_blueprint(backup_admin_bp)
 
     @app.before_request
-    def require_temporary_password_change():
+    def require_tenant_context_and_password_change():
         if current_user.is_authenticated and current_user.force_password_change:
-            allowed_endpoints = {"auth.change_password", "auth.logout", "static", "health.liveness", "health.readiness"}
+            allowed_endpoints = {"auth.change_password", "auth.logout", "auth.select_tenant", "static", "health.liveness", "health.readiness"}
             if request.endpoint not in allowed_endpoints:
                 return redirect(url_for("auth.change_password"))
+        if current_user.is_authenticated and not current_user.is_super_admin:
+            from .auth.tenant_context import current_membership
+
+            if current_membership(current_user) is None:
+                if request.endpoint in {"auth.select_tenant", "auth.logout", "auth.change_password", "static", "health.liveness", "health.readiness"}:
+                    return None
+                if session.get("pending_tenant_selection"):
+                    return redirect(url_for("auth.select_tenant"))
+                session.clear()
+                return redirect(url_for("auth.login"))
         return None
 
     @app.after_request
@@ -87,7 +124,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "geolocation=()")
         if request.endpoint != "static":
-            response.headers["Cache-Control"] = "no-store"
+            response.headers.setdefault("Cache-Control", "no-store")
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; "
@@ -135,9 +172,9 @@ def register_cli_commands(app: Flask) -> None:
         normalized_username = normalize_username(username)
         if not is_valid_username(normalized_username):
             raise click.ClickException("Username must be 3–48 characters using letters, numbers, dots, underscores, or hyphens.")
-        if User.query.filter_by(role="admin", is_active=True).count():
+        if User.query.filter_by(role="super_admin", is_active=True).count():
             raise click.ClickException(
-                "An active administrator already exists; use Accounts or reset-imported-password for a migrated account."
+                "An active Main Admin already exists; use company administration or reset-imported-password for an approved account."
             )
         if User.query.filter_by(username=normalized_username).first():
             raise click.ClickException("That username already exists.")
@@ -146,7 +183,7 @@ def register_cli_commands(app: Flask) -> None:
         if len(password) < 12:
             raise click.ClickException("Password must be at least 12 characters.")
 
-        user = User(username=normalized_username, role="admin", permissions=[])
+        user = User(username=normalized_username, role="super_admin", company_id=None, permissions=[])
         user.set_password(password)
         db.session.add(user)
         try:
@@ -156,7 +193,7 @@ def register_cli_commands(app: Flask) -> None:
             app.logger.error("Could not create initial administrator: %s", type(error).__name__)
             raise click.ClickException("Administrator creation failed. Check database connectivity and migration status.") from None
 
-        click.echo(f"Administrator '{normalized_username}' created.")
+        click.echo(f"Main Admin '{normalized_username}' created.")
 
     @app.cli.command("backup-scheduler")
     @click.option("--once", "run_once", is_flag=True, help="Check for one due backup and exit.")
@@ -180,12 +217,16 @@ def register_cli_commands(app: Flask) -> None:
     @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
     @click.option("--password-policy", type=click.Choice(["reset", "hash"]), default="reset", show_default=True)
     @click.option("--confirm-legacy-passwords", is_flag=True, help="Required with --password-policy=hash on apply.")
+    @click.option("--company-id", help="Company to receive the legacy rows; required when multiple companies exist.")
+    @click.option("--store-id", help="Store to receive legacy store-scoped rows; required when multiple stores exist.")
     def import_sqlite(
         source_path: Path,
         apply_import: bool,
         confirm_apply: bool,
         password_policy: str,
         confirm_legacy_passwords: bool,
+        company_id: str | None,
+        store_id: str | None,
     ) -> None:
         """Validate or import the reviewed legacy SQLite database."""
         from .migrations.legacy_import import LegacyImportError, import_sqlite_database
@@ -201,6 +242,8 @@ def register_cli_commands(app: Flask) -> None:
                 source_path,
                 apply=apply_import,
                 password_policy=password_policy,
+                company_id=company_id,
+                store_id=store_id,
             )
         except LegacyImportError as error:
             raise click.ClickException(str(error)) from None
@@ -238,6 +281,66 @@ def register_cli_commands(app: Flask) -> None:
             f"stock_units={stock.get('quantity_total', 0)}; "
             f"invoice_counter_rows={counters.get('rows', 0)}."
         )
+
+    @app.cli.command("migrate-media")
+    @click.option("--source", "source_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+    @click.option("--source-uploads", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
+    @click.option("--company-id", help="Imported target company that owns these legacy uploads.")
+    @click.option("--destination", type=click.Path(file_okay=False, path_type=Path), help="Override UPLOADS_DIR for this run.")
+    @click.option("--apply", "apply_migration", is_flag=True, help="Copy files and update matching MySQL path metadata.")
+    @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
+    def migrate_media(
+        source_path: Path,
+        source_uploads: Path,
+        company_id: str | None,
+        destination: Path | None,
+        apply_migration: bool,
+        confirm_apply: bool,
+    ) -> None:
+        """Preflight or migrate legacy uploads after the SQLite import."""
+        from .migrations.media import MediaMigrationError, migrate_legacy_media
+
+        if apply_migration and not confirm_apply:
+            raise click.ClickException("Review the media dry run first, then pass --apply --confirm-apply.")
+        if apply_migration and not company_id:
+            raise click.ClickException("Applying media migration requires --company-id.")
+        try:
+            report = migrate_legacy_media(
+                source_path,
+                source_uploads,
+                apply=apply_migration,
+                company_id=company_id,
+                destination_root=destination,
+            )
+        except MediaMigrationError as error:
+            raise click.ClickException(str(error)) from None
+        except Exception as error:
+            app.logger.error("Legacy media migration failed (%s)", type(error).__name__)
+            raise click.ClickException("Legacy media migration failed; check server logs.") from None
+
+        mode = "APPLIED" if apply_migration else "DRY RUN — no files or database paths changed"
+        click.echo(f"Media migration: {mode}")
+        click.echo(
+            f"References={report.source_references}; local={report.local_references}; "
+            f"unique_files={report.unique_local_files}; cloud_refs={report.cloud_file_references}; "
+            f"cloud_manifests={report.cloud_metadata_files}; orphan_cloud_users={len(report.orphaned_cloud_users)}; "
+            f"uploads_tree_files={report.source_upload_files}; unreferenced={report.unreferenced_files}; "
+            f"external={report.external_references}; "
+            f"embedded={report.embedded_references}; missing_source_files={len(report.missing_source_files)}."
+        )
+        if apply_migration:
+            click.echo(
+                f"Copied={report.copied_files}; already_present={report.already_present_files}; "
+                f"path_updates={report.rewritten_target_references}; "
+                f"already_updated={report.already_rewritten_references}; "
+                f"verified_database_paths={report.database_paths_verified}; "
+                f"verified_cloud_paths={report.cloud_paths_verified}."
+            )
+        if report.missing_source_files:
+            examples = ", ".join(report.missing_source_files[:5])
+            raise click.ClickException(
+                f"The source uploads directory is missing referenced files: {examples}"
+            )
 
     @app.cli.command("reset-imported-password")
     @click.option("--username", required=True, help="Imported account to reset.")

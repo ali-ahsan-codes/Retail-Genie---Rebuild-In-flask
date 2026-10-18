@@ -19,6 +19,13 @@
     </div>
     <form method="post" novalidate>
       {{ form.hidden_tag() }}
+      {% if current_user.is_super_admin %}
+        <div class="field">
+          {{ form.company_id.label }}
+          {{ form.company_id(class="control") }}
+          {% for error in form.company_id.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endif %}
       <div class="field">
         {{ form.username.label }}
         {{ form.username(class="control", autocomplete="off", autocapitalize="none", spellcheck="false") }}
@@ -62,11 +69,12 @@
     {% if users %}
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Account action</th></tr></thead>
+          <thead><tr><th>Username</th>{% if current_user.is_super_admin %}<th>Company</th>{% endif %}<th>Role</th><th>Status</th><th>Account action</th></tr></thead>
           <tbody>
             {% for user in users %}
               <tr>
                 <td><strong>{{ user.username }}</strong></td>
+                {% if current_user.is_super_admin %}<td>{{ company_names.get(user.company_id, 'Platform / unassigned') }}</td>{% endif %}
                 <td>{{ role_labels.get(user.role, user.role|title) }}</td>
                 <td><span class="pill {{ 'pill-success' if user.is_active else 'pill-muted' }}">{{ 'Active' if user.is_active else 'Inactive' }}</span></td>
                 <td>

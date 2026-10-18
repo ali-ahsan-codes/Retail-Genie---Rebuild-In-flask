@@ -140,6 +140,49 @@ def test_backup_service_writes_private_atomic_gzip_and_keeps_secret_out_of_argv(
     assert list(backup_dir.glob("*.partial")) == []
 
 
+def test_backup_service_rejects_empty_dump_output(app, tmp_path, monkeypatch):
+    backup_dir = tmp_path / "private-backups"
+    monkeypatch.setitem(app.config, "BACKUP_DIR", str(backup_dir))
+    monkeypatch.setitem(app.config, "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://backup:secret@db.example/retail_genie")
+    monkeypatch.setitem(app.config, "BACKUP_DATABASE_URL", None)
+
+    def successful_empty_dump(command, *, stdout, stderr, timeout, check, shell):
+        return subprocess.CompletedProcess(command, 0, stdout=None, stderr=b"")
+
+    monkeypatch.setattr(service, "_mysqldump_executable", lambda: "/usr/bin/mysqldump")
+    monkeypatch.setattr(service.subprocess, "run", successful_empty_dump)
+
+    with app.app_context(), pytest.raises(service.BackupError, match="empty database dump"):
+        service.create_mysql_backup()
+
+    assert list(backup_dir.glob("*.sql.gz")) == []
+    assert list(backup_dir.glob(".*.partial")) == []
+
+
+def test_backup_service_rejects_corrupt_gzip_output(app, tmp_path, monkeypatch):
+    backup_dir = tmp_path / "private-backups"
+    monkeypatch.setitem(app.config, "BACKUP_DIR", str(backup_dir))
+    monkeypatch.setitem(app.config, "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://backup:secret@db.example/retail_genie")
+    monkeypatch.setitem(app.config, "BACKUP_DATABASE_URL", None)
+
+    def successful_dump(command, *, stdout, stderr, timeout, check, shell):
+        stdout.write(b"-- a non-empty SQL dump")
+        return subprocess.CompletedProcess(command, 0, stdout=None, stderr=b"")
+
+    def corrupt_gzip_reader(*args, **kwargs):
+        raise gzip.BadGzipFile("invalid gzip stream")
+
+    monkeypatch.setattr(service, "_mysqldump_executable", lambda: "/usr/bin/mysqldump")
+    monkeypatch.setattr(service.subprocess, "run", successful_dump)
+    monkeypatch.setattr(service.gzip, "open", corrupt_gzip_reader)
+
+    with app.app_context(), pytest.raises(service.BackupError, match="valid gzip database dump"):
+        service.create_mysql_backup()
+
+    assert list(backup_dir.glob("*.sql.gz")) == []
+    assert list(backup_dir.glob(".*.partial")) == []
+
+
 def test_backup_service_rejects_public_static_directory(app, tmp_path, monkeypatch):
     monkeypatch.setitem(app.config, "BACKUP_DIR", str(Path(app.static_folder) / "unpublished-backups"))
     monkeypatch.setitem(app.config, "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://backup:secret@db.example/retail_genie")

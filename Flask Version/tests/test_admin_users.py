@@ -14,9 +14,10 @@ def test_first_admin_is_created_interactively_without_a_default_password(app):
     )
 
     assert result.exit_code == 0
-    assert "Administrator 'first.admin' created." in result.output
+    assert "Main Admin 'first.admin' created." in result.output
     with app.app_context():
-        account = User.query.filter_by(username="first.admin", role="admin").one()
+        account = User.query.filter_by(username="first.admin", role="super_admin").one()
+        assert account.company_id is None
         assert account.check_password("A-valid-and-long-password-2!") is True
         assert account.force_password_change is False
 

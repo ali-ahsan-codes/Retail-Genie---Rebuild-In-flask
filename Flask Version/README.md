@@ -1,8 +1,10 @@
 # Retail Genie — Flask Version
 
-This directory is the **Node-free Flask rebuild**. Phase 1 supplies the Flask app factory, secure account authentication, server-side permissions, health endpoints, and tests. Phase 2 adds administrator-configurable MySQL backups, a separate scheduler worker, a typed landing schema for the 27-table SQLite source, and a read-only dry-run / insert-only importer. Multi-company/multi-store requirements are documented in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md) but are **not implemented**; the current schema and app remain single-tenant. The business modules, upload migration, live MySQL validation, and real-time business events are still outstanding. `Node Js Version/` remains the unchanged behavior reference.
+This directory is the **Node-free Flask rebuild**. Phase 0 and the local Phase 1 foundation are complete; Phase 2 has passed SQLite-backed local verification, and **Phase 3 is active but incomplete**. Per the user's updated direction, isolated SQLite tests/checks may be used without waiting for attached MySQL; the app's intended runtime/configuration remains MySQL. The user will verify MySQL locally later. Live MySQL/staging reconciliation, real backup/restore, approved real-media migration, and the two-browser office-network test remain pending and are not implied by local test success. Phase 4 remains paused until Phase 3 acceptance. See [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference.
 
 The application does not use Node.js, npm, React, or a frontend build step. Flask serves the HTML templates and static CSS. The browser never connects directly to MySQL.
+
+**Database policy:** MySQL 8/InnoDB remains the intended application database. Keep `DATABASE_URL` pointed to MySQL for actual app runs. SQLite is used only as an isolated test/migration-verification database; it is not a fallback production runtime or a substitute for the user's pending MySQL checks.
 
 ## Requirements
 
@@ -48,7 +50,7 @@ Open `http://127.0.0.1:5000/`. Health endpoints are available at `/healthz` and 
 
 ## Automatic database backups
 
-Administrators can open **Database backups** at `/admin/backups/` and set an interval (15 minutes to 7 days), retention count (1–365 files), enable/disable the schedule, and queue a one-time run. The defaults are disabled, daily, and 14 files. The app writes private, gzip-compressed `.sql.gz` dumps to `Flask Version/backup/` by default (override with `BACKUP_DIR`). A SHA-256 checksum, file size, run status, and sanitized error are recorded in MySQL. Older successful files are removed according to the configured retention count; audit rows remain. The app does not provide a public backup download URL.
+Administrators can open **Database backups** at `/admin/backups/` and set an interval (15 minutes to 7 days), retention count (1–365 files), enable/disable the schedule, and queue a one-time run. The defaults are disabled, daily, and 14 files. The app writes private, gzip-compressed `.sql.gz` dumps to `Flask Version/backup/` by default (override with `BACKUP_DIR`). A SHA-256 checksum, file size, run status, and sanitized error are recorded in MySQL. Before publishing a dump, the worker fully reads the gzip stream to validate its checksum and rejects empty or corrupt output. Older successful files are removed according to the configured retention count; audit rows remain. The app does not provide a public backup download URL.
 
 Run **one separate scheduler/worker process** on the Flask/MySQL host; do not start a scheduler in each WSGI web worker:
 
@@ -64,6 +66,12 @@ The worker uses a MySQL advisory lock to refuse a second scheduler for the same 
 
 The backup directory is intentionally outside Flask's static directory, is ignored by Git, and is created with owner-only permissions on POSIX hosts. Keep it on persistent storage and arrange a separate encrypted/off-host copy for disaster recovery; a backup on the same server is not protection against disk loss. Test restores before production use.
 
+## Current Phase 3 catalog and sales slice (unfinished)
+
+`/catalog/products` provides tenant/policy-scoped product and inventory search, including SKU, category, and barcode lookup (USB barcode scanners can enter a code in the search field). Authorized users can import/export CSV: imports are limited to 2 MB/1000 rows, match updates by SKU only within the selected company, roll back as one transaction on any invalid row, and apply stock quantities only with the required inventory permissions. Exports omit stock and threshold values when the account cannot view inventory. Store transfers are limited to accessible stores within one legal company and update both balances with paired ledger entries, audit history, and per-store events in one transaction.
+
+The sales slice also has a manager/admin-only settled-order return/refund screen and API. Each return requires an idempotency key, is limited to unreturned line quantities and the amount paid, restores catalog stock with audit/realtime history, and reduces the applicable tender's daily cashup total. Initial demand-notice and quotation workflows include company-scoped numbering, audit/status controls, and conversion of eligible catalog-linked documents into stock-backed open bills while preserving quote prices. Deposits, partial fulfillment, quote printing/email, exchanges/store credit, tax/discount handling and return-slip printing remain open. This is still not Phase 3 acceptance: purchasing/receiving, attendance/audits, messaging/files/reports, category management, barcode/label printing, the LCD display, and other legacy workflows remain. Phase 4 remains paused until Phase 3 is explicitly completed and accepted.
+
 ## Phase 2 SQLite-to-MySQL import
 
 The checked-in `Node Js Version/netpos.db` is confirmed **demo/sample data**, not the production dataset. The command below is a read-only dry run and is safe to use against that sample:
@@ -72,14 +80,30 @@ The checked-in `Node Js Version/netpos.db` is confirmed **demo/sample data**, no
 flask --app wsgi import-sqlite --source "..\Node Js Version\netpos.db"
 ```
 
-The importer requires the reviewed 27-table schema documented in `LEGACY_SCHEMA_MAP.md`, validates JSON, numeric precision, timestamps, usernames, permissions, and SQLite foreign keys, and reports table counts plus OMR order/payment, stock, and invoice-counter reconciliation totals. On apply, it verifies target row counts and foreign keys and aborts the transaction if those totals do not match. It opens the source read-only and immutable; it never writes to the SQLite file. For any real migration, first make a verified, consistent SQLite backup. Close/checkpoint the source so committed WAL contents are included; do not point the importer at a live database or at a main `.db` file whose `-wal` contains uncheckpointed changes. Rehearse against a staging MySQL database, back up the destination, inspect the dry-run, then apply only with an explicit confirmation:
+The importer requires the reviewed 27-table schema documented in `LEGACY_SCHEMA_MAP.md`, validates JSON, numeric precision, timestamps, usernames, permissions, and SQLite foreign keys, and reports table counts plus OMR order/payment, stock, and invoice-counter reconciliation totals. On apply, it verifies target row counts and foreign keys and aborts the transaction if those totals do not match. Legacy product rows are additionally seeded into the normalized catalog with a store-level opening balance and opening movement; repeated imports never overwrite live catalog edits or stock changes. The original landing rows remain available for reconciliation. It opens the source read-only and immutable; it never writes to the SQLite file. For any real migration, first make a verified, consistent SQLite backup. Close/checkpoint the source so committed WAL contents are included; do not point the importer at a live database or at a main `.db` file whose `-wal` contains uncheckpointed changes. Rehearse against a staging MySQL database, back up the destination, inspect the dry-run, then apply only with an explicit confirmation:
 
 ```powershell
 flask --app wsgi import-sqlite --source "D:\approved\retail-genie.sqlite"
 flask --app wsgi import-sqlite --source "D:\approved\retail-genie.sqlite" --apply --confirm-apply
 ```
 
-Applying is restricted to MySQL/MariaDB by the CLI. The importer is insert-only and transactional: identical existing IDs are skipped, a conflicting row aborts and rolls back the complete import, and it never overwrites target rows. Legacy JSON fields are mapped to JSON columns; money columns use `DECIMAL` with three fractional digits for OMR, percentage fields retain higher precision, and legacy datetimes are normalized to UTC. It preserves stable IDs and foreign-key relationships, including the cyclic order/demand-notice link. File-path values are retained, but uploaded files are **not** copied by this importer and must be reconciled/migrated separately.
+Applying is restricted to MySQL/MariaDB by the CLI. The importer is insert-only and transactional: identical existing IDs are skipped, a conflicting row aborts and rolls back the complete import, and it never overwrites target rows. Legacy JSON fields are mapped to JSON columns; money columns use `DECIMAL` with three fractional digits for OMR, percentage fields retain higher precision, and legacy datetimes are normalized to UTC. It preserves stable IDs and foreign-key relationships, including the cyclic order/demand-notice link. The importer retains file-path metadata but does not copy uploaded files; migrate and verify those separately as described below.
+
+### Legacy media migration
+
+After the database import, run a read-only preflight against the same closed/checkpointed SQLite snapshot and its matching legacy `uploads/` directory:
+
+```powershell
+flask --app wsgi migrate-media --source "D:\approved\retail-genie.sqlite" --source-uploads "D:\approved\uploads"
+```
+
+Review the counts and resolve any missing files before applying. Applying requires the imported target company and an explicit confirmation:
+
+```powershell
+flask --app wsgi migrate-media --source "D:\approved\retail-genie.sqlite" --source-uploads "D:\approved\uploads" --company-id "approved-company-id" --apply --confirm-apply
+```
+
+The utility rejects unsafe paths and symbolic links, checks source-file hashes, refuses to overwrite different destination content, copies the complete uploads tree (including orphaned files) into private `UPLOADS_DIR` storage under a deterministic tenant/company namespace, updates only matching imported rows in a database transaction, and verifies each local database path resolves to a file. Legacy per-user cloud manifests are validated and rewritten to scoped file URLs; cloud-owner directories without a matching source account are reported for review. The operation is idempotent and leaves the SQLite source untouched. External URLs and embedded image data are preserved but reported separately; they are not copied. Set `UPLOADS_DIR` to persistent private storage (default: `Flask Version/uploads`). The CLI does not expose uploaded files publicly. The checked-in sample database contains no referenced local upload files, and this checkout has no production uploads directory; real media migration still requires the approved source media and staging MySQL sign-off.
 
 All imported legacy passwords are reset to unknown random values and stored as Argon2 hashes by default; accounts are marked to require a password change. After approving an account, an operator can set a temporary password interactively on the server:
 
@@ -91,9 +115,9 @@ The user must replace that temporary password after signing in. For a vetted pro
 
 For an approved data migration, run `db upgrade` first, then import before creating an initial admin if possible. The default reset policy imports legacy administrators with unknown passwords; use `reset-imported-password` for the approved admin account. If you create a separate admin before importing, choose a username not already present in the source so the unique username constraint cannot cause a conflict.
 
-## Multi-company and multi-store status
+## SaaS tenant-container status
 
-The next multi-tenant work is specified in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md), but has not been built. Requirements include a Main Admin and company-admin hierarchy, admin-managed manager-to-store assignments, managers scoped to assigned shops, company-isolated data, phone-only lookup of open customer bills across branches within one company, manager-approved/audited removals, unpaid bills staying open until settled, and separate Cash/Bank/Bank Transfer invoice series with admin-configured mixed-payment classification. Do not treat the current single-tenant schema or app as production-ready for multiple companies. The tenant storage choice and the meaning of “daily return/as per collection” remain to be confirmed.
+The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), with current status and build order in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). The confirmed design is one shared MySQL database, one logical container per independent customer, and child companies/branches inside that tenant. Phase 0 and local Phase 1 are closed; Phase 2's isolated SQLite implementation checks have passed, with live MySQL/staging/restore/media acceptance deferred to the user's local MySQL environment and Phase 6. Phase 3 is active but incomplete; Phase 4 remains paused. Company-level sharing remains the conservative default, and only Main Admin can change policies. The Phase 0 choices and outstanding external gates are recorded in the inventory and migration plan.
 
 ## Run tests
 
@@ -101,7 +125,7 @@ The next multi-tenant work is specified in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT
 python -m pytest
 ```
 
-Tests use an isolated in-memory SQLite database and do not modify the sample database in `Node Js Version/`. MySQL DDL can be compiled offline, but no live office MySQL connection, real backup restore, or production import has been verified in this workspace.
+The suite currently passes 114 tests (36 Phase 2-focused tests; 52 selected Phase 3 sales/catalog/tenancy/commercial tests). Tests use an isolated in-memory SQLite database and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and `flask db check` pass, and MySQL DDL can be generated offline. These results are local checks only: no live office MySQL connection, staging reconciliation, real backup restore, production import, or real-media migration has been verified in this workspace. The user plans to run the MySQL acceptance checks locally.
 
 ## Security and deployment notes
 
@@ -111,5 +135,5 @@ Tests use an isolated in-memory SQLite database and do not modify the sample dat
 - Admins create accounts from **Accounts**. There is no public registration. Managers with `manage_users` may create non-admin accounts, and cannot grant permissions they do not hold. Only the `admin` role can view or change backup settings.
 - Do not commit `.env`, database backups, uploaded files, or production credentials. Back up the MySQL database and `UPLOADS_DIR` separately.
 - In production, use HTTPS, set `SESSION_COOKIE_SECURE=true`, restrict the office firewall, and configure a shared rate-limit store if running multiple workers. Select and test the production WSGI/WebSocket server after the office server OS is confirmed. `python run.py` is for local development only.
-- Socket.IO is wired into the app factory for the later real-time phase; no inventory/sales events are emitted yet.
+- A partial Products & Inventory realtime slice remains in the working tree from earlier out-of-order work: it uses a locally vendored Socket.IO browser client and a cursor replay API, but is paused and not phase-accepted. No Node/npm runtime or frontend build is required; the broader Phase 4 work still awaits its turn in the phase gate sequence.
 - Apply schema changes with Alembic/Flask-Migrate and review every migration before it is run against production.
