@@ -3,8 +3,8 @@
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, SelectField, StringField, SubmitField
-from wtforms.validators import InputRequired, Length, NumberRange, Regexp, ValidationError
+from wtforms import BooleanField, IntegerField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField
+from wtforms.validators import InputRequired, Length, NumberRange, Optional, Regexp, ValidationError
 
 
 class CreateCompanyForm(FlaskForm):
@@ -45,6 +45,20 @@ class AssignmentForm(FlaskForm):
     store_id = SelectField("Store", choices=[], validators=[InputRequired()])
     can_view_shared_bills = BooleanField("Allow limited cross-store open-bill lookup (Super Admin only)")
     submit = SubmitField("Save assignment")
+
+
+class DomainPolicyForm(FlaskForm):
+    is_enabled = BooleanField("Enable this data domain", default=True)
+    sharing_mode = SelectField(
+        "Sharing scope",
+        choices=[],
+        validators=[InputRequired()],
+    )
+    allow_company_ids = SelectMultipleField("Allow these companies", choices=[], validators=[Optional()])
+    deny_company_ids = SelectMultipleField("Explicitly deny these companies", choices=[], validators=[Optional()])
+    allow_store_ids = SelectMultipleField("Allow these stores", choices=[], validators=[Optional()])
+    deny_store_ids = SelectMultipleField("Explicitly deny these stores", choices=[], validators=[Optional()])
+    submit = SubmitField("Save policy")
 
 
 class BillingSettingsForm(FlaskForm):

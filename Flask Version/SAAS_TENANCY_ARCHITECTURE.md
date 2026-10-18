@@ -1,6 +1,6 @@
 # Retail Genie SaaS Tenant-Container Architecture
 
-**Status:** This architecture was documented before implementation as requested, and the user then authorized phased work. The tenant-container schema, active-container context, memberships, company/store assignments, policy enforcement primitives, tenant-aware importer, and scoped sales records are now implemented as a working foundation on the active branch. The foundation test suite passes locally; live MySQL, full policy-administration UI/audit, realtime isolation, restore, staging, and production validation remain incomplete. This document does not claim the product is SaaS-production-ready.
+**Status:** This architecture was documented before implementation as requested, and the user then authorized phased work. The tenant-container schema, active-container context, memberships, company/store assignments, Main Admin-only domain-policy UI with before/after audit history, tenant-aware importer, and scoped sales records are implemented as the current foundation. Local tests pass; live MySQL, realtime isolation, restore, staging, all-module coverage, and production validation remain incomplete. This document does not claim the product is SaaS-production-ready.
 
 ## 1. Confirmed product direction
 
@@ -61,7 +61,7 @@ The user's direction is that the container's companies and branches share their 
 2. **Narrower sharing:** a domain can be restricted to one company/subtree or selected branches without moving the records to another database.
 3. **Disabled sharing:** data in that domain is not visible or writable across the restricted organizational boundary.
 
-**Current implementation default (provisional, not product approval):** the migration and new-container provisioning seed each domain as enabled with `company` sharing mode. This preserves existing company-level behavior and prevents sibling companies from silently seeing each other's data; branches/stores under one company can still use that company's data subject to role and assignment checks. The policy engine also supports `container`, `assigned_store`, `selected_units`, and `disabled` modes. The user has not finalized the default sharing breadth or which administrator may change it, so do not treat this seed as a settled production policy or silently broaden it.
+**Approved starting policy:** each domain is enabled with `company` sharing mode by default. This preserves company-level behavior and prevents sibling companies from silently seeing each other's data; branches/stores under one company can use that company's data subject to role and assignment checks. The user approved Main Admin as the only role that may change domain-sharing policies. The policy engine supports `container`, `company`, `assigned_store`, `selected_units`, and `disabled` modes; Main Admin changes are versioned and audit logged. Do not broaden the default or delegate policy control without an explicit product decision.
 
 ### 3.3 Policy is not the same as role permission
 
@@ -76,7 +76,7 @@ AND the user's company/branch assignment permits that record
 AND business workflow rules (e.g. manager approval) are satisfied
 ```
 
-Enabling inventory sharing does not grant every user permission to edit stock. Giving a role an inventory permission does not let it cross a domain-sharing boundary or a store assignment. The foundation now recognizes action-specific membership permissions such as `inventory.view`, `inventory.add`, `inventory.edit`, and `inventory.delete`; existing broad application permissions remain temporarily supported for compatibility. The policy model and server-side enforcement helper exist, but a policy-administration screen, immutable policy-change audit/history, and session/realtime invalidation still need implementation. Policy and membership/role changes must ultimately be audited and take effect on subsequent HTTP and realtime requests.
+Enabling inventory sharing does not grant every user permission to edit stock. Giving a role an inventory permission does not let it cross a domain-sharing boundary or a store assignment. The foundation recognizes action-specific membership permissions such as `inventory.view`, `inventory.add`, `inventory.edit`, and `inventory.delete`; existing broad application permissions remain temporarily supported for compatibility. A Main Admin-only policy screen now supports sharing modes and explicit allow/deny unit scopes, increments the policy version, and records before/after values in the tenant audit log. HTTP requests read current policy state; realtime subscription invalidation remains for the later realtime phase.
 
 ### 3.4 Suggested domain policy matrix
 
@@ -93,7 +93,7 @@ Enabling inventory sharing does not grant every user permission to edit stock. G
 | Audit and daily cash/bank closeout | Container / company / branch | View, submit, approve, export |
 | Company settings and billing series | Container / company / branch (policy-dependent) | View, configure, approve changes |
 
-The policy table should be data-driven and versioned, not implemented as a collection of hard-coded UI visibility conditions. The exact permitted choices and which admin role can change each setting remain to be confirmed.
+The policy table is data-driven and versioned rather than a collection of hard-coded UI visibility conditions. The current policy editor is restricted to Main Admin, as approved. Any later delegation or changes to available sharing modes require an explicit product decision.
 
 ## 4. Role hierarchy and administration
 
@@ -215,22 +215,25 @@ Before rollout, test at minimum:
 9. A container-level export/restore is filtered and cannot alter another container. Full database backup/restore still reconciles every container.
 10. Concurrent invoice/payment operations allocate unique numbers once the invoice scope/timing policy is approved.
 
-## 10. Decisions to confirm before implementing SaaS billing/policy controls
+## 10. Confirmed policy decisions and remaining questions
 
-The following remain open; keep them explicit rather than hard-coding assumptions:
+The user has confirmed the starting domain-sharing policy and authority for this foundation:
+
+- Each domain starts enabled with `company` sharing mode. Broader sharing between child companies requires an explicit setting.
+- Only Main Admin may change sharing mode, enable/disable a domain, or edit selected-unit allow/deny scopes. Changes are versioned and audit logged.
+
+Keep these other decisions open rather than hard-coding assumptions:
 
 1. **Invoice series scope:** one sequence per container, per child company, or per branch/store?
 2. **Invoice number timing:** at full settlement, first payment, or another point? A mixed tender can make its final classification unknown until later payments; document how reservations/corrections work if numbering occurs earlier.
-3. **Sharing-policy administrator:** may the Tenant/Container Admin change all domain-sharing settings, or must Main Admin approve high-impact domains such as staff/accounts and customer data?
-4. **Default policy and granularity:** the foundation currently seeds `company` sharing for each domain as a conservative provisional default. Confirm whether production containers should instead enable broader container-wide sharing by default, and whether child companies inherit that policy or require explicit per-domain/scope approval.
-5. **Child-company role boundary:** may each child company have its own Company Admin who manages only that child/subtree, while the Tenant Admin retains full container scope?
-6. **Multi-container staff:** the foundation supports a single login with multiple explicit memberships and requires a container selection at sign-in. Confirm whether this is desired operational policy, or whether customer logins should instead remain separate.
+3. **Child-company role boundary:** may each child company have its own Company Admin who manages only that child/subtree, while the Tenant Admin retains full container scope?
+4. **Multi-container staff:** the foundation supports a single login with multiple explicit memberships and requires a container selection at sign-in. Confirm whether this is desired operational policy, or whether customer logins should instead remain separate.
 
 ## 11. Phased implementation status and next steps
 
 1. **Documentation first:** complete; the user authorized implementation afterward.
 2. **Tenant-container foundation (current phase):** working-tree schema/migration, per-company legacy-container backfill, nested company hierarchy, memberships, active-container selection, role/store scopes, per-domain policy model/enforcement, and tenant-aware legacy/sales records are implemented. Focused and full SQLite test suites pass; MySQL migration SQL generation is supported.
-3. **Foundation completion gates:** rerun migration/foreign-key/offline checks after changes; review the remaining policy defaults/delegation; implement policy administration/audit and broad page/API coverage; validate with live MySQL and restore rehearsal before production. Do not treat generated MySQL SQL as a live database test.
+3. **Foundation completion gates:** keep the approved defaults/authority; extend isolation coverage as each module is added; validate with live MySQL, staging, and backup-restore rehearsal before production. Do not treat generated MySQL SQL as a live database test.
 4. **Next business modules:** only after the foundation gates are accepted, implement products/catalog and inventory with container/domain/action scoping, then customers, sales and other modules in dependency order.
 5. Add permission-scoped realtime delivery and perform full MySQL, restore, concurrency, multi-session, staging and production-pilot checks before cutover.
 

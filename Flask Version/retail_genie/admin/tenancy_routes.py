@@ -7,11 +7,11 @@ from sqlalchemy.exc import IntegrityError
 
 from ..auth.permissions import company_admin_required, super_admin_required
 from ..extensions import db
-from ..models import AuditEvent, BillingSeries, Company, ContainerMembership, INVOICE_CATEGORIES, Store, TenantContainer, User, UserStoreAssignment, normalize_username
+from ..models import AuditEvent, BillingSeries, Company, ContainerMembership, DATA_DOMAINS, INVOICE_CATEGORIES, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, User, UserStoreAssignment, normalize_username
 from ..tenancy.service import seed_tenant_data_policies
 from ..auth.tenant_context import current_membership
 from ..models.user import is_valid_username
-from .tenancy_forms import AssignmentForm, BillingSettingsForm, CreateCompanyForm, StoreForm
+from .tenancy_forms import AssignmentForm, BillingSettingsForm, CreateCompanyForm, DomainPolicyForm, StoreForm
 
 tenancy_admin_bp = Blueprint("tenancy_admin", __name__, url_prefix="/admin")
 
@@ -329,6 +329,248 @@ def billing_settings(company_id: str):
                 return redirect(url_for("tenancy_admin.billing_settings", company_id=company.id))
 
     return render_template("admin/billing_settings.html", form=form, company=company)
+
+
+_DOMAIN_LABELS = {
+    "product_catalog": "Product catalog",
+    "open_bills": "Open bills",
+    "staff_accounts": "Staff and accounts",
+    "cashups": "Cashups",
+}
+_DOMAIN_POLICY_MODES = {
+    "company": "Same company (all assigned stores)",
+    "container": "Entire tenant container",
+    "assigned_store": "Assigned stores only",
+    "selected_units": "Selected companies / stores",
+    "disabled": "Disabled",
+}
+
+
+def _domain_label(domain: str) -> str:
+    return _DOMAIN_LABELS.get(domain, domain.replace("_", " ").title())
+
+
+def _scope_snapshot(scopes: list[TenantDataPolicyScope]) -> dict[str, list[str]]:
+    return {
+        "allowed_companies": sorted(scope.company_id for scope in scopes if scope.company_id and scope.is_allowed),
+        "denied_companies": sorted(scope.company_id for scope in scopes if scope.company_id and not scope.is_allowed),
+        "allowed_stores": sorted(scope.store_id for scope in scopes if scope.store_id and scope.is_allowed),
+        "denied_stores": sorted(scope.store_id for scope in scopes if scope.store_id and not scope.is_allowed),
+    }
+
+
+@tenancy_admin_bp.get("/domain-policies")
+@super_admin_required
+def domain_policy_index():
+    containers = TenantContainer.query.order_by(TenantContainer.name.asc()).all()
+    rows = [
+        {
+            "container": container,
+            "company_count": Company.query.filter_by(tenant_container_id=container.id).count(),
+            "policy_count": TenantDataPolicy.query.filter_by(tenant_container_id=container.id).count(),
+        }
+        for container in containers
+    ]
+    return render_template("admin/domain_policy_index.html", rows=rows)
+
+
+@tenancy_admin_bp.get("/containers/<string:tenant_container_id>/policies")
+@super_admin_required
+def domain_policies(tenant_container_id: str):
+    container = db.session.get(TenantContainer, tenant_container_id)
+    if container is None:
+        abort(404)
+    policies = {
+        policy.domain: policy
+        for policy in TenantDataPolicy.query.filter_by(tenant_container_id=container.id).all()
+    }
+    return render_template(
+        "admin/domain_policies.html",
+        container=container,
+        domains=DATA_DOMAINS,
+        domain_labels={domain: _domain_label(domain) for domain in DATA_DOMAINS},
+        mode_labels=_DOMAIN_POLICY_MODES,
+        policies=policies,
+    )
+
+
+@tenancy_admin_bp.route(
+    "/containers/<string:tenant_container_id>/policies/<string:domain>",
+    methods=["GET", "POST"],
+)
+@super_admin_required
+def edit_domain_policy(tenant_container_id: str, domain: str):
+    container = db.session.get(TenantContainer, tenant_container_id)
+    if container is None or domain not in DATA_DOMAINS:
+        abort(404)
+    policy = TenantDataPolicy.query.filter_by(tenant_container_id=container.id, domain=domain).one_or_none()
+    if policy is None:
+        abort(404)
+
+    companies_list = Company.query.filter_by(tenant_container_id=container.id).order_by(Company.name.asc()).all()
+    stores = (
+        Store.query.filter_by(tenant_container_id=container.id)
+        .order_by(Store.company_id.asc(), Store.code.asc())
+        .all()
+    )
+    company_labels = {company.id: f"{company.name} ({company.slug})" for company in companies_list}
+    company_by_id = {company.id: company for company in companies_list}
+    store_choices = []
+    for store in stores:
+        owner = company_by_id.get(store.company_id)
+        owner_name = owner.name if owner is not None else "Unknown company"
+        store_choices.append((store.id, f"{owner_name} · {store.code} — {store.name}"))
+
+    form = DomainPolicyForm()
+    form.sharing_mode.choices = [(mode, label) for mode, label in _DOMAIN_POLICY_MODES.items()]
+    form.allow_company_ids.choices = [(company.id, company_labels[company.id]) for company in companies_list]
+    form.deny_company_ids.choices = [(company.id, company_labels[company.id]) for company in companies_list]
+    form.allow_store_ids.choices = store_choices
+    form.deny_store_ids.choices = store_choices
+    existing_scopes = TenantDataPolicyScope.query.filter_by(
+        tenant_container_id=container.id,
+        policy_id=policy.id,
+    ).all()
+
+    if request.method == "GET":
+        form.is_enabled.data = policy.is_enabled
+        form.sharing_mode.data = policy.sharing_mode
+        snapshot = _scope_snapshot(existing_scopes)
+        form.allow_company_ids.data = snapshot["allowed_companies"]
+        form.deny_company_ids.data = snapshot["denied_companies"]
+        form.allow_store_ids.data = snapshot["allowed_stores"]
+        form.deny_store_ids.data = snapshot["denied_stores"]
+
+    if form.validate_on_submit():
+        allowed_companies = set(form.allow_company_ids.data or [])
+        denied_companies = set(form.deny_company_ids.data or [])
+        allowed_stores = set(form.allow_store_ids.data or [])
+        denied_stores = set(form.deny_store_ids.data or [])
+        if allowed_companies & denied_companies:
+            form.allow_company_ids.errors.append("A company cannot be both allowed and denied.")
+        if allowed_stores & denied_stores:
+            form.allow_store_ids.errors.append("A store cannot be both allowed and denied.")
+
+        if form.sharing_mode.data != "selected_units":
+            allowed_companies.clear()
+            denied_companies.clear()
+            allowed_stores.clear()
+            denied_stores.clear()
+
+        if not any(field.errors for field in form):
+            before = {
+                "is_enabled": policy.is_enabled,
+                "sharing_mode": policy.sharing_mode,
+                "scopes": _scope_snapshot(existing_scopes),
+            }
+            new_scopes = {
+                "allowed_companies": sorted(allowed_companies),
+                "denied_companies": sorted(denied_companies),
+                "allowed_stores": sorted(allowed_stores),
+                "denied_stores": sorted(denied_stores),
+            }
+            after = {
+                "is_enabled": bool(form.is_enabled.data),
+                "sharing_mode": form.sharing_mode.data,
+                "scopes": new_scopes,
+            }
+            if before == after:
+                flash("No policy changes to save.", "info")
+                return redirect(url_for("tenancy_admin.edit_domain_policy", tenant_container_id=container.id, domain=domain))
+
+            policy.is_enabled = bool(form.is_enabled.data)
+            policy.sharing_mode = form.sharing_mode.data
+            policy.policy_version += 1
+            policy.changed_by_user_id = current_user.id
+            for scope in existing_scopes:
+                db.session.delete(scope)
+            db.session.flush()
+
+            scope_rows = []
+            if policy.sharing_mode == "selected_units":
+                for company_id in allowed_companies:
+                    scope_rows.append(
+                        TenantDataPolicyScope(
+                            tenant_container_id=container.id,
+                            policy_id=policy.id,
+                            company_id=company_id,
+                            is_allowed=True,
+                        )
+                    )
+                for company_id in denied_companies:
+                    scope_rows.append(
+                        TenantDataPolicyScope(
+                            tenant_container_id=container.id,
+                            policy_id=policy.id,
+                            company_id=company_id,
+                            is_allowed=False,
+                        )
+                    )
+                for store_id in allowed_stores:
+                    scope_rows.append(
+                        TenantDataPolicyScope(
+                            tenant_container_id=container.id,
+                            policy_id=policy.id,
+                            store_id=store_id,
+                            is_allowed=True,
+                        )
+                    )
+                for store_id in denied_stores:
+                    scope_rows.append(
+                        TenantDataPolicyScope(
+                            tenant_container_id=container.id,
+                            policy_id=policy.id,
+                            store_id=store_id,
+                            is_allowed=False,
+                        )
+                    )
+                db.session.add_all(scope_rows)
+
+            db.session.add(
+                AuditEvent(
+                    tenant_container_id=container.id,
+                    company_id=None,
+                    store_id=None,
+                    actor_user_id=current_user.id,
+                    action="tenant_data_policy.updated",
+                    entity_type="tenant_data_policy",
+                    entity_id=policy.id,
+                    before_data=before,
+                    after_data=after,
+                )
+            )
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                form.sharing_mode.errors.append("The policy could not be saved. Refresh and verify its company/store scopes.")
+            else:
+                flash(f"{_domain_label(domain)} policy saved. Change recorded in the tenant audit log.", "success")
+                return redirect(url_for("tenancy_admin.domain_policies", tenant_container_id=container.id))
+
+    audit_entries = db.session.execute(
+        select(AuditEvent, User.username)
+        .outerjoin(User, User.id == AuditEvent.actor_user_id)
+        .where(
+            AuditEvent.tenant_container_id == container.id,
+            AuditEvent.entity_type == "tenant_data_policy",
+            AuditEvent.entity_id == policy.id,
+        )
+        .order_by(AuditEvent.created_at.desc())
+        .limit(20)
+    ).all()
+    return render_template(
+        "admin/domain_policy_edit.html",
+        form=form,
+        container=container,
+        domain=domain,
+        domain_label=_domain_label(domain),
+        mode_labels=_DOMAIN_POLICY_MODES,
+        company_count=len(companies_list),
+        store_count=len(stores),
+        policy_version=policy.policy_version,
+        audit_entries=audit_entries,
+    )
 
 
 @tenancy_admin_bp.route("/store-assignments", methods=["GET", "POST"])

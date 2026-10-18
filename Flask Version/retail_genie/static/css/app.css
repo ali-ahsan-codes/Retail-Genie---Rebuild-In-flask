@@ -255,3 +255,28 @@ td form { margin: 0; }
 @media (max-width: 700px) {
   .billing-mixed-setting, .billing-series-grid { grid-template-columns: 1fr; }
 }
+
+.policy-callout { margin: 15px 0 20px; padding: 14px 16px; border: 1px solid #d8e4f1; border-radius: 12px; color: #43566f; background: #f5f8fc; font-size: 12px; line-height: 1.6; }
+.policy-callout-warning { border-color: #f0dfb9; color: #72501a; background: #fff8e9; }
+.policy-edit-card { max-width: 1050px; }
+.policy-edit-card .field { max-width: 750px; }
+.policy-edit-card .checkbox-control { width: 17px; height: 17px; margin: 0 7px 0 0; vertical-align: middle; accent-color: var(--blue); }
+.policy-edit-card .checkbox-control + label { display: inline; color: #34445a; font-size: 12px; font-weight: 700; }
+.policy-scope-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; }
+.policy-scope-grid .control { min-height: 160px; padding: 6px; }
+.policy-scope-grid option { padding: 5px; }
+.policy-scope-note { margin: 0 0 14px; font-size: 12px; }
+.policy-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.policy-audit-note { margin-top: 23px; padding-top: 15px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+.policy-table { min-width: 760px; }
+@media (max-width: 700px) {
+  .policy-scope-grid { grid-template-columns: 1fr; }
+}
+.policy-history-card { margin-top: 18px; }
+.policy-history-table { min-width: 760px; }
+.policy-history-table details summary { color: var(--blue); cursor: pointer; font-size: 11px; font-weight: 700; }
+.policy-history-values { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; min-width: 500px; margin-top: 10px; }
+.policy-history-values pre { max-height: 190px; overflow: auto; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: #34445a; background: #f7f9fc; font: 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
+@media (max-width: 700px) {
+  .policy-history-values { grid-template-columns: 1fr; min-width: 250px; }
+}

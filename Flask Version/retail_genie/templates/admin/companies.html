@@ -47,6 +47,7 @@
                   <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.stores', company_id=company.id) }}">Stores</a>
                   <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.store_assignments', company_id=company.id) }}">Assignments</a>
                   <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.billing_settings', company_id=company.id) }}">Billing</a>
+                  <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.domain_policies', tenant_container_id=company.tenant_container_id) }}">Data policies</a>
                   <form method="post" action="{{ url_for('tenancy_admin.toggle_company', company_id=company.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="button button-small {{ 'button-danger' if company.is_active else 'button-secondary' }}" type="submit">{{ 'Disable' if company.is_active else 'Enable' }}</button>
