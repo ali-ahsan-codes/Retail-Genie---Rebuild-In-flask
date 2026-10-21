@@ -15,6 +15,8 @@ def _env_bool(name: str, default: bool) -> bool:
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
+    PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 

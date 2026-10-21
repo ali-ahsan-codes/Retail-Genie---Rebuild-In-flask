@@ -13,6 +13,16 @@
       <span class="brand-mark" aria-hidden="true">RG</span>
       <span><strong>Retail Genie</strong><small>Flask Edition</small></span>
     </a>
+    {% if not is_mobile_device and app_login_url %}
+      <details class="app-qr">
+        <summary class="app-qr-toggle"><span aria-hidden="true">▦</span> Open on phone</summary>
+        <div class="app-qr-popover">
+          <img src="{{ url_for('main.app_login_qr') }}" alt="QR code for the Retail Genie sign-in page">
+          <p>Scan with a phone camera while it is connected to the same Wi-Fi network.</p>
+          <a href="{{ app_login_url }}">{{ app_login_url }}</a>
+        </div>
+      </details>
+    {% endif %}
     {% if current_user.is_authenticated %}
       <details class="nav-menu">
         <summary class="nav-menu-toggle"><span aria-hidden="true">☰</span><span>Menu</span></summary>

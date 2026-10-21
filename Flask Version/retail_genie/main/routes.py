@@ -1,16 +1,42 @@
 """Role-aware home dashboard for the Flask business modules."""
 
-from flask import Blueprint, render_template, url_for
+from io import BytesIO
+
+from flask import Blueprint, Response, abort, render_template, url_for
 from flask_login import current_user, login_required
 
 from ..auth.tenant_context import current_membership, current_tenant_container_id
 from ..extensions import db
 from ..models import Company, TenantContainer
+from ..share import app_login_url
 
 main_bp = Blueprint("main", __name__)
 
 
+@main_bp.get("/app-qr.svg")
+def app_login_qr():
+    """Render a request-specific SVG QR code for the shared login URL."""
+    target_url = app_login_url()
+    if not target_url:
+        abort(503, description="Set PUBLIC_BASE_URL or make a LAN IPv4 route available to this server.")
+
+    import qrcode
+    from qrcode.image.svg import SvgPathImage
+
+    code = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=4)
+    code.add_data(target_url)
+    code.make(fit=True)
+    svg = code.make_image(image_factory=SvgPathImage)
+    buffer = BytesIO()
+    svg.save(buffer)
+    response = Response(buffer.getvalue(), mimetype="image/svg+xml")
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Vary"] = "Host"
+    return response
+
+
 def _dashboard_cards():
+
     cards = []
 
     def add(group, title, description, endpoint, icon, *, permission=None, any_permission=(), **values):

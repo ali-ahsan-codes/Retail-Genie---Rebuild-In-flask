@@ -30,6 +30,14 @@ button, input, select { font: inherit; }
 .brand strong, .brand small, .account-name small { display: block; }
 .brand strong { font-size: 15px; font-weight: 700; }
 .brand small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.app-qr { position: relative; z-index: 30; }
+.app-qr-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; color: #34445a; background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; list-style: none; white-space: nowrap; }
+.app-qr-toggle::-webkit-details-marker { display: none; }
+.app-qr[open] .app-qr-toggle, .app-qr-toggle:hover { border-color: #c9def5; color: var(--blue-dark); background: var(--blue-pale); }
+.app-qr-popover { position: absolute; top: calc(100% + 10px); left: 0; display: grid; justify-items: center; gap: 9px; width: 280px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: var(--shadow); text-align: center; }
+.app-qr-popover img { display: block; width: 220px; height: 220px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.app-qr-popover p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.app-qr-popover a { max-width: 100%; overflow-wrap: anywhere; font-size: 11px; }
 .nav-menu { position: relative; z-index: 20; margin-left: auto; }
 .nav-menu-toggle { display: inline-flex; align-items: center; gap: 9px; min-height: 40px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px; color: #34445a; background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; list-style: none; }
 .nav-menu-toggle::-webkit-details-marker { display: none; }

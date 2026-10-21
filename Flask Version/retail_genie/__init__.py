@@ -25,8 +25,19 @@ def create_app(test_config: dict | None = None) -> Flask:
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
     @app.context_processor
-    def inject_csp_nonce():
-        return {"csp_nonce": getattr(g, "csp_nonce", "")}
+    def inject_template_context():
+        from .device import is_mobile_phone
+        from .share import app_login_url
+
+        mobile_device = is_mobile_phone(
+            request.user_agent.string,
+            request.headers.get("Sec-CH-UA-Mobile"),
+        )
+        return {
+            "csp_nonce": getattr(g, "csp_nonce", ""),
+            "is_mobile_device": mobile_device,
+            "app_login_url": None if mobile_device else app_login_url(),
+        }
 
     db.init_app(app)
     migrate.init_app(app, db)

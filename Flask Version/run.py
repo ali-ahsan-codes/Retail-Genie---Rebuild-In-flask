@@ -18,5 +18,7 @@ if __name__ == "__main__":
         host=os.getenv("FLASK_HOST", "127.0.0.1"),
         port=int(os.getenv("FLASK_PORT", "5000")),
         debug=debug,
-        allow_unsafe_werkzeug=debug,
+        # This file is explicitly the local-development runner. Keep debug
+        # independently configurable; production must use a proper WSGI server.
+        allow_unsafe_werkzeug=True,
     )
