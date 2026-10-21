@@ -14,9 +14,26 @@
 - [x] Preserve the Node application unchanged as a reference and rollback copy.
 - [x] Complete Phase 5 local verification (145 tests at Phase 5 closure).
 - [x] Add `flask --app wsgi phase6-preflight`, a read-only check for MySQL 8, current Alembic heads, mapped-table presence/InnoDB, and session foreign-key enforcement. It rejects non-MySQL targets before issuing SQL and never changes schema or data.
-- [x] Run the updated full local suite including Phase 6 preflight tests: 146 passed.
+- [x] Run the updated full local suite including Phase 6 preflight tests: 146 passed; the opt-in MySQL preflight test is skipped because no test URL is configured.
 - [x] Verify fresh SQLite migration upgrade, schema check, explicit reversible downgrade to `ba2fd4c7e8a1`, re-upgrade, and current revision `f4c1b7a2d903`.
 - [ ] Run the preflight against an approved staging MySQL database and retain its sanitized output as evidence.
+
+## Running the opt-in MySQL test suite locally
+
+The normal suite uses isolated SQLite. To run it against MySQL 8, point it only at a disposable database whose name ends in `_phase6_test`; the test fixture refuses other names, requires the schema to already be at the current Alembic head, and clears mapped-table rows between cases. It does not create or alter the MySQL schema; it preserves the migrated schema. Do not use a production, office-live, or user-data database for this suite.
+
+On the machine that can reach the disposable MySQL server, set both environment values to the same URL (keep the password in a secret manager/environment and URL-encode special characters), then run from `Flask Version/`:
+
+```bash
+export RETAIL_GENIE_MYSQL_TEST_URL='mysql+pymysql://phase6_user:URL_ENCODED_PASSWORD@MYSQL_HOST:3306/retail_genie_phase6_test?charset=utf8mb4'
+export DATABASE_URL="$RETAIL_GENIE_MYSQL_TEST_URL"
+export SECRET_KEY='a-local-test-only-secret'
+flask --app wsgi db upgrade
+flask --app wsgi phase6-preflight
+python -m pytest -q
+```
+
+`db upgrade` changes the disposable schema. The test suite writes and deletes test rows from the `*_phase6_test` database. Review the URL and confirm the database name before running. The MySQL preflight test is automatically skipped by the default SQLite suite and runs when the opt-in MySQL URL is configured.
 
 ## Required deployment acceptance gates
 
@@ -56,7 +73,7 @@
 
 | Gate | Evidence/artifact | Result | Date / approver |
 |---|---|---|---|
-| Local automated suite | `.venv/bin/python -m pytest -q` | 146 passed | 2026-10-21 |
+| Local automated suite | `.venv/bin/python -m pytest -q` | 146 passed; 1 opt-in MySQL test skipped | 2026-10-21 |
 | Staging MySQL preflight/migrations | Not available in this workspace | Blocked on approved staging MySQL | — |
 | Import/media reconciliation | No approved production snapshot/media available | Pending | — |
 | Two-browser/device workflow | No office network/devices available | Pending | — |

@@ -70,7 +70,7 @@ The backup directory is intentionally outside Flask's static directory, is ignor
 
 Phase 3 business workflows are implemented locally across the catalog, sales, commercial, SCM, attendance, stock-audit, messaging, cloud-file, reports, display, and admin/settings modules. Highlights include scoped category/barcode/label workflows; transactional inventory ledger, imports/transfers/receiving; POS, open bills, exchange/store-credit, tax/discount, refund/cashup, fulfillment, and print views; commercial deposits, partial fulfillment, editing, conversion, print and opt-in SMTP email; supplier/PO attachments and logistics; attendance/breaks, evidence access, private messages/files, sales/activity reports, and privacy-limited LCD output. Role, tenant, store, and domain-policy checks plus audit history are retained.
 
-Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the current Phase 6 local suite passes **146**. Isolated SQLite migration/schema upgrade/check/downgrade/re-upgrade also pass with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
+Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the current Phase 6 local suite passes **146 tests**, with the opt-in MySQL test skipped until a test URL is configured. Isolated SQLite migration/schema upgrade/check/downgrade/re-upgrade also pass with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
 
 ## Phase 4 realtime/offline implementation and local verification
 
@@ -78,7 +78,7 @@ A generalized MySQL-backed realtime outbox now emits scoped inventory, sales, pa
 
 Products & Inventory supports a browser IndexedDB queue for stock adjustments only. Retries use actor-scoped idempotency keys, so a lost response does not apply the same delta twice; mismatched retries and access changes are blocked and surfaced. Financial checkout/payment are deliberately not queued offline. See `MIGRATION_PLAN.md` for Phase 4 coverage and pending live-MySQL concurrency acceptance.
 
-The current full local suite passes **146 tests**. Offline MySQL migration SQL generation succeeds (168,839 characters), while fresh SQLite migration/check/downgrade/re-upgrade passes. No live MySQL server is available here, so this is not live MySQL or staging verification.
+The current full local suite passes **146 tests**; the opt-in MySQL preflight test is skipped because no MySQL test URL is configured. Offline MySQL migration SQL generation succeeds (168,839 characters), while fresh SQLite migration/check/downgrade/re-upgrade passes. No live MySQL server is available here, so this is not live MySQL or staging verification.
 
 ## Phase 5 UI parity
 
@@ -139,7 +139,7 @@ The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.m
 python -m pytest
 ```
 
-The suite currently passes **146 tests**. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and schema check, downgrade, and re-upgrade pass with no model drift. Offline MySQL DDL generation succeeds, but these are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
+The suite currently passes **146 tests**; one opt-in MySQL test is skipped until a disposable MySQL test URL is configured. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and schema check, downgrade, and re-upgrade pass with no model drift. Offline MySQL DDL generation succeeds, but these are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
 
 ## Security and deployment notes
 
