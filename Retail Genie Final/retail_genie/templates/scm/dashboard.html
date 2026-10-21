@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Supply chain · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Phase 3 · Supply chain</p><h1>SCM overview</h1><p class="muted">{{ company.name if company else 'Select an active company.' }}</p></div><nav class="button-row"><a class="button button-secondary" href="{{ url_for('scm.suppliers_page') }}">Suppliers</a><a class="button button-primary" href="{{ url_for('scm.purchase_orders_page') }}">Purchase orders</a></nav></section>
+{% if company %}<section class="panel"><h2>Supplier count: {{ suppliers|length }}</h2><p>Purchase orders: {{ purchase_orders|length }}</p><div class="table-wrap"><table class="data-table"><thead><tr><th>PO</th><th>Status</th><th>Supplier</th><th>Total</th><th>Expected</th></tr></thead><tbody>{% for po in purchase_orders[:10] %}<tr><td><a href="{{ url_for('scm.purchase_order_page', po_id=po.id) }}">{{ po.po_number }}</a></td><td>{{ po.status }}</td><td>{{ po.supplier_name or po.supplier_id }}</td><td>OMR {{ po.total_amount }}</td><td>{{ po.expected_delivery or '—' }}</td></tr>{% else %}<tr><td colspan="5">No purchase orders found.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}

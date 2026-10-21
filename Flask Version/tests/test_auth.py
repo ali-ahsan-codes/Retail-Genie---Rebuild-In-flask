@@ -82,6 +82,36 @@ def test_login_requires_csrf_token_when_csrf_is_enabled(app):
     assert b"CSRF" in response.data
 
 
+def test_login_csrf_token_validates_with_configured_time_limit(app, create_user):
+    from html.parser import HTMLParser
+
+    class CsrfInputParser(HTMLParser):
+        token = None
+
+        def handle_starttag(self, tag, attrs):
+            values = dict(attrs)
+            if tag == "input" and values.get("name") == "csrf_token":
+                self.token = values.get("value")
+
+    create_user("csrf.valid")
+    app.config["WTF_CSRF_ENABLED"] = True
+    client = app.test_client()
+    try:
+        form_response = client.get("/login")
+        parser = CsrfInputParser()
+        parser.feed(form_response.get_data(as_text=True))
+        assert parser.token
+        response = client.post(
+            "/login",
+            data={"username": "csrf.valid", "password": "A-long-test-password-4!", "csrf_token": parser.token},
+        )
+    finally:
+        app.config["WTF_CSRF_ENABLED"] = False
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/dashboard")
+
+
 def test_password_change_revokes_other_sessions(app, create_user):
     first_client = app.test_client()
     second_client = app.test_client()

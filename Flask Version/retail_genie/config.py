@@ -28,7 +28,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.getenv("SESSION_LIFETIME_HOURS", "8")))
 
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = timedelta(hours=1)
+    # Flask-WTF passes this directly to ItsDangerous as a max_age in seconds.
+    WTF_CSRF_TIME_LIMIT = 3600
     MAX_CONTENT_LENGTH = 25 * 1024 * 1024
 
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
