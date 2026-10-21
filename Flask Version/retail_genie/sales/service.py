@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -9,17 +11,21 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import case, func, or_, select
 
-from ..auth.store_scope import can_access_store, can_view_shared_bill
+from ..auth.store_scope import accessible_store_ids, can_access_store, can_view_shared_bill
 from ..auth.tenant_context import current_membership
 from ..auth.tenant_policy import can_access_data_domain
 from ..extensions import db
 from ..models import (
     AuditEvent,
     BillingSeries,
+    BusinessNumberSeries,
     CatalogProduct,
+    CommissionSetting,
     Company,
     DailyCashup,
     DemandNotice,
+    DemandNoticeFulfillment,
+    GlobalDiscountSetting,
     InventoryBalance,
     InventoryMovement,
     OrderNumberSeries,
@@ -30,9 +36,13 @@ from ..models import (
     Quotation,
     QuotationLine,
     RealtimeEvent,
+    RETURN_KINDS,
     SalesOrder,
     SalesOrderLine,
     Store,
+    StoreCredit,
+    StoreCreditRedemption,
+    TaxSetting,
     TenantContainer,
     User,
 )
@@ -526,14 +536,38 @@ def order_dict(order: SalesOrder) -> dict:
             }
             for return_record in returns
         ],
+        "subtotal_amount": format(Decimal(order.subtotal_amount or 0), ".3f"),
+        "discount_amount": format(Decimal(order.discount_amount or 0), ".3f"),
+        "applied_discount_percentage": format(Decimal(order.applied_discount_percentage or 0), ".3f"),
+        "applied_global_discount_percentage": format(Decimal(order.applied_global_discount_percentage or 0), ".3f"),
+        "taxes": order.taxes or [],
         "total_amount": format(Decimal(order.total_amount), ".3f"),
         "paid_amount": format(paid, ".3f"),
         "balance": format(max(Decimal(order.total_amount) - paid, ZERO), ".3f"),
         "invoice_category": order.invoice_category,
         "invoice_number": order.invoice_number,
+        "delivery_status": order.delivery_status,
+        "delivery_address": order.delivery_address,
+        "storekeeper_notes": order.storekeeper_notes,
         "created_at": order.created_at.isoformat() if order.created_at else None,
         "closed_at": order.closed_at.isoformat() if order.closed_at else None,
     }
+
+
+def _sales_realtime_event(*, company: Company, store: Store, actor: User, event_type: str, payload: dict) -> RealtimeEvent:
+    """Stage a minimal, store-scoped sales event in the same business transaction."""
+    event = RealtimeEvent(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        store_id=store.id,
+        domain="sales",
+        event_type=event_type,
+        payload=dict(payload),
+        actor_user_id=actor.id,
+    )
+    db.session.add(event)
+    db.session.flush()
+    return event
 
 
 def _add_audit(company_id: str, actor_id: str | None, action: str, entity_type: str, entity_id: str, *, store_id: str | None = None, before=None, after=None, reason=None) -> None:
@@ -601,7 +635,8 @@ def _add_order_line(
     return line, event
 
 
-def _recalculate_order(order: SalesOrder) -> Decimal:
+def _recalculate_order(order: SalesOrder, company: Company | None = None) -> Decimal:
+    """Recompute subtotal, discounts, taxes, and the bill total."""
     value = db.session.execute(
         select(func.coalesce(func.sum(SalesOrderLine.line_total), 0)).where(
             SalesOrderLine.tenant_container_id == order.tenant_container_id,
@@ -610,8 +645,51 @@ def _recalculate_order(order: SalesOrder) -> Decimal:
             SalesOrderLine.is_active.is_(True),
         )
     ).scalar_one()
-    order.total_amount = Decimal(str(value or 0)).quantize(MONEY_QUANTUM)
+    subtotal = Decimal(str(value or 0)).quantize(MONEY_QUANTUM)
+    order.subtotal_amount = subtotal
+    if company is None:
+        company = db.session.get(Company, order.company_id)
+    manual_pct = Decimal(str(order.applied_discount_percentage or 0))
+    global_pct = _effective_global_discount(company, order.business_date)
+    order.applied_global_discount_percentage = global_pct
+    after_manual = (subtotal * (Decimal("100") - manual_pct) / Decimal("100")).quantize(MONEY_QUANTUM)
+    after_global = (after_manual * (Decimal("100") - global_pct) / Decimal("100")).quantize(MONEY_QUANTUM)
+    order.discount_amount = (subtotal - after_global).quantize(MONEY_QUANTUM)
+    tax_rows: list[dict] = []
+    taxed = after_global
+    if company is not None:
+        for tax in db.session.execute(
+            select(TaxSetting).where(
+                TaxSetting.tenant_container_id == company.tenant_container_id,
+                TaxSetting.company_id == company.id,
+                TaxSetting.is_enabled.is_(True),
+            ).order_by(TaxSetting.name.asc())
+        ).scalars():
+            tax_amount = (taxed * Decimal(str(tax.rate)) / Decimal("100")).quantize(MONEY_QUANTUM)
+            tax_rows.append({"name": tax.name, "rate": str(tax.rate), "amount": format(tax_amount, ".3f")})
+    order.taxes = tax_rows or None
+    tax_total = sum((Decimal(row["amount"]) for row in tax_rows), ZERO)
+    order.total_amount = (after_global + tax_total).quantize(MONEY_QUANTUM)
     return Decimal(order.total_amount)
+
+
+def _effective_global_discount(company: Company | None, business_date: date) -> Decimal:
+    """Snapshot the dated company-wide discount percentage for a bill."""
+    if company is None:
+        return ZERO
+    setting = db.session.execute(
+        select(GlobalDiscountSetting).where(
+            GlobalDiscountSetting.tenant_container_id == company.tenant_container_id,
+            GlobalDiscountSetting.company_id == company.id,
+        )
+    ).scalar_one_or_none()
+    if setting is None or not setting.is_active:
+        return ZERO
+    if setting.start_date and business_date < setting.start_date:
+        return ZERO
+    if setting.end_date and business_date > setting.end_date:
+        return ZERO
+    return Decimal(str(setting.percentage))
 
 
 def _issue_invoice(order: SalesOrder, company: Company) -> None:
@@ -660,8 +738,17 @@ def create_order(
     items: list[dict] | None = None,
     company_id: str | None = None,
     source_demand_notice_id: str | None = None,
+    source_demand_notice_fulfillment_key: str | None = None,
     source_quotation_id: str | None = None,
     line_price_overrides: list[object] | None = None,
+    discount_percentage: object | None = None,
+    primary_salesperson_id: str | None = None,
+    secondary_salesperson_id: str | None = None,
+    delivery_address: str | None = None,
+    storekeeper_notes: str | None = None,
+    cashier_notes: str | None = None,
+    reminder_date: object | None = None,
+    reminder_notes: str | None = None,
 ) -> SalesOrder:
     company = _company_for_actor(actor, company_id)
     store = _require_assigned_store(actor, store_id, company.id)
@@ -720,8 +807,16 @@ def create_order(
             raise SalesRuleError("Only an open demand notice can be converted.", 409, "invalid_state")
         if not source_notice.product_id or len(items) != 1:
             raise SalesRuleError("Link the demand notice to one catalog product before conversion.", 409, "product_link_required")
-        if str(items[0].get("product_id", "")) != source_notice.product_id or _as_integer(items[0].get("quantity"), field="Item quantity") != source_notice.quantity_requested:
-            raise SalesRuleError("The converted order lines must match the demand notice.", 409, "source_mismatch")
+        requested_quantity = _as_integer(items[0].get("quantity"), field="Item quantity")
+        remaining_quantity = source_notice.quantity_requested - source_notice.quantity_fulfilled
+        if str(items[0].get("product_id", "")) != source_notice.product_id or requested_quantity > remaining_quantity:
+            raise SalesRuleError("The fulfillment order must match the notice product and remaining quantity.", 409, "source_mismatch")
+        if requested_quantity <= 0:
+            raise SalesRuleError("Fulfillment quantity must be positive.")
+        if source_demand_notice_fulfillment_key is not None:
+            key = str(source_demand_notice_fulfillment_key).strip()
+            if not key or len(key) > 128:
+                raise SalesRuleError("A valid fulfillment idempotency key is required.")
         if line_price_overrides is not None:
             expected_price = Decimal(source_notice.agreed_price) if source_notice.agreed_price is not None else None
             if line_price_overrides != [expected_price]:
@@ -764,6 +859,59 @@ def create_order(
         if line_price_overrides is None or [Decimal(value) for value in line_price_overrides] != [Decimal(line.unit_price) for line in quote_lines]:
             raise SalesRuleError("The converted prices must match the accepted quotation.", 409, "source_mismatch")
 
+    manual_discount = ZERO
+    if discount_percentage not in (None, "", 0, "0"):
+        try:
+            manual_discount = Decimal(str(discount_percentage))
+        except (InvalidOperation, ValueError, TypeError):
+            raise SalesRuleError("The discount percentage must be a number.") from None
+        if manual_discount < 0 or manual_discount > 100:
+            raise SalesRuleError("The discount percentage must be between 0 and 100.")
+        _require_sales_domain(
+            actor,
+            tenant_container_id=company.tenant_container_id,
+            domain="sales",
+            action="edit",
+            company_id=company.id,
+            store_id=store.id,
+        )
+
+    salesperson_ids = [value for value in (primary_salesperson_id, secondary_salesperson_id) if value]
+    if len(set(salesperson_ids)) != len(salesperson_ids):
+        raise SalesRuleError("The primary and secondary salespersons must differ.")
+    commission_rate = None
+    commission_setting = db.session.execute(
+        select(CommissionSetting).where(
+            CommissionSetting.tenant_container_id == company.tenant_container_id,
+            CommissionSetting.company_id == company.id,
+            CommissionSetting.is_active.is_(True),
+        )
+    ).scalar_one_or_none()
+    if commission_setting is not None:
+        commission_rate = Decimal(str(commission_setting.commission_percentage))
+    for salesperson_id in salesperson_ids:
+        user = db.session.get(User, salesperson_id)
+        if user is None or not user.is_active:
+            raise SalesRuleError("The selected salesperson account does not exist.", 404, "not_found")
+        if not user.is_super_admin:
+            salesperson_membership = current_membership(user, tenant_container_id=company.tenant_container_id)
+            if salesperson_membership is None:
+                raise SalesRuleError("The selected salesperson is not a member of this tenant.", 403, "tenant_forbidden")
+
+    cleaned_delivery_address = (delivery_address or "").strip()[:2000] or None
+    cleaned_reminder_notes = (reminder_notes or "").strip()[:500] or None
+    parsed_reminder_date = None
+    if reminder_date not in (None, ""):
+        if isinstance(reminder_date, datetime):
+            parsed_reminder_date = reminder_date.date()
+        elif isinstance(reminder_date, date):
+            parsed_reminder_date = reminder_date
+        else:
+            try:
+                parsed_reminder_date = date.fromisoformat(str(reminder_date).strip())
+            except ValueError:
+                raise SalesRuleError("The reminder date must use YYYY-MM-DD format.") from None
+
     order_number = _allocate_order_number(company)
     order = SalesOrder(
         tenant_container_id=company.tenant_container_id,
@@ -775,6 +923,16 @@ def create_order(
         order_number=order_number,
         source_demand_notice_id=source_notice.id if source_notice else None,
         source_quotation_id=source_quote.id if source_quote else None,
+        applied_discount_percentage=manual_discount,
+        primary_salesperson_id=primary_salesperson_id or None,
+        secondary_salesperson_id=secondary_salesperson_id or None,
+        primary_commission_rate=commission_rate if primary_salesperson_id else None,
+        secondary_commission_rate=commission_rate if secondary_salesperson_id else None,
+        delivery_address=cleaned_delivery_address,
+        storekeeper_notes=(storekeeper_notes or "").strip()[:500] or None,
+        cashier_notes=(cashier_notes or "").strip()[:500] or None,
+        reminder_date=parsed_reminder_date,
+        reminder_notes=cleaned_reminder_notes,
         business_date=company_today(company),
         status="open",
         total_amount=ZERO,
@@ -795,13 +953,77 @@ def create_order(
             unit_price_override=override,
         )
         event_ids.append(event.id)
-    total = _recalculate_order(order)
+    total = _recalculate_order(order, company)
     if total <= 0:
         raise SalesRuleError("An open bill must have a positive total.")
+    credited_deposit = ZERO
     if source_notice is not None:
-        source_notice.status = "converted"
-        source_notice.quantity_fulfilled = source_notice.quantity_requested
+        already_applied = db.session.execute(select(func.coalesce(func.sum(DemandNoticeFulfillment.deposit_applied), 0)).where(
+            DemandNoticeFulfillment.tenant_container_id == company.tenant_container_id,
+            DemandNoticeFulfillment.company_id == company.id,
+            DemandNoticeFulfillment.notice_id == source_notice.id,
+        )).scalar_one()
+        deposit_remaining = max(ZERO, Decimal(source_notice.amount_paid or 0) - Decimal(str(already_applied or 0)))
+        if deposit_remaining > 0:
+            prior_tenders = db.session.execute(select(OrderPayment.method, func.coalesce(func.sum(OrderPayment.amount), 0)).where(
+                OrderPayment.tenant_container_id == company.tenant_container_id,
+                OrderPayment.company_id == company.id,
+                OrderPayment.transaction_reference == f"notice-deposit-credit:{source_notice.id}",
+            ).group_by(OrderPayment.method)).all()
+            used_by_method = {method: Decimal(str(amount or 0)) for method, amount in prior_tenders}
+            original_by_method: dict[str, Decimal] = {}
+            for tender in source_notice.payments or []:
+                if not isinstance(tender, dict) or tender.get("method") not in {"cash", "bank", "bank_transfer", "other"}:
+                    continue
+                try:
+                    original_amount = Decimal(str(tender.get("amount", "0"))).quantize(MONEY_QUANTUM)
+                except (InvalidOperation, ValueError, TypeError):
+                    continue
+                original_by_method[tender["method"]] = original_by_method.get(tender["method"], ZERO) + original_amount
+            for index, method in enumerate(original_by_method):
+                available_tender = max(ZERO, original_by_method[method] - used_by_method.get(method, ZERO))
+                applied = min(available_tender, deposit_remaining, total - credited_deposit)
+                if applied <= 0:
+                    continue
+                db.session.add(OrderPayment(
+                    tenant_container_id=company.tenant_container_id,
+                    company_id=company.id,
+                    order_id=order.id,
+                    store_id=store.id,
+                    method=method,
+                    amount=applied,
+                    idempotency_key=f"notice-deposit:{source_notice.id}:{source_demand_notice_fulfillment_key or order.id}:{index}"[:128],
+                    transaction_reference=f"notice-deposit-credit:{source_notice.id}"[:128],
+                    received_by_id=actor.id,
+                ))
+                db.session.flush()
+                credited_deposit += applied
+                deposit_remaining -= applied
+                _add_audit(company.id, actor.id, "commercial.demand_notice.deposit_applied", "sales_order", order.id, store_id=store.id,
+                           after={"notice_id": source_notice.id, "method": method, "amount": format(applied, ".3f")})
+                if deposit_remaining <= 0 or credited_deposit >= total:
+                    break
+    if source_notice is not None:
+        fulfilled_quantity = _as_integer(items[0].get("quantity"), field="Item quantity")
+        source_notice.quantity_fulfilled += fulfilled_quantity
+        if source_notice.quantity_fulfilled >= source_notice.quantity_requested:
+            source_notice.quantity_fulfilled = source_notice.quantity_requested
+            source_notice.status = "converted"
         source_notice.updated_by_id = actor.id
+        db.session.add(DemandNoticeFulfillment(
+            tenant_container_id=company.tenant_container_id,
+            company_id=company.id,
+            notice_id=source_notice.id,
+            order_id=order.id,
+            quantity=fulfilled_quantity,
+            deposit_applied=credited_deposit,
+            idempotency_key=source_demand_notice_fulfillment_key or f"order:{order.id}",
+            fulfilled_by_id=actor.id,
+        ))
+        if credited_deposit == total:
+            _issue_invoice(order, company)
+            order.status = "closed"
+            order.closed_at = datetime.now(timezone.utc)
     if source_quote is not None:
         source_quote.status = "converted"
         source_quote.updated_by_id = actor.id
@@ -823,9 +1045,194 @@ def create_order(
             "source_quotation_id": source_quote.id if source_quote else None,
         },
     )
+    sales_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.order_changed",
+        payload={"order_id": order.id, "order_number": order.order_number, "status": order.status, "total_amount": format(total, ".3f"), "balance": format(max(total - _paid_amount(order), ZERO), ".3f")},
+    )
+    event_ids.append(sales_event.id)
     db.session.commit()
     _publish_inventory_events(event_ids)
     return order
+
+
+def express_checkout(
+    actor: User,
+    *,
+    store_id: str,
+    items: list[dict],
+    payments: list[dict],
+    idempotency_key: str,
+    customer_phone: str,
+    customer_name: str | None = None,
+    company_id: str | None = None,
+) -> tuple[SalesOrder, bool]:
+    """Atomic SKU checkout: catalog prices, inventory, tender, invoice, audit."""
+    if not actor.has_permission("express_checkout"):
+        raise SalesRuleError("Express checkout permission is required.", 403, "permission_denied")
+    if not isinstance(idempotency_key, str) or not idempotency_key.strip() or len(idempotency_key.strip()) > 128:
+        raise SalesRuleError("A checkout idempotency key of 1-128 characters is required.")
+    idempotency_key = idempotency_key.strip()
+    if not isinstance(items, list) or not items or len(items) > 100:
+        raise SalesRuleError("Add 1-100 items to express checkout.")
+    if not isinstance(payments, list) or not payments or len(payments) > 10:
+        raise SalesRuleError("Provide 1-10 tender payments.")
+    phone_search = normalize_phone(customer_phone)
+    cleaned_name = (customer_name or "").strip() or None
+    if cleaned_name and len(cleaned_name) > 160:
+        raise SalesRuleError("Customer name is too long.")
+    company = _company_for_actor(actor, company_id)
+    store = _require_assigned_store(actor, store_id, company.id)
+    _require_sales_domain(
+        actor,
+        tenant_container_id=company.tenant_container_id,
+        domain="sales",
+        action="add",
+        company_id=company.id,
+        store_id=store.id,
+    )
+    canonical_request = json.dumps(
+        {
+            "store_id": store.id,
+            "phone": phone_search,
+            "name": cleaned_name,
+            "items": items,
+            "payments": payments,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    request_hash = hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
+    existing_order = db.session.execute(
+        select(SalesOrder).where(
+            SalesOrder.tenant_container_id == company.tenant_container_id,
+            SalesOrder.company_id == company.id,
+            SalesOrder.checkout_idempotency_key == idempotency_key,
+        )
+    ).scalar_one_or_none()
+    if existing_order is not None:
+        if existing_order.checkout_request_hash != request_hash:
+            raise SalesRuleError("This checkout key was already used for different items or payment.", 409, "idempotency_conflict")
+        return existing_order, True
+
+    normalized_lines: list[dict] = []
+    subtotal = ZERO
+    for raw in items:
+        if not isinstance(raw, dict):
+            raise SalesRuleError("Each checkout item must include SKU and quantity.")
+        sku = str(raw.get("sku", "")).strip()
+        if not sku or len(sku) > 128:
+            raise SalesRuleError("Each checkout item needs a valid SKU.")
+        quantity = _as_integer(raw.get("quantity"), field="Item quantity")
+        product = db.session.execute(
+            select(CatalogProduct)
+            .where(
+                CatalogProduct.tenant_container_id == company.tenant_container_id,
+                CatalogProduct.company_id == company.id,
+                CatalogProduct.sku == sku,
+                CatalogProduct.is_active.is_(True),
+            )
+            .with_for_update()
+        ).scalar_one_or_none()
+        if product is None:
+            raise SalesRuleError(f"No active product with SKU {sku} was found.", 404, "product_not_found")
+        if product.price is None:
+            raise SalesRuleError(f"Set a catalog price for {product.name} before checkout.", 409, "product_price_missing")
+        price = Decimal(str(product.price)).quantize(MONEY_QUANTUM)
+        normalized_lines.append({"product_id": product.id, "quantity": quantity})
+        subtotal += price * quantity
+    if len({line["product_id"] for line in normalized_lines}) != len(normalized_lines):
+        raise SalesRuleError("Each product may appear only once in express checkout.")
+
+    order = SalesOrder(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        origin_store_id=store.id,
+        customer_name=cleaned_name,
+        customer_phone=customer_phone.strip()[:64],
+        phone_search=phone_search,
+        order_number=_allocate_order_number(company),
+        checkout_idempotency_key=idempotency_key,
+        checkout_request_hash=request_hash,
+        business_date=company_today(company),
+        status="open",
+        total_amount=ZERO,
+        created_by_id=actor.id,
+        updated_by_id=actor.id,
+    )
+    db.session.add(order)
+    db.session.flush()
+    event_ids: list[int] = []
+    for item in normalized_lines:
+        _line, event = _add_order_line(actor, company, store, order, item)
+        event_ids.append(event.id)
+    total = _recalculate_order(order, company)
+    normalized_payments: list[tuple[str, Decimal, str | None]] = []
+    payment_total = ZERO
+    for payment in payments:
+        if not isinstance(payment, dict):
+            raise SalesRuleError("Each tender must include method and amount.")
+        method = payment.get("method")
+        if method not in {"cash", "bank", "bank_transfer", "other"}:
+            raise SalesRuleError("Choose Cash, Bank, Bank Transfer, or Other as a tender.")
+        amount = as_money(payment.get("amount"), field="Payment", allow_zero=False)
+        reference = payment.get("transaction_reference")
+        if reference is not None:
+            if not isinstance(reference, str) or len(reference.strip()) > 128:
+                raise SalesRuleError("Payment transaction reference must be at most 128 characters.")
+            reference = reference.strip() or None
+        normalized_payments.append((method, amount, reference))
+        payment_total += amount
+    if payment_total != total:
+        raise SalesRuleError("Express checkout payments must exactly match the bill total.", 409, "payment_total_mismatch")
+    for index, (method, amount, reference) in enumerate(normalized_payments):
+        db.session.add(
+            OrderPayment(
+                tenant_container_id=company.tenant_container_id,
+                company_id=company.id,
+                order_id=order.id,
+                store_id=store.id,
+                method=method,
+                amount=amount,
+                idempotency_key=f"express:{idempotency_key}:{index}",
+                transaction_reference=reference,
+                received_by_id=actor.id,
+            )
+        )
+    db.session.flush()
+    _issue_invoice(order, company)
+    order.status = "closed"
+    order.closed_at = datetime.now(timezone.utc)
+    order.updated_by_id = actor.id
+    _add_audit(
+        company.id,
+        actor.id,
+        "order.express_checkout_completed",
+        "sales_order",
+        order.id,
+        store_id=store.id,
+        after={
+            "order_number": order.order_number,
+            "invoice_number": order.invoice_number,
+            "total": format(total, ".3f"),
+            "items": len(normalized_lines),
+            "payments": len(normalized_payments),
+        },
+    )
+    sales_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.order_changed",
+        payload={"order_id": order.id, "order_number": order.order_number, "status": order.status, "total_amount": format(total, ".3f"), "balance": "0.000"},
+    )
+    event_ids.append(sales_event.id)
+    db.session.commit()
+    _publish_inventory_events(event_ids)
+    return order, False
 
 
 def find_open_orders(actor: User, *, store_id: str, phone: str, company_id: str | None = None) -> list[dict]:
@@ -929,7 +1336,7 @@ def add_order_item(actor: User, *, order_id: str, store_id: str, item: dict) -> 
     )
     old_total = Decimal(order.total_amount)
     line, event = _add_order_line(actor, company, store, order, item)
-    new_total = _recalculate_order(order)
+    new_total = _recalculate_order(order, company)
     order.updated_by_id = actor.id
     _add_audit(
         company.id,
@@ -947,8 +1354,15 @@ def add_order_item(actor: User, *, order_id: str, store_id: str, item: dict) -> 
             "order_total": format(new_total, ".3f"),
         },
     )
+    sales_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.order_changed",
+        payload={"order_id": order.id, "order_number": order.order_number, "status": order.status, "total_amount": format(new_total, ".3f"), "balance": format(max(new_total - _paid_amount(order), ZERO), ".3f")},
+    )
     db.session.commit()
-    _publish_inventory_events([event.id])
+    _publish_inventory_events([event.id, sales_event.id])
     return order
 
 
@@ -1008,7 +1422,15 @@ def request_item_removal(actor: User, *, order_id: str, store_id: str, line_id: 
         after={"order_id": order.id, "line_id": line.id, "quantity": quantity},
         reason=reason,
     )
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.removal_changed",
+        payload={"order_id": order.id, "request_id": request.id, "status": "pending"},
+    )
     db.session.commit()
+    _publish_inventory_events([realtime_event.id])
     return request
 
 
@@ -1086,7 +1508,16 @@ def review_removal_request(actor: User, *, request_id: str, approve: bool, revie
             after={"status": "rejected"},
             reason=review_reason or removal.reason,
         )
+        removal_store = _store_for_company(removal.requesting_store_id, removal.company_id)
+        realtime_event = _sales_realtime_event(
+            company=company,
+            store=removal_store,
+            actor=actor,
+            event_type="sales.removal_changed",
+            payload={"order_id": order.id, "request_id": removal.id, "status": "rejected"},
+        )
         db.session.commit()
+        _publish_inventory_events([realtime_event.id])
         return removal
 
     previous_quantity = line.quantity
@@ -1125,7 +1556,7 @@ def review_removal_request(actor: User, *, request_id: str, approve: bool, revie
     else:
         line.quantity = new_quantity
         line.line_total = new_line_total
-    new_total = _recalculate_order(order)
+    new_total = _recalculate_order(order, company)
     paid = _paid_amount(order)
     if new_total < paid:
         db.session.rollback()
@@ -1152,6 +1583,14 @@ def review_removal_request(actor: User, *, request_id: str, approve: bool, revie
         order.status = "closed"
         order.closed_at = datetime.now(timezone.utc)
         _add_audit(company.id, actor.id, "order.closed", "sales_order", order.id, store_id=removal.requesting_store_id, after={"status": "closed", "invoice_number": order.invoice_number})
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=_store_for_company(removal.requesting_store_id, removal.company_id),
+        actor=actor,
+        event_type="sales.removal_changed",
+        payload={"order_id": order.id, "request_id": removal.id, "status": removal.status},
+    )
+    inventory_event_ids.append(realtime_event.id)
     db.session.commit()
     _publish_inventory_events(inventory_event_ids)
     return removal
@@ -1232,8 +1671,320 @@ def record_payment(actor: User, *, order_id: str, store_id: str, method: str, am
             store_id=store.id,
             after={"status": "closed", "invoice_category": order.invoice_category, "invoice_number": order.invoice_number},
         )
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.payment_recorded",
+        payload={
+            "order_id": order.id,
+            "order_number": order.order_number,
+            "status": order.status,
+            "total_amount": format(Decimal(order.total_amount), ".3f"),
+            "paid_amount": format(paid_after, ".3f"),
+            "balance": format(Decimal(order.total_amount) - paid_after, ".3f"),
+        },
+    )
     db.session.commit()
+    _publish_inventory_events([realtime_event.id])
     return order, payment, False
+
+
+def find_store_credits(actor: User, *, phone: str, company_id: str | None = None) -> list[StoreCredit]:
+    company = _company_for_actor(actor, company_id)
+    phone_search = normalize_phone(phone)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id)
+    rows = db.session.execute(
+        select(StoreCredit).where(
+            StoreCredit.tenant_container_id == company.tenant_container_id,
+            StoreCredit.company_id == company.id,
+            StoreCredit.phone_search == phone_search,
+            StoreCredit.status == "open",
+            StoreCredit.remaining_amount > 0,
+        ).order_by(StoreCredit.created_at.desc()).limit(100)
+    ).scalars()
+    now = datetime.now(timezone.utc)
+    active: list[StoreCredit] = []
+    for credit in rows:
+        expires_at = credit.expires_at
+        if expires_at is not None and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at is None or expires_at > now:
+            active.append(credit)
+        if len(active) >= 50:
+            break
+    return active
+
+
+def redeem_store_credit(
+    actor: User,
+    *,
+    credit_id: str,
+    order_id: str,
+    store_id: str,
+    customer_phone: str,
+    amount,
+    idempotency_key: str,
+) -> tuple[SalesOrder, StoreCreditRedemption, bool]:
+    if not isinstance(idempotency_key, str) or not idempotency_key.strip() or len(idempotency_key.strip()) > 128:
+        raise SalesRuleError("A store-credit redemption key of 1-128 characters is required.")
+    key = idempotency_key.strip()
+    phone_search = normalize_phone(customer_phone)
+    order, store, company = _order_for_actor(actor, order_id, store_id, lock=True)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="add", company_id=company.id, store_id=store.id)
+    credit = db.session.execute(
+        select(StoreCredit).where(
+            StoreCredit.tenant_container_id == company.tenant_container_id,
+            StoreCredit.company_id == company.id,
+            StoreCredit.id == credit_id,
+        ).with_for_update()
+    ).scalar_one_or_none()
+    if credit is None:
+        raise SalesRuleError("Store credit not found.", 404, "credit_not_found")
+    if credit.phone_search != phone_search or order.phone_search != phone_search:
+        raise SalesRuleError("Customer phone must match both the credit and the bill.", 403, "credit_customer_mismatch")
+    existing = db.session.execute(
+        select(StoreCreditRedemption).where(
+            StoreCreditRedemption.tenant_container_id == company.tenant_container_id,
+            StoreCreditRedemption.company_id == company.id,
+            StoreCreditRedemption.idempotency_key == key,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        if existing.store_credit_id != credit_id or existing.order_id != order.id or Decimal(existing.amount) != as_money(amount, field="Credit redemption", allow_zero=False):
+            raise SalesRuleError("This redemption key was already used for another credit or amount.", 409, "idempotency_conflict")
+        return order, existing, True
+    if order.status != "open":
+        raise SalesRuleError("Store credit can only be applied to an open bill.", 409, "order_closed")
+    now = datetime.now(timezone.utc)
+    if credit.status != "open" or Decimal(credit.remaining_amount) <= ZERO:
+        raise SalesRuleError("This store credit has no remaining value.", 409, "credit_unavailable")
+    if credit.expires_at is not None:
+        expires_at = credit.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at <= now:
+            raise SalesRuleError("This store credit has expired.", 409, "credit_expired")
+    credit_amount = as_money(amount, field="Credit redemption", allow_zero=False)
+    paid_before = _paid_amount(order)
+    outstanding = Decimal(order.total_amount) - paid_before
+    if credit_amount > Decimal(credit.remaining_amount) or credit_amount > outstanding:
+        raise SalesRuleError("Credit redemption exceeds either the remaining credit or bill balance.", 409, "credit_amount_exceeded")
+    payment = OrderPayment(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        order_id=order.id,
+        store_id=store.id,
+        method="other",
+        amount=credit_amount,
+        idempotency_key=f"store-credit:{hashlib.sha256(key.encode('utf-8')).hexdigest()}",
+        transaction_reference=f"Store credit {credit.credit_number}",
+        received_by_id=actor.id,
+    )
+    db.session.add(payment)
+    db.session.flush()
+    redemption = StoreCreditRedemption(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        store_credit_id=credit.id,
+        order_id=order.id,
+        payment_id=payment.id,
+        amount=credit_amount,
+        idempotency_key=key,
+        processed_by_id=actor.id,
+    )
+    db.session.add(redemption)
+    credit.remaining_amount = Decimal(credit.remaining_amount) - credit_amount
+    if credit.remaining_amount == ZERO:
+        credit.status = "fully_used"
+    paid_after = paid_before + credit_amount
+    order.updated_by_id = actor.id
+    _add_audit(company.id, actor.id, "store_credit.redeemed", "store_credit", credit.id, store_id=store.id, before={"remaining_amount": format(Decimal(credit.remaining_amount) + credit_amount, ".3f")}, after={"remaining_amount": format(credit.remaining_amount, ".3f"), "order_id": order.id, "amount": format(credit_amount, ".3f")})
+    if paid_after == Decimal(order.total_amount):
+        _issue_invoice(order, company)
+        order.status = "closed"
+        order.closed_at = now
+        _add_audit(company.id, actor.id, "order.closed", "sales_order", order.id, store_id=store.id, after={"status": "closed", "invoice_number": order.invoice_number})
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.payment_recorded",
+        payload={
+            "order_id": order.id,
+            "order_number": order.order_number,
+            "status": order.status,
+            "total_amount": format(Decimal(order.total_amount), ".3f"),
+            "paid_amount": format(paid_after, ".3f"),
+            "balance": format(Decimal(order.total_amount) - paid_after, ".3f"),
+        },
+    )
+    db.session.commit()
+    _publish_inventory_events([realtime_event.id])
+    return order, redemption, False
+
+
+def _allocate_credit_number(company: Company) -> str:
+    locked_company = db.session.execute(
+        select(Company).where(
+            Company.id == company.id,
+            Company.tenant_container_id == company.tenant_container_id,
+        ).with_for_update()
+    ).scalar_one_or_none()
+    if locked_company is None or not locked_company.is_active:
+        raise SalesRuleError("Company not found.", 404, "not_found")
+    series = db.session.execute(
+        select(BusinessNumberSeries).where(
+            BusinessNumberSeries.tenant_container_id == company.tenant_container_id,
+            BusinessNumberSeries.company_id == company.id,
+            BusinessNumberSeries.document_type == "store_credit",
+        ).with_for_update()
+    ).scalar_one_or_none()
+    if series is None:
+        series = BusinessNumberSeries(
+            tenant_container_id=company.tenant_container_id,
+            company_id=company.id,
+            document_type="store_credit",
+            prefix="CR-",
+            next_number=1,
+        )
+        db.session.add(series)
+        db.session.flush()
+    number = int(series.next_number)
+    if number <= 0 or number > 999999999:
+        raise SalesRuleError("Store credit number series is exhausted; contact an administrator.", 409, "series_exhausted")
+    series.next_number = number + 1
+    return f"{series.prefix}{number:06d}"
+
+
+def _issue_store_credit(
+    actor: User,
+    *,
+    company: Company,
+    order: SalesOrder,
+    return_record: OrderReturn,
+    amount: Decimal,
+    customer_name: str | None,
+    customer_phone: str,
+) -> StoreCredit:
+    credit = StoreCredit(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        credit_number=_allocate_credit_number(company),
+        customer_name=customer_name,
+        customer_phone=customer_phone,
+        phone_search=normalize_phone(customer_phone),
+        amount=amount,
+        remaining_amount=amount,
+        status="open",
+        source_order_id=order.id,
+        source_return_id=return_record.id,
+        issued_by_id=actor.id,
+        reason=return_record.reason,
+    )
+    db.session.add(credit)
+    db.session.flush()
+    _add_audit(
+        company.id,
+        actor.id,
+        "sales.store_credit.issued",
+        "store_credit",
+        credit.id,
+        store_id=return_record.store_id,
+        after={
+            "credit_number": credit.credit_number,
+            "amount": format(amount, ".3f"),
+            "customer_phone": credit.phone_search,
+            "source_order": order.order_number,
+        },
+    )
+    return credit
+
+
+def _build_exchange_order(
+    actor: User,
+    *,
+    company: Company,
+    store: Store,
+    source_order: SalesOrder,
+    return_record: OrderReturn,
+    exchange_items: list[dict] | None,
+    customer_name: str | None,
+    customer_phone: str,
+) -> tuple[SalesOrder, list[int]]:
+    if not isinstance(exchange_items, list) or not exchange_items or len(exchange_items) > 100:
+        raise SalesRuleError("An exchange needs 1-100 replacement items.")
+    order_number = _allocate_order_number(company)
+    exchange_order = SalesOrder(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        origin_store_id=store.id,
+        customer_name=(customer_name or "").strip() or None,
+        customer_phone=customer_phone.strip(),
+        phone_search=normalize_phone(customer_phone),
+        order_number=order_number,
+        source_return_id=return_record.id,
+        business_date=company_today(company),
+        status="open",
+        total_amount=ZERO,
+        created_by_id=actor.id,
+        updated_by_id=actor.id,
+    )
+    db.session.add(exchange_order)
+    db.session.flush()
+    event_ids: list[int] = []
+    for item in exchange_items:
+        _line, event = _add_order_line(actor, company, store, exchange_order, item)
+        event_ids.append(event.id)
+    total = _recalculate_order(exchange_order, company)
+    if total <= 0:
+        raise SalesRuleError("An exchange bill must have a positive total.")
+    credit_applied = min(Decimal(return_record.refund_amount), total)
+    if credit_applied > 0:
+        payment = OrderPayment(
+            tenant_container_id=company.tenant_container_id,
+            company_id=company.id,
+            order_id=exchange_order.id,
+            store_id=store.id,
+            method="other",
+            amount=credit_applied,
+            idempotency_key=f"exchange:{return_record.id}",
+            transaction_reference=f"Exchange for {source_order.order_number}",
+            received_by_id=actor.id,
+        )
+        db.session.add(payment)
+        db.session.flush()
+        if credit_applied == total:
+            _issue_invoice(exchange_order, company)
+            exchange_order.status = "closed"
+            exchange_order.closed_at = datetime.now(timezone.utc)
+    surplus_credit = Decimal(return_record.refund_amount) - credit_applied
+    if surplus_credit > 0:
+        _issue_store_credit(
+            actor,
+            company=company,
+            order=source_order,
+            return_record=return_record,
+            amount=surplus_credit,
+            customer_name=source_order.customer_name,
+            customer_phone=source_order.customer_phone,
+        )
+    _add_audit(
+        company.id,
+        actor.id,
+        "order.exchange_created",
+        "sales_order",
+        exchange_order.id,
+        store_id=store.id,
+        after={
+            "order_number": order_number,
+            "source_order": source_order.order_number,
+            "total_amount": format(total, ".3f"),
+            "credit_applied": format(credit_applied, ".3f"),
+            "store_credit_issued": format(surplus_credit, ".3f"),
+        },
+    )
+    return exchange_order, event_ids
 
 
 def process_order_return(
@@ -1246,10 +1997,17 @@ def process_order_return(
     refund_method: str,
     idempotency_key: str,
     transaction_reference: str | None = None,
+    kind: str = "refund",
+    exchange_items: list[dict] | None = None,
+    customer_name: str | None = None,
 ) -> tuple[SalesOrder, OrderReturn, bool]:
-    """Return sold quantities, restore stock, and record one tendered refund."""
+    """Return sold quantities, restore stock, and refund, exchange, or credit."""
     if not (actor.is_super_admin or actor.is_company_admin or actor.effective_role == "manager"):
         raise SalesRuleError("Only a manager or administrator can process a return/refund.", 403, "return_forbidden")
+    if kind not in RETURN_KINDS:
+        raise SalesRuleError("Choose refund, exchange, or store credit.")
+    if kind != "refund":
+        refund_method = "other"
     if not isinstance(refund_method, str) or refund_method not in {"cash", "bank", "bank_transfer", "other"}:
         raise SalesRuleError("Choose the tender used to issue the refund.")
     if not isinstance(idempotency_key, str):
@@ -1314,6 +2072,7 @@ def process_order_return(
         ).all()
         if (
             existing_return.order_id != order.id
+            or existing_return.kind != kind
             or existing_return.store_id != store.id
             or existing_return.refund_method != refund_method
             or existing_return.reason != reason
@@ -1342,7 +2101,11 @@ def process_order_return(
         raise SalesRuleError("One or more order items are not available for return.", 404, "return_line_not_found")
 
     prior_rows = db.session.execute(
-        select(OrderReturnLine.sales_order_line_id, func.coalesce(func.sum(OrderReturnLine.quantity), 0))
+        select(
+            OrderReturnLine.sales_order_line_id,
+            func.coalesce(func.sum(OrderReturnLine.quantity), 0),
+            func.coalesce(func.sum(OrderReturnLine.line_total), 0),
+        )
         .join(
             OrderReturn,
             (OrderReturn.tenant_container_id == OrderReturnLine.tenant_container_id)
@@ -1357,7 +2120,29 @@ def process_order_return(
         )
         .group_by(OrderReturnLine.sales_order_line_id)
     ).all()
-    previously_returned = {line_id: int(quantity or 0) for line_id, quantity in prior_rows}
+    previously_returned = {line_id: int(quantity or 0) for line_id, quantity, _amount in prior_rows}
+    previously_refunded_amounts = {line_id: Decimal(str(amount or 0)).quantize(MONEY_QUANTUM) for line_id, _quantity, amount in prior_rows}
+    all_order_lines = list(db.session.execute(
+        select(SalesOrderLine).where(
+            SalesOrderLine.tenant_container_id == company.tenant_container_id,
+            SalesOrderLine.company_id == company.id,
+            SalesOrderLine.order_id == order.id,
+            SalesOrderLine.is_active.is_(True),
+        ).order_by(SalesOrderLine.id.asc())
+    ).scalars())
+    subtotal = Decimal(order.subtotal_amount or 0)
+    effective_total = Decimal(order.total_amount or 0)
+    if subtotal <= ZERO:
+        raise SalesRuleError("The original bill does not contain a refundable subtotal.", 409, "invalid_refund_basis")
+    line_refund_targets: dict[str, Decimal] = {}
+    allocated = ZERO
+    for historical_line in all_order_lines:
+        target = (Decimal(historical_line.line_total) * effective_total / subtotal).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_UP)
+        line_refund_targets[historical_line.id] = target
+        allocated += target
+    if all_order_lines:
+        last_line_id = all_order_lines[-1].id
+        line_refund_targets[last_line_id] += effective_total - allocated
 
     line_amounts: dict[str, Decimal] = {}
     total_refund = ZERO
@@ -1371,7 +2156,11 @@ def process_order_return(
                 409,
                 "return_quantity_exceeded",
             )
-        amount = (Decimal(line.unit_price) * quantity).quantize(MONEY_QUANTUM)
+        cumulative_quantity = returned_before + quantity
+        cumulative_amount = (line_refund_targets[line_id] * cumulative_quantity / line.quantity).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_UP)
+        amount = cumulative_amount - previously_refunded_amounts.get(line_id, ZERO)
+        if amount < ZERO:
+            raise SalesRuleError("The refund allocation is inconsistent with prior returns.", 409, "refund_allocation_conflict")
         line_amounts[line_id] = amount
         total_refund += amount
     total_refund = total_refund.quantize(MONEY_QUANTUM)
@@ -1394,6 +2183,7 @@ def process_order_return(
         company_id=company.id,
         order_id=order.id,
         store_id=store.id,
+        kind=kind,
         refund_method=refund_method,
         refund_amount=total_refund,
         idempotency_key=idempotency_key,
@@ -1404,6 +2194,31 @@ def process_order_return(
     db.session.add(return_record)
     db.session.flush()
     inventory_event_ids: list[int] = []
+    exchange_order = None
+    if kind == "exchange":
+        exchange_order, exchange_event_ids = _build_exchange_order(
+            actor,
+            company=company,
+            store=store,
+            source_order=order,
+            return_record=return_record,
+            exchange_items=exchange_items,
+            customer_name=customer_name or order.customer_name,
+            customer_phone=order.customer_phone,
+        )
+        return_record.exchange_order_id = exchange_order.id
+        inventory_event_ids.extend(exchange_event_ids)
+        db.session.flush()
+    elif kind == "store_credit":
+        _issue_store_credit(
+            actor,
+            company=company,
+            order=order,
+            return_record=return_record,
+            amount=total_refund,
+            customer_name=customer_name or order.customer_name,
+            customer_phone=order.customer_phone,
+        )
     for line_id, quantity in requested_quantities.items():
         line = line_by_id[line_id]
         db.session.add(
@@ -1451,13 +2266,14 @@ def process_order_return(
     _add_audit(
         company.id,
         actor.id,
-        "sales.return_refunded",
+        "sales.return_refunded" if kind == "refund" else f"sales.return_{kind}",
         "order_return",
         return_record.id,
         store_id=store.id,
         after={
             "order_id": order.id,
             "order_number": order.order_number,
+            "kind": return_record.kind,
             "refund_method": refund_method,
             "refund_amount": format(total_refund, ".3f"),
             "items": [
@@ -1467,6 +2283,20 @@ def process_order_return(
         },
         reason=reason,
     )
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.return_recorded",
+        payload={
+            "order_id": order.id,
+            "order_number": order.order_number,
+            "return_id": return_record.id,
+            "kind": return_record.kind,
+            "refund_amount": format(total_refund, ".3f"),
+        },
+    )
+    inventory_event_ids.append(realtime_event.id)
     db.session.commit()
     _publish_inventory_events(inventory_event_ids)
     return order, return_record, False
@@ -1482,16 +2312,43 @@ def _expected_collections(company: Company, store_id: str, business_date: date) 
             OrderPayment.store_id == store_id,
             OrderPayment.created_at >= start,
             OrderPayment.created_at < end,
+            or_(OrderPayment.transaction_reference.is_(None), ~OrderPayment.transaction_reference.like("notice-deposit-credit:%")),
         )
         .group_by(OrderPayment.method)
     ).all()
     totals = {method: Decimal(str(amount or 0)).quantize(MONEY_QUANTUM) for method, amount in rows}
+    # Commercial deposits are real cash/bank collections and belong in the same
+    # daily closeout as POS receipts. They are held in the locked notice JSON
+    # ledger for compatibility with imported legacy payments.
+    notices = db.session.execute(
+        select(DemandNotice).where(
+            DemandNotice.tenant_container_id == company.tenant_container_id,
+            DemandNotice.company_id == company.id,
+            DemandNotice.store_id == store_id,
+        )
+    ).scalars()
+    for notice in notices:
+        for payment in notice.payments or []:
+            if not isinstance(payment, dict) or payment.get("method") not in {"cash", "bank", "bank_transfer", "other"}:
+                continue
+            try:
+                received_at = datetime.fromisoformat(str(payment.get("received_at", "")))
+                if received_at.tzinfo is None:
+                    received_at = received_at.replace(tzinfo=timezone.utc)
+                received_at = received_at.astimezone(timezone.utc)
+                amount = Decimal(str(payment.get("amount", "0"))).quantize(MONEY_QUANTUM)
+            except (ValueError, InvalidOperation):
+                continue
+            if start <= received_at < end:
+                method = payment["method"]
+                totals[method] = totals.get(method, ZERO) + amount
     refund_rows = db.session.execute(
         select(OrderReturn.refund_method, func.coalesce(func.sum(OrderReturn.refund_amount), 0))
         .where(
             OrderReturn.tenant_container_id == company.tenant_container_id,
             OrderReturn.company_id == company.id,
             OrderReturn.store_id == store_id,
+            OrderReturn.kind == "refund",
             OrderReturn.created_at >= start,
             OrderReturn.created_at < end,
         )
@@ -1574,7 +2431,15 @@ def submit_cashup(
             "counted": {key: format(value, ".3f") for key, value in normalized_counted.items()},
         },
     )
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.cashup_changed",
+        payload={"cashup_id": cashup.id, "business_date": business_date.isoformat(), "status": cashup.status},
+    )
     db.session.commit()
+    _publish_inventory_events([realtime_event.id])
     return cashup
 
 
@@ -1612,5 +2477,95 @@ def review_cashup(actor: User, *, cashup_id: str, approve: bool, note: str | Non
         before={"status": "submitted"},
         after={"status": cashup.status, "review_note": cashup.review_note},
     )
+    company = db.session.get(Company, cashup.company_id)
+    store = _store_for_company(cashup.store_id, cashup.company_id)
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.cashup_changed",
+        payload={"cashup_id": cashup.id, "business_date": cashup.business_date.isoformat(), "status": cashup.status},
+    )
     db.session.commit()
+    _publish_inventory_events([realtime_event.id])
     return cashup
+
+
+def list_sales_orders(actor: User, *, company_id: str | None = None, store_id: str | None = None, status: str | None = None, search: str | None = None, limit: int = 500) -> list[dict]:
+    company = _company_for_actor(actor, company_id)
+    allowed = accessible_store_ids(actor, company_id=company.id, tenant_container_id=company.tenant_container_id)
+    allowed = {sid for sid in allowed if can_access_data_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id, store_id=sid)}
+    if store_id:
+        store = _require_assigned_store(actor, store_id, company.id)
+        _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id, store_id=store.id)
+        allowed &= {store.id}
+    if not allowed:
+        return []
+    statement = select(SalesOrder).where(
+        SalesOrder.tenant_container_id == company.tenant_container_id,
+        SalesOrder.company_id == company.id,
+        SalesOrder.origin_store_id.in_(allowed),
+    )
+    if status and status != "all":
+        if status not in {"open", "closed", "voided"}:
+            raise SalesRuleError("Choose a valid order status.")
+        statement = statement.where(SalesOrder.status == status)
+    term = str(search or "").strip()[:80]
+    if term:
+        statement = statement.where(or_(
+            SalesOrder.order_number.ilike(f"%{term}%"),
+            SalesOrder.invoice_number.ilike(f"%{term}%"),
+            SalesOrder.customer_name.ilike(f"%{term}%"),
+            SalesOrder.customer_phone.ilike(f"%{term}%"),
+        ))
+    rows = db.session.execute(statement.order_by(SalesOrder.created_at.desc()).limit(max(1, min(int(limit), 1000)))).scalars()
+    return [order_dict(order) for order in rows]
+
+
+def update_order_fulfillment(actor: User, *, order_id: str, status: str, delivery_address: str | None = None, storekeeper_notes: str | None = None, company_id: str | None = None) -> SalesOrder:
+    company = _company_for_actor(actor, company_id)
+    order_ref = db.session.execute(select(SalesOrder).where(
+        SalesOrder.id == order_id,
+        SalesOrder.tenant_container_id == company.tenant_container_id,
+        SalesOrder.company_id == company.id,
+    )).scalar_one_or_none()
+    if order_ref is None:
+        raise SalesRuleError("Order not found.", 404, "not_found")
+    order, store, company = _order_for_actor(actor, order_id, order_ref.origin_store_id, for_shared_bill=False, lock=True)
+    sales_edit = can_access_data_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="edit", company_id=company.id, store_id=store.id)
+    logistics_edit = actor.has_permission("manage_logistics") and can_access_data_domain(actor, tenant_container_id=company.tenant_container_id, domain="inventory", action="edit", company_id=company.id, store_id=store.id)
+    if not (actor.is_admin or sales_edit or logistics_edit):
+        raise SalesRuleError("You are not allowed to update delivery fulfillment.", 403, "permission_denied")
+    if status not in {"pending", "partially_delivered", "delivered", "cancelled"}:
+        raise SalesRuleError("Choose a valid delivery status.")
+    transitions = {
+        "pending": {"pending", "partially_delivered", "delivered", "cancelled"},
+        "partially_delivered": {"partially_delivered", "delivered", "cancelled"},
+        "delivered": {"delivered"},
+        "cancelled": {"cancelled"},
+    }
+    if status not in transitions.get(order.delivery_status or "pending", {"pending"}):
+        raise SalesRuleError("Delivery status cannot move backwards or reopen a terminal fulfillment.", 409, "invalid_transition")
+    before = {"delivery_status": order.delivery_status, "delivery_address": order.delivery_address, "storekeeper_notes": order.storekeeper_notes}
+    if delivery_address is not None:
+        if not isinstance(delivery_address, str) or len(delivery_address.strip()) > 2000:
+            raise SalesRuleError("Delivery address must be 2000 characters or fewer.")
+        order.delivery_address = delivery_address.strip() or None
+    if storekeeper_notes is not None:
+        if not isinstance(storekeeper_notes, str) or len(storekeeper_notes.strip()) > 500:
+            raise SalesRuleError("Storekeeper notes must be 500 characters or fewer.")
+        order.storekeeper_notes = storekeeper_notes.strip() or None
+    order.delivery_status = status
+    order.updated_by_id = actor.id
+    _add_audit(company.id, actor.id, "sales.fulfillment_updated", "sales_order", order.id, store_id=store.id, before=before,
+               after={"delivery_status": status, "delivery_address": order.delivery_address, "storekeeper_notes": order.storekeeper_notes})
+    realtime_event = _sales_realtime_event(
+        company=company,
+        store=store,
+        actor=actor,
+        event_type="sales.order_changed",
+        payload={"order_id": order.id, "order_number": order.order_number, "status": order.status, "delivery_status": order.delivery_status},
+    )
+    db.session.commit()
+    _publish_inventory_events([realtime_event.id])
+    return order

@@ -20,6 +20,7 @@ from ..models import (
     normalize_username,
 )
 from .forms import CreateUserForm
+from ..saas.service import SaaSRuleError, ensure_capacity
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 ROLE_LABELS = {
@@ -183,6 +184,11 @@ def users():
         if User.query.filter_by(username=username).first():
             form.username.errors.append("That username is already in use.")
             return _render_accounts(form, 400, company_id)
+        try:
+            ensure_capacity(company.tenant_container_id, "active_user")
+        except SaaSRuleError as error:
+            form.username.errors.append(str(error))
+            return _render_accounts(form, 400, company_id)
 
         account = User(
             company_id=company.id,
@@ -247,13 +253,27 @@ def toggle_user_active(user_id: str):
             flash("The last active Company Admin cannot be deactivated.", "error")
             return redirect(url_for("admin.users", company_id=membership.company_id if current_user.is_super_admin else None))
 
+    if not membership.is_active:
+        try:
+            ensure_capacity(membership.tenant_container_id, "active_user")
+        except SaaSRuleError as error:
+            flash(str(error), "error")
+            return redirect(url_for("admin.users", company_id=membership.company_id if current_user.is_super_admin else None))
+
     membership.is_active = not membership.is_active
     active_memberships = ContainerMembership.query.filter_by(user_id=target.id, is_active=True).count()
     target.is_active = membership.is_active or active_memberships > 0
     target.auth_version += 1
-    db.session.commit()
-    from ..realtime.service import clear_user_subscriptions
+    from ..realtime.service import clear_user_subscriptions, publish_realtime_event, stage_user_access_revocations
 
+    access_event_ids = stage_user_access_revocations(
+        user_id=target.id,
+        actor_user_id=current_user.id,
+        include_inactive=True,
+    )
+    db.session.commit()
+    for event_id in access_event_ids:
+        publish_realtime_event(event_id)
     clear_user_subscriptions(target.id)
     state = "activated" if membership.is_active else "deactivated"
     flash(f"Account '{target.username}' {state} in this tenant.", "success")

@@ -1,34 +1,42 @@
 {% extends "base.html" %}
 {% block title %}Overview · Retail Genie{% endblock %}
 {% block content %}
-<section class="page-heading dashboard-heading">
-  <div>
-    <p class="eyebrow">RETAIL GENIE · FLASK EDITION</p>
-    <h1>Welcome, {{ current_user.username }}</h1>
-    <p class="muted">Your signed-in role is <strong>{{ current_user.role|replace('_', ' ')|title }}</strong>. Account checks happen on the server.</p>
+<section class="workspace-hero">
+  <div class="workspace-hero-copy">
+    <p class="eyebrow">RETAIL GENIE · WORKSPACE</p>
+    <h1>Good to see you, {{ current_user.username }}</h1>
+    <p class="muted">Your dashboard is tailored to your role and current access.</p>
   </div>
-  <span class="pill pill-success">Account active</span>
-</section>
-
-<section class="card milestone-card">
-  <div class="milestone-icon" aria-hidden="true">✓</div>
-  <div>
-    <p class="eyebrow">PHASE 2 IN PROGRESS</p>
-    <h2>Secure foundation with backup controls</h2>
-    <p class="muted">The Flask foundation is in place. Phase 2 adds administrator-configurable MySQL backups, a separate backup worker, and a reviewed SQLite import path. Business workflows and real-time sync are still being migrated.</p>
+  <div class="workspace-context">
+    <span class="workspace-role">{{ current_user.effective_role|replace('_', ' ')|title }}</span>
+    {% if active_tenant %}<span class="workspace-tenant">{{ active_tenant.name }}{% if active_company %} · {{ active_company.name }}{% endif %}</span>{% elif current_user.is_super_admin %}<span class="workspace-tenant">Platform administration</span>{% endif %}
   </div>
 </section>
 
-<section class="section-heading">
-  <div>
-    <h2>Migration roadmap</h2>
-    <p class="muted">Business modules will be added in tested stages. The existing Node version remains the behavior reference.</p>
-  </div>
-</section>
-<div class="roadmap-grid">
-  <article class="card roadmap-item"><span class="step-number">01</span><div><h3>Accounts & access</h3><p>Central accounts, secure sessions, roles, and permission checks.</p></div><span class="pill pill-success">Foundation</span></article>
-  <article class="card roadmap-item"><span class="step-number">02</span><div><h3>Database & backups</h3><p>Schema map, safe SQLite import, admin schedule, and private MySQL dumps.</p></div><span class="pill">In progress</span></article>
-  <article class="card roadmap-item"><span class="step-number">03</span><div><h3>Products & stock</h3><p>Catalog, barcode lookup, stock controls, and CSV tools.</p></div><span class="pill">Next</span></article>
-  <article class="card roadmap-item"><span class="step-number">04</span><div><h3>Sales & checkout</h3><p>Orders, payments, invoices, returns, and transaction safety.</p></div><span class="pill">Planned</span></article>
-</div>
+{% if dashboard_cards %}
+  {% for group, cards in dashboard_cards|groupby('group') %}
+    <section class="workspace-section" aria-labelledby="workspace-group-{{ loop.index }}">
+      <div class="workspace-section-heading">
+        <div><p class="eyebrow">{{ group }}</p><h2 id="workspace-group-{{ loop.index }}">{% if group == 'Daily work' %}Your daily work{% elif group == 'Insights' %}Insights & reporting{% elif group == 'Workspace setup' %}Workspace tools{% elif group == 'Administration' %}Administration{% else %}{{ group }}{% endif %}</h2></div>
+        <span class="workspace-count">{{ cards|length }} available</span>
+      </div>
+      <div class="workspace-card-grid">
+        {% for card in cards %}
+          <a class="workspace-card" href="{{ card.url }}">
+            <span class="workspace-card-icon" aria-hidden="true">{{ card.icon }}</span>
+            <span class="workspace-card-copy"><strong>{{ card.title }}</strong><small>{{ card.description }}</small></span>
+            <span class="workspace-card-arrow" aria-hidden="true">→</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+{% else %}
+  <section class="workspace-empty panel">
+    <span class="workspace-card-icon" aria-hidden="true">RG</span>
+    <h2>Your workspace is ready</h2>
+    <p class="muted">There are no modules assigned to this account yet. Ask an administrator to review your role, permissions, and store access.</p>
+    <a class="button button-secondary" href="{{ url_for('auth.change_password') }}">Review account security</a>
+  </section>
+{% endif %}
 {% endblock %}

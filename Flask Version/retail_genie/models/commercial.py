@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    JSON,
     Numeric,
     String,
     Text,
@@ -31,7 +32,10 @@ class BusinessNumberSeries(db.Model):
 
     __tablename__ = "business_number_series"
     __table_args__ = (
-        CheckConstraint("document_type IN ('demand_notice', 'quotation')", name="ck_business_number_series_type"),
+        CheckConstraint(
+            "document_type IN ('demand_notice', 'quotation', 'purchase_order', 'store_credit')",
+            name="ck_business_number_series_type",
+        ),
         CheckConstraint("next_number > 0", name="ck_business_number_series_next_positive"),
         CheckConstraint("length(trim(prefix)) > 0", name="ck_business_number_series_prefix_nonempty"),
         ForeignKeyConstraint(
@@ -105,6 +109,7 @@ class DemandNotice(db.Model):
     store_id: Mapped[str] = mapped_column(String(64), nullable=False)
     notice_number: Mapped[str] = mapped_column(String(64), nullable=False)
     salesperson_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    salesperson_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
     customer_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
     customer_phone: Mapped[str] = mapped_column(String(64), nullable=False)
     phone_search: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -116,6 +121,8 @@ class DemandNotice(db.Model):
     quantity_fulfilled: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     agreed_price: Mapped[object | None] = mapped_column(Numeric(14, 3), nullable=True)
     expected_availability_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    payments: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    amount_paid: Mapped[object] = mapped_column(Numeric(14, 3), nullable=False, default=0)
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="open")
     is_new_product: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -217,4 +224,40 @@ class QuotationLine(db.Model):
     line_total: Mapped[object] = mapped_column(Numeric(14, 3), nullable=False)
     is_external: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     converted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)
+
+
+class DemandNoticeFulfillment(db.Model):
+    """Idempotent order/quantity fulfillment history for demand notices."""
+
+    __tablename__ = "commercial_demand_notice_fulfillments"
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="ck_demand_notice_fulfillments_quantity_positive"),
+        ForeignKeyConstraint(
+            ["tenant_container_id", "company_id", "notice_id"],
+            ["commercial_demand_notices.tenant_container_id", "commercial_demand_notices.company_id", "commercial_demand_notices.id"],
+            name="fk_demand_notice_fulfillments_notice",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_container_id", "company_id", "order_id"],
+            ["sales_orders.tenant_container_id", "sales_orders.company_id", "sales_orders.id"],
+            name="fk_demand_notice_fulfillments_order",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint("company_id", "notice_id", "idempotency_key", name="uq_demand_notice_fulfillment_key"),
+        UniqueConstraint("tenant_container_id", "company_id", "id", name="uq_demand_notice_fulfillment_container_id"),
+        Index("ix_demand_notice_fulfillment_notice", "tenant_container_id", "company_id", "notice_id", "created_at"),
+        {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4"},
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    tenant_container_id: Mapped[str] = mapped_column(String(64), ForeignKey("tenant_containers.id", ondelete="CASCADE"), nullable=False)
+    company_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    notice_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    order_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    deposit_applied: Mapped[object] = mapped_column(Numeric(14, 3), nullable=False, default=0)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    fulfilled_by_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)

@@ -635,7 +635,8 @@ def adjust_inventory(
     quantity_delta,
     reason: str,
     tenant_container_id: str | None = None,
-) -> tuple[InventoryBalance, InventoryMovement, RealtimeEvent]:
+    idempotency_key: str | None = None,
+) -> tuple[InventoryBalance, InventoryMovement, RealtimeEvent | None, bool]:
     tenant_id = _tenant_for_actor(actor, tenant_container_id)
     # Serialize event creation per store on MySQL so auto-increment cursors follow
     # commit order and clients can safely replay through a later event ID.
@@ -686,6 +687,48 @@ def adjust_inventory(
     cleaned_reason = str(reason or "").strip()
     if not cleaned_reason or len(cleaned_reason) > 500:
         raise CatalogRuleError("Enter a stock-change reason of 1 to 500 characters.")
+    if idempotency_key is not None:
+        idempotency_key = str(idempotency_key).strip()
+        if not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", idempotency_key):
+            raise CatalogRuleError("Provide a valid stock-adjustment idempotency key.")
+        existing = db.session.execute(
+            select(InventoryMovement).where(
+                InventoryMovement.tenant_container_id == tenant_id,
+                InventoryMovement.actor_user_id == actor.id,
+                InventoryMovement.idempotency_key == idempotency_key,
+            ).with_for_update()
+        ).scalar_one_or_none()
+        if existing is not None:
+            if (
+                existing.store_id != store.id
+                or existing.product_id != product.id
+                or existing.quantity_delta != delta
+                or existing.reason != cleaned_reason
+            ):
+                raise CatalogRuleError("This idempotency key was already used for a different adjustment.", 409, "idempotency_conflict")
+            existing_balance = db.session.execute(
+                select(InventoryBalance).where(
+                    InventoryBalance.tenant_container_id == tenant_id,
+                    InventoryBalance.company_id == store.company_id,
+                    InventoryBalance.store_id == store.id,
+                    InventoryBalance.product_owner_company_id == product.company_id,
+                    InventoryBalance.product_id == product.id,
+                )
+            ).scalar_one_or_none()
+            existing_event = None
+            candidates = db.session.execute(
+                select(RealtimeEvent).where(
+                    RealtimeEvent.tenant_container_id == tenant_id,
+                    RealtimeEvent.store_id == store.id,
+                    RealtimeEvent.product_id == product.id,
+                    RealtimeEvent.event_type == "inventory.updated",
+                ).order_by(RealtimeEvent.id.desc()).limit(100)
+            ).scalars().all()
+            for candidate in candidates:
+                if candidate.payload.get("movement_id") == existing.id:
+                    existing_event = candidate
+                    break
+            return existing_balance, existing, existing_event, True
 
     balance_statement = select(InventoryBalance).where(
         InventoryBalance.tenant_container_id == tenant_id,
@@ -728,6 +771,7 @@ def adjust_inventory(
         quantity_delta=delta,
         reason=cleaned_reason,
         actor_user_id=actor.id,
+        idempotency_key=idempotency_key,
     )
     db.session.add(movement)
     db.session.flush()
@@ -765,7 +809,7 @@ def adjust_inventory(
     )
     db.session.add(realtime_event)
     db.session.flush()
-    return balance, movement, realtime_event
+    return balance, movement, realtime_event, False
 
 
 def product_dict(product: CatalogProduct) -> dict:
@@ -1181,7 +1225,7 @@ def import_products_csv(
                 current_quantity = balance.quantity_on_hand if balance is not None else 0
                 delta = target_quantity - current_quantity
                 if delta:
-                    _balance, _movement, event = adjust_inventory(
+                    _balance, _movement, event, _replayed = adjust_inventory(
                         actor,
                         product.id,
                         store_id=store.id,

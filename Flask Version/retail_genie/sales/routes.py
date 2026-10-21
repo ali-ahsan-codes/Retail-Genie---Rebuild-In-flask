@@ -10,9 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from ..auth.store_scope import accessible_store_ids
-from ..auth.tenant_context import current_membership
+from ..auth.tenant_context import current_membership, current_tenant_container_id
 from ..extensions import db
-from ..models import Company, DailyCashup, OrderRemovalRequest, OrderReturn, OrderReturnLine, SalesOrder, SalesOrderLine, Store
+from ..models import Company, DailyCashup, OrderRemovalRequest, OrderReturn, OrderReturnLine, SalesOrder, SalesOrderLine, Store, StoreCredit
 from . import sales_bp
 from .service import (
     SalesRuleError,
@@ -21,6 +21,8 @@ from .service import (
     company_today,
     find_open_orders,
     find_returnable_orders,
+    find_store_credits,
+    list_sales_orders,
     order_dict,
     process_order_return,
     review_cashup,
@@ -28,8 +30,10 @@ from .service import (
     add_order_item,
     create_order,
     record_payment,
+    redeem_store_credit,
     request_item_removal,
     submit_cashup,
+    update_order_fulfillment,
 )
 
 
@@ -130,6 +134,14 @@ def create_sales_order():
             customer_name=data.get("customer_name"),
             items=data.get("items"),
             company_id=data.get("company_id"),
+            discount_percentage=data.get("discount_percentage"),
+            primary_salesperson_id=data.get("primary_salesperson_id"),
+            secondary_salesperson_id=data.get("secondary_salesperson_id"),
+            delivery_address=data.get("delivery_address"),
+            storekeeper_notes=data.get("storekeeper_notes"),
+            cashier_notes=data.get("cashier_notes"),
+            reminder_date=data.get("reminder_date"),
+            reminder_notes=data.get("reminder_notes"),
         )
         return jsonify(order=order_dict(order)), 201
     except SalesRuleError as error:
@@ -151,6 +163,85 @@ def get_sales_order(order_id: str):
         return jsonify(order=order_dict(order))
     except SalesRuleError as error:
         return _error_response(error)
+
+
+@sales_bp.patch("/api/v1/orders/<string:order_id>/fulfillment")
+@login_required
+def update_order_fulfillment_api(order_id: str):
+    data = _payload()
+    try:
+        order = update_order_fulfillment(current_user, order_id=order_id, company_id=data.get("company_id"), status=str(data.get("delivery_status", "")), delivery_address=data.get("delivery_address"), storekeeper_notes=data.get("storekeeper_notes"))
+        return jsonify(order=order_dict(order)), 200
+    except SalesRuleError as error:
+        return _error_response(error)
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="integrity_conflict", message="The fulfillment update conflicted; retry after refreshing."), 409
+
+
+@sales_bp.get("/api/v1/orders")
+@login_required
+def list_sales_orders_api():
+    try:
+        rows = list_sales_orders(current_user, company_id=request.args.get("company_id"), store_id=request.args.get("store_id"), status=request.args.get("status", "all"), search=request.args.get("q"))
+        return jsonify(orders=rows), 200
+    except SalesRuleError as error:
+        return _error_response(error)
+
+
+@sales_bp.get("/admin/orders")
+@login_required
+def admin_orders_page():
+    companies = []
+    if current_user.is_super_admin and not request.args.get("company_id"):
+        tenant_id = current_tenant_container_id(current_user)
+        companies = Company.query.filter_by(tenant_container_id=tenant_id, is_active=True).order_by(Company.name.asc()).all() if tenant_id else []
+        return render_template("sales/orders.html", company=None, companies=companies, stores=[], orders=[], status="all", search="")
+    try:
+        company = _company_for_actor(current_user, request.args.get("company_id"))
+        store_ids = accessible_store_ids(current_user, company_id=company.id, tenant_container_id=company.tenant_container_id)
+        stores = Store.query.filter(Store.id.in_(store_ids), Store.is_active.is_(True)).order_by(Store.code.asc()).all() if store_ids else []
+        if not (current_user.is_admin or current_user.has_permission("manage_orders") or current_user.has_permission("sales.view")):
+            abort(403)
+        orders = list_sales_orders(current_user, company_id=company.id, store_id=request.args.get("store_id") or None, status=request.args.get("status", "all"), search=request.args.get("q", ""))
+    except SalesRuleError as error:
+        abort(error.status_code)
+    return render_template("sales/orders.html", company=company, companies=companies, stores=stores, orders=orders, status=request.args.get("status", "all"), search=request.args.get("q", ""))
+
+
+@sales_bp.get("/sales/orders/<string:order_id>/print")
+@login_required
+def print_sales_order(order_id: str):
+    try:
+        company = _company_for_actor(current_user, request.args.get("company_id"))
+        order_ref = db.session.execute(select(SalesOrder).where(SalesOrder.id == order_id, SalesOrder.tenant_container_id == company.tenant_container_id, SalesOrder.company_id == company.id)).scalar_one_or_none()
+        if order_ref is None:
+            abort(404)
+        order, _store, _company = _order_for_actor(current_user, order_id, order_ref.origin_store_id, for_shared_bill=False)
+    except SalesRuleError as error:
+        abort(error.status_code)
+    return render_template("sales/order_print.html", order=order_dict(order), company=company)
+
+
+@sales_bp.get("/sales/returns/<string:return_id>/print")
+@login_required
+def print_return_slip(return_id: str):
+    try:
+        company = _company_for_actor(current_user, request.args.get("company_id"))
+        record = db.session.execute(select(OrderReturn).where(OrderReturn.id == return_id, OrderReturn.tenant_container_id == company.tenant_container_id, OrderReturn.company_id == company.id)).scalar_one_or_none()
+        if record is None:
+            abort(404)
+        order, _store, _company = _order_for_actor(current_user, record.order_id, record.store_id, for_shared_bill=False)
+        rows = db.session.execute(select(OrderReturnLine, SalesOrderLine.name).join(SalesOrderLine,
+            (SalesOrderLine.tenant_container_id == OrderReturnLine.tenant_container_id) &
+            (SalesOrderLine.company_id == OrderReturnLine.company_id) &
+            (SalesOrderLine.id == OrderReturnLine.sales_order_line_id)
+        ).where(OrderReturnLine.tenant_container_id == company.tenant_container_id, OrderReturnLine.company_id == company.id, OrderReturnLine.return_id == record.id)).all()
+        details = [{"name": name, "quantity": line.quantity, "unit_price": format(line.unit_price, ".3f"), "line_total": format(line.line_total, ".3f")} for line, name in rows]
+        document = {"id": record.id, "kind": record.kind, "refund_method": record.refund_method, "refund_amount": format(record.refund_amount, ".3f"), "reason": record.reason, "transaction_reference": record.transaction_reference, "created_at": record.created_at.isoformat() if record.created_at else None, "items": details}
+    except SalesRuleError as error:
+        abort(error.status_code)
+    return render_template("sales/return_print.html", order=order_dict(order), document=document, company=company)
 
 
 @sales_bp.post("/api/v1/orders/<string:order_id>/items")
@@ -238,6 +329,38 @@ def create_order_payment(order_id: str):
         return jsonify(error="integrity_conflict", message="Payment could not be saved; check for a repeated request."), 409
 
 
+@sales_bp.get("/api/v1/store-credits")
+@login_required
+def list_store_credits_api():
+    try:
+        credits = find_store_credits(current_user._get_current_object(), phone=request.args.get("phone", ""), company_id=request.args.get("company_id"))
+        return jsonify(credits=[{"id": credit.id, "credit_number": credit.credit_number, "customer_name": credit.customer_name, "remaining_amount": format(credit.remaining_amount, ".3f"), "expires_at": credit.expires_at.isoformat() if credit.expires_at else None} for credit in credits]), 200
+    except SalesRuleError as error:
+        return _error_response(error)
+
+
+@sales_bp.post("/api/v1/orders/<string:order_id>/store-credits/<string:credit_id>/redeem")
+@login_required
+def redeem_store_credit_api(order_id: str, credit_id: str):
+    data = _payload()
+    try:
+        order, redemption, replayed = redeem_store_credit(
+            current_user._get_current_object(),
+            credit_id=credit_id,
+            order_id=order_id,
+            store_id=str(data.get("store_id", "")),
+            customer_phone=data.get("customer_phone", ""),
+            amount=data.get("amount"),
+            idempotency_key=data.get("idempotency_key", ""),
+        )
+        return jsonify(order=order_dict(order), redemption={"id": redemption.id, "amount": format(redemption.amount, ".3f"), "store_credit_id": redemption.store_credit_id}, replayed=replayed), 200 if replayed else 201
+    except SalesRuleError as error:
+        return _error_response(error)
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="integrity_conflict", message="Store credit could not be applied; retry with the same request key."), 409
+
+
 @sales_bp.post("/api/v1/orders/<string:order_id>/returns")
 @login_required
 def create_order_return(order_id: str):
@@ -252,6 +375,9 @@ def create_order_return(order_id: str):
             refund_method=str(data.get("refund_method", "")),
             idempotency_key=data.get("idempotency_key"),
             transaction_reference=data.get("transaction_reference"),
+            kind=data.get("kind", "refund"),
+            exchange_items=data.get("exchange_items"),
+            customer_name=data.get("customer_name"),
         )
         result = {
             "id": return_record.id,
@@ -263,7 +389,18 @@ def create_order_return(order_id: str):
             "transaction_reference": return_record.transaction_reference,
             "created_at": return_record.created_at.isoformat() if return_record.created_at else None,
         }
-        return jsonify(order=order_dict(order), return_transaction=result, replayed=replayed), (200 if replayed else 201)
+        credit = StoreCredit.query.filter_by(
+            tenant_container_id=return_record.tenant_container_id,
+            company_id=return_record.company_id,
+            source_return_id=return_record.id,
+        ).first() if return_record.kind == "store_credit" else None
+        credit_result = None if credit is None else {
+            "id": credit.id,
+            "credit_number": credit.credit_number,
+            "amount": format(credit.amount, ".3f"),
+            "remaining_amount": format(credit.remaining_amount, ".3f"),
+        }
+        return jsonify(order=order_dict(order), return_transaction=result, store_credit=credit_result, replayed=replayed), (200 if replayed else 201)
     except SalesRuleError as error:
         return _error_response(error)
     except IntegrityError:
@@ -440,6 +577,8 @@ def submit_order_return_page(order_id: str):
     store_id = str(request.form.get("store_id", ""))
     search = str(request.form.get("search", ""))[:80]
     items = []
+    print_return_id = None
+    return_company_id = request.form.get("company_id")
     for key, value in request.form.items():
         if key.startswith("quantity_") and str(value).strip() not in {"", "0"}:
             items.append({"line_id": key.removeprefix("quantity_"), "quantity": value})
@@ -456,13 +595,17 @@ def submit_order_return_page(order_id: str):
         )
         message = f"Refund of OMR {Decimal(return_record.refund_amount):.3f} recorded by {return_record.refund_method.replace('_', ' ')}."
         flash(("This return was already recorded. " if replayed else "") + message, "success")
+        print_return_id = return_record.id
+        return_company_id = _order.company_id
     except SalesRuleError as error:
         db.session.rollback()
         flash(str(error), "error")
     except IntegrityError:
         db.session.rollback()
         flash("The refund conflicted with another request; reload before retrying.", "error")
-    return redirect(url_for("sales.returns_page", store_id=store_id, q=search))
+    if print_return_id:
+        return redirect(url_for("sales.print_return_slip", return_id=print_return_id, company_id=return_company_id))
+    return redirect(url_for("sales.returns_page", company_id=return_company_id or None, store_id=store_id, q=search))
 
 
 @sales_bp.get("/removals")

@@ -13,24 +13,51 @@
       <span class="brand-mark" aria-hidden="true">RG</span>
       <span><strong>Retail Genie</strong><small>Flask Edition</small></span>
     </a>
+    {% if not is_mobile_device and app_login_url %}
+      <details class="app-qr">
+        <summary class="app-qr-toggle"><span aria-hidden="true">▦</span> Open on phone</summary>
+        <div class="app-qr-popover">
+          <img src="{{ url_for('main.app_login_qr') }}" alt="QR code for the Retail Genie sign-in page">
+          <p>Scan with a phone camera while it is connected to the same Wi-Fi network.</p>
+          <a href="{{ app_login_url }}">{{ app_login_url }}</a>
+        </div>
+      </details>
+    {% endif %}
     {% if current_user.is_authenticated %}
-      <nav class="main-nav" aria-label="Main navigation">
+      <details class="nav-menu">
+        <summary class="nav-menu-toggle"><span aria-hidden="true">☰</span><span>Menu</span></summary>
+        <nav class="main-nav" aria-label="Main navigation">
         <a href="{{ url_for('main.dashboard') }}">Overview</a>
-        {% if current_user.company_id or current_user.is_super_admin %}<a href="{{ url_for('sales.point_of_sale') }}">Sales / POS</a>{% endif %}
+        {% if current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.point_of_sale') }}">Sales / POS</a>{% endif %}
+        {% if current_user.has_permission('express_checkout') %}<a href="{{ url_for('express.express_page') }}">Express checkout</a>{% endif %}
+        {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') %}<a href="{{ url_for('sales.admin_orders_page') }}">Orders / fulfillment</a>{% endif %}
         {% if current_user.has_permission('sales.view') %}
           <a href="{{ url_for('commercial.demand_notices_page') }}">Demand notices</a>
           <a href="{{ url_for('commercial.quotations_page') }}">Quotations</a>
         {% endif %}
-        {% if current_user.has_permission('product_catalog.view') or current_user.has_permission('manage_products') %}<a href="{{ url_for('catalog.products_page') }}">Products / inventory</a>{% endif %}
-        {% if current_user.effective_role == 'manager' or current_user.is_company_admin or current_user.is_super_admin %}
-          <a href="{{ url_for('sales.daily_cashup_page') }}">Daily cashup</a>
-          <a href="{{ url_for('sales.removal_approvals_page') }}">Removals</a>
-          {% if current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.returns_page') }}">Returns / refunds</a>{% endif %}
-        {% endif %}
-        {% if current_user.has_permission('manage_users') %}
+        {% if current_user.has_permission('product_catalog.view') or current_user.has_permission('inventory.view') or current_user.has_permission('manage_products') %}<a href="{{ url_for('catalog.products_page') }}">Products / inventory</a>{% endif %}
+        {% if current_user.has_permission('manage_labels') %}<a href="{{ url_for('catalog.label_printing_page') }}">Barcode / labels</a>{% endif %}
+        {% if current_user.has_permission('manage_suppliers') or current_user.has_permission('create_pos') or current_user.has_permission('receive_stock') or current_user.has_permission('manage_logistics') %}<a href="{{ url_for('scm.scm_dashboard') }}">Supply chain</a>{% endif %}
+        {% if current_user.has_permission('manage_audits') or current_user.has_permission('conduct_audits') %}<a href="{{ url_for('stock_audits.audits_page') }}">Stock audits</a>{% endif %}
+        {% if current_user.has_permission('view_reports') or current_user.has_permission('view_salesperson_reports') %}<a href="{{ url_for('reports.salesperson_reports_page') }}">Sales reports</a>{% endif %}
+        {% if current_user.has_permission('view_activity_logs') %}<a href="{{ url_for('reports.activity_logs_page') }}">Activity log</a>{% endif %}
+        {% if current_user.is_admin or current_user.has_permission('manage_settings') or current_user.has_permission('manage_commissions') %}<a href="{{ url_for('settings.settings_index') }}">Settings</a>{% endif %}
+        {% if current_user.effective_role == 'display' %}<a href="{{ url_for('display.lcd_display_page') }}">LCD display</a>{% endif %}
+        <a href="{{ url_for('attendance.attendance_page') }}">Attendance / breaks</a>
+        <a href="{{ url_for('messaging.messaging_page') }}">Messages</a>
+        <a href="{{ url_for('cloud.my_cloud_page') }}">My files</a>
+        {% if current_user.has_permission('manage_cloud_files') %}<a href="{{ url_for('cloud.file_management_page') }}">File management</a>{% endif %}
+        {% if current_user.has_permission('manage_settings') or current_user.has_permission('manage_orders') or current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.daily_cashup_page') }}">Daily cashup</a>{% endif %}
+        {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') %}<a href="{{ url_for('sales.removal_approvals_page') }}">Removals</a>{% endif %}
+        {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') or current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.returns_page') }}">Returns / refunds</a>{% endif %}
+        {% if current_user.has_permission('manage_users') or current_user.has_permission('manage_accounts') %}
           <a href="{{ url_for('admin.users') }}">Accounts</a>
         {% endif %}
+        {% if current_user.is_company_admin %}<a href="{{ url_for('saas.tenant_portal') }}">Subscription &amp; plan</a>{% endif %}
         {% if current_user.is_super_admin %}
+          <a href="{{ url_for('saas.plans') }}">SaaS plans</a>
+          <a href="{{ url_for('saas.subscriptions') }}">Tenant subscriptions</a>
+          <a href="{{ url_for('saas.plan_requests') }}">Plan requests</a>
           <a href="{{ url_for('tenancy_admin.companies') }}">Companies</a>
           <a href="{{ url_for('tenancy_admin.domain_policy_index') }}">Data policies</a>
           <a href="{{ url_for('admin_backups.settings') }}">Database backups</a>
@@ -40,7 +67,8 @@
           <a href="{{ url_for('tenancy_admin.stores', company_id=current_user.company_id) }}">Stores</a>
           <a href="{{ url_for('tenancy_admin.billing_settings', company_id=current_user.company_id) }}">Billing setup</a>
         {% endif %}
-      </nav>
+        </nav>
+      </details>
       <div class="account-nav">
         <span class="account-name">{{ current_user.username }}<small>{{ current_user.role|replace('_', ' ')|title }}</small></span>
         <a class="quiet-link" href="{{ url_for('auth.change_password') }}">Password</a>
@@ -66,5 +94,9 @@
   </main>
   <footer class="site-footer">Retail Genie · Flask + MySQL foundation</footer>
   {% block scripts %}{% endblock %}
+  {% if current_user.is_authenticated and request.endpoint and request.endpoint.startswith('sales.') and request.endpoint not in ['sales.print_sales_order', 'sales.print_return_slip'] and (current_user.has_permission('sales.view') or current_user.has_permission('inventory.view')) %}
+    <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/sales-realtime.js') }}" defer></script>
+  {% endif %}
 </body>
 </html>

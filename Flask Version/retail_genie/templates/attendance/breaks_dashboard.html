@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Breaks dashboard · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Phase 3 · People</p><h1>Breaks dashboard</h1><p class="muted">{{ dashboard.business_date }} · {{ dashboard.company_id }}</p></div><a class="button button-secondary" href="{{ url_for('attendance.attendance_page') }}">Attendance</a></section>
+<section class="panel"><h2>Active breaks ({{ dashboard.active_breaks|length }})</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>Staff account</th><th>Started</th><th>Elapsed (seconds)</th></tr></thead><tbody>{% for row in dashboard.active_breaks %}<tr><td>{{ row.user_id }}</td><td>{{ row.start_time }}</td><td>—</td></tr>{% else %}<tr><td colspan="3">No active breaks.</td></tr>{% endfor %}</tbody></table></div></section><section class="panel"><h2>Today's attendance</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>Staff account</th><th>Clock in</th><th>Clock out</th><th>Method</th></tr></thead><tbody>{% for row in dashboard.today_logs %}<tr><td>{{ row.user_id }}</td><td>{{ row.timestamp }}</td><td>{{ 'Yes' if row.clocked_out else 'No' }}</td><td>{{ row.method }}</td></tr>{% else %}<tr><td colspan="4">No attendance records.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

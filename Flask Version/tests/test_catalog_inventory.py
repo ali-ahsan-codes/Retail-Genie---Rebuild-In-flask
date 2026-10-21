@@ -174,6 +174,39 @@ def test_catalog_preserves_expiry_demand_notice_and_store_threshold(client, crea
         assert event.after_data["low_stock_threshold"] == 5
 
 
+def test_inventory_adjustment_idempotency_replays_without_double_counting(client, create_user, app):
+    create_user("inventory.idempotent", role="manager", permissions=CATALOG_PERMISSIONS)
+    _login(client, "inventory.idempotent")
+    product = _create_product(client)
+    payload = {
+        "store_id": "test-store",
+        "quantity_delta": 5,
+        "reason": "Offline delivery adjustment",
+        "idempotency_key": "offline-adjustment-001",
+    }
+
+    first = client.post(f"/api/v1/products/{product['id']}/inventory", json=payload)
+    assert first.status_code == 201, first.get_json()
+    replay = client.post(f"/api/v1/products/{product['id']}/inventory", json=payload)
+    assert replay.status_code == 200, replay.get_json()
+    assert replay.get_json()["replayed"] is True
+    assert replay.get_json()["inventory"]["quantity_on_hand"] == 5
+    assert replay.get_json()["movement"]["id"] == first.get_json()["movement"]["id"]
+
+    conflict = client.post(
+        f"/api/v1/products/{product['id']}/inventory",
+        json={**payload, "quantity_delta": 6},
+    )
+    assert conflict.status_code == 409
+    assert conflict.get_json()["error"] == "idempotency_conflict"
+
+    with app.app_context():
+        from retail_genie.models import InventoryMovement
+
+        movements = InventoryMovement.query.filter_by(idempotency_key="offline-adjustment-001").all()
+        assert len(movements) == 1
+
+
 def test_catalog_domain_permissions_sku_conflicts_and_unassigned_store_are_enforced(client, create_user, app):
     create_user("catalog.manager", role="manager", permissions=CATALOG_PERMISSIONS)
     _login(client, "catalog.manager")

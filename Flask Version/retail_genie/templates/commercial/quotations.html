@@ -80,6 +80,8 @@
               <td>{{ item.total_amount }}</td>
               <td>{{ item.valid_until or '—' }}</td>
               <td><span class="status-pill">{{ item.status|title }}</span>
+                <a class="button button-quiet" href="{{ url_for('commercial.print_quotation', quotation_id=item.id, company_id=company.id) }}">Print / Email</a>
+                {% if item.status in ['draft', 'sent'] and current_user.has_permission('sales.edit') %}<details class="quote-edit-details"><summary>Edit document</summary><form class="quote-edit-form" data-quotation-id="{{ item.id }}" data-company-id="{{ company.id }}"><label>Customer name<input name="customer_name" value="{{ item.customer_name or '' }}" maxlength="160"></label><label>Phone<input name="customer_phone" value="{{ item.customer_phone }}" maxlength="64" required></label><label>Email<input name="customer_email" type="email" value="{{ item.customer_email or '' }}" maxlength="254"></label><label>Address<input name="customer_address" value="{{ item.customer_address or '' }}" maxlength="2000"></label><label>Preparation days<input name="preparation_days" type="number" min="0" value="{{ item.preparation_days }}"></label><label>Valid until<input name="valid_until" type="date" value="{{ item.valid_until or '' }}"></label><label>Notes<textarea name="notes" rows="2">{{ item.notes or '' }}</textarea></label><label>Lines JSON<textarea name="lines" rows="5" required>{{ item.lines|tojson }}</textarea><small>Each line requires product_id, quantity and unit_price; use is_external=true with product_name for an external line.</small></label><button class="button button-secondary" type="submit">Save document</button></form></details>{% endif %}
                 {% if item.status == 'draft' %}<button class="button button-secondary quotation-action" type="button" data-action="sent" data-quotation-id="{{ item.id }}" data-company-id="{{ company.id }}">Mark sent</button>{% endif %}
                 {% if item.status == 'sent' %}
                   <button class="button button-secondary quotation-action" type="button" data-action="accepted" data-quotation-id="{{ item.id }}" data-company-id="{{ company.id }}">Mark accepted</button>
@@ -102,7 +104,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (() => {
   const token = document.querySelector('[data-commercial-csrf]')?.value || '';
   const submit = async (button, endpoint, body) => {
@@ -138,6 +140,22 @@
       {company_id: button.dataset.companyId}
     ));
   });
+  document.querySelectorAll('.quote-edit-form').forEach((form) => form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const fields = Object.fromEntries(new FormData(form));
+    try { fields.lines = JSON.parse(fields.lines); } catch (_) { window.alert('Lines must be valid JSON.'); return; }
+    fields.company_id = form.dataset.companyId;
+    const button = form.querySelector('button[type="submit"]');
+    const result = form.closest('tr')?.querySelector('.commercial-action-result');
+    if (button) button.disabled = true;
+    try {
+      const response = await fetch(`/api/v1/quotations/${encodeURIComponent(form.dataset.quotationId)}`, {method:'PATCH',headers:{'Content-Type':'application/json','X-CSRFToken':token},credentials:'same-origin',body:JSON.stringify(fields)});
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Quotation could not be updated.');
+      if (result) result.textContent = ' Updated.';
+      window.setTimeout(() => window.location.reload(), 500);
+    } catch (error) { if (result) result.textContent = ` ${error.message}`; if (button) button.disabled = false; }
+  }));
   const productSelect = document.getElementById('quote-product');
   const price = document.getElementById('quote-price');
   productSelect?.addEventListener('change', () => {

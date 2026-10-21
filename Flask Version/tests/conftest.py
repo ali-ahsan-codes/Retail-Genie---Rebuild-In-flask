@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import os
+
 import pytest
-from sqlalchemy import event
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
+from sqlalchemy import event, inspect, make_url
 
 from retail_genie import create_app
-from retail_genie.extensions import db
+from retail_genie.extensions import db, migrate
 from retail_genie.models import (
     BillingSeries,
     Company,
@@ -19,13 +23,44 @@ from retail_genie.models import (
 from retail_genie.tenancy.service import seed_tenant_data_policies
 
 
+def _clear_mysql_test_tables() -> None:
+    """Remove test rows while retaining schema in the guarded disposable DB."""
+    db.session.remove()
+    with db.engine.connect() as connection:
+        connection.exec_driver_sql("SET FOREIGN_KEY_CHECKS=0")
+        connection.commit()
+        try:
+            for table in reversed(db.metadata.sorted_tables):
+                connection.execute(table.delete())
+            connection.commit()
+        finally:
+            if connection.in_transaction():
+                connection.rollback()
+            connection.exec_driver_sql("SET FOREIGN_KEY_CHECKS=1")
+            connection.commit()
+
+
 @pytest.fixture(scope="session")
 def app():
+    mysql_test_url = os.getenv("RETAIL_GENIE_MYSQL_TEST_URL")
+    database_uri = "sqlite://"
+    if mysql_test_url:
+        try:
+            test_url = make_url(mysql_test_url)
+        except (TypeError, ValueError):
+            raise RuntimeError("RETAIL_GENIE_MYSQL_TEST_URL is not a valid SQLAlchemy URL.") from None
+        if test_url.get_backend_name() != "mysql" or not (test_url.database or "").endswith("_phase6_test"):
+            raise RuntimeError(
+                "MySQL integration tests require a MySQL database name ending in '_phase6_test'; "
+                "the suite clears its test tables between cases."
+            )
+        database_uri = mysql_test_url
+
     application = create_app(
         {
             "TESTING": True,
             "SECRET_KEY": "test-only-secret-key-not-for-production",
-            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "SQLALCHEMY_DATABASE_URI": database_uri,
             "WTF_CSRF_ENABLED": False,
             "RATELIMIT_ENABLED": False,
             "SESSION_COOKIE_SECURE": False,
@@ -34,23 +69,41 @@ def app():
     )
     with application.app_context():
         engine = db.engine
-
-        @event.listens_for(engine, "connect")
-        def _enable_sqlite_foreign_keys(connection, _connection_record):
-            cursor = connection.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
-
-        db.create_all()
+        if engine.dialect.name == "sqlite":
+            @event.listens_for(engine, "connect")
+            def _enable_sqlite_foreign_keys(connection, _connection_record):
+                cursor = connection.cursor()
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.close()
+            db.create_all()
+        else:
+            # Do not let the MySQL test fixture create or alter schema. Require
+            # the operator to run reviewed Alembic migrations explicitly first.
+            with engine.connect() as connection:
+                current_heads = set(MigrationContext.configure(connection).get_current_heads())
+                expected_heads = set(ScriptDirectory.from_config(migrate.get_config()).get_heads())
+                missing_tables = set(db.metadata.tables) - set(inspect(connection).get_table_names())
+            if not expected_heads or current_heads != expected_heads or missing_tables:
+                raise RuntimeError(
+                    "MySQL integration database is not at the current Alembic head or is missing mapped tables; "
+                    "run reviewed `flask db upgrade` on the disposable *_phase6_test database first."
+                )
     yield application
     with application.app_context():
         db.session.remove()
-        db.drop_all()
+        if db.engine.dialect.name == "sqlite":
+            db.drop_all()
+        db.engine.dispose()
 
 
 @pytest.fixture(autouse=True)
 def clear_database(app):
+    from retail_genie.realtime.service import initialize_realtime_registry
+
+    initialize_realtime_registry(app)
     with app.app_context():
+        if db.engine.dialect.name == "mysql":
+            _clear_mysql_test_tables()
         container = TenantContainer(
             id="test-container",
             name="Test Tenant",
@@ -101,22 +154,26 @@ def clear_database(app):
     yield
     with app.app_context():
         db.session.remove()
-        raw_connection = db.engine.raw_connection()
-        cursor = raw_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=OFF")
-        raw_connection.commit()
-        cursor.close()
-        raw_connection.close()
-        for table in reversed(db.metadata.sorted_tables):
-            db.session.execute(table.delete())
-        db.session.commit()
-        db.session.remove()
-        raw_connection = db.engine.raw_connection()
-        cursor = raw_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        raw_connection.commit()
-        cursor.close()
-        raw_connection.close()
+        if db.engine.dialect.name == "sqlite":
+            raw_connection = db.engine.raw_connection()
+            cursor = raw_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=OFF")
+            raw_connection.commit()
+            cursor.close()
+            raw_connection.close()
+            for table in reversed(db.metadata.sorted_tables):
+                db.session.execute(table.delete())
+            db.session.commit()
+            db.session.remove()
+            raw_connection = db.engine.raw_connection()
+            cursor = raw_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            raw_connection.commit()
+            cursor.close()
+            raw_connection.close()
+        else:
+            # The guarded *_phase6_test schema is retained for repeat runs.
+            _clear_mysql_test_tables()
 
 
 @pytest.fixture()

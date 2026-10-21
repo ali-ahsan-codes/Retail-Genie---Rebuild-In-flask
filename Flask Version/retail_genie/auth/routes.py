@@ -106,9 +106,12 @@ def change_password():
             current_user.set_password(form.new_password.data or "")
             current_user.force_password_change = False
             current_user.auth_version += 1
-            db.session.commit()
-            from ..realtime.service import clear_user_subscriptions
+            from ..realtime.service import clear_user_subscriptions, publish_realtime_event, stage_user_access_revocations
 
+            access_event_ids = stage_user_access_revocations(user_id=current_user.id, actor_user_id=current_user.id)
+            db.session.commit()
+            for event_id in access_event_ids:
+                publish_realtime_event(event_id)
             clear_user_subscriptions(current_user.id)
             # Keep this session signed in; all other sessions are now stale.
             session["auth_version"] = current_user.auth_version

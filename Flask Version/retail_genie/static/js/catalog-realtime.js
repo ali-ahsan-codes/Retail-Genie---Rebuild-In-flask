@@ -189,9 +189,15 @@
     });
   });
 
-  // Push is a wake-up signal, not the source of cursor advancement: replaying
-  // the durable feed in order prevents a fast later push from skipping an event.
-  socket.on("inventory.updated", (event) => {
+  // Pushes are wake-up signals, not the source of cursor advancement: replaying
+  // the durable feed in order prevents a fast later push from skipping events.
+  socket.onAny((eventName, event) => {
+    if (eventName === "access.revoked") {
+      accessRevoked = true;
+      setStatus("Live access changed. Reload to refresh permissions.", true);
+      socket.disconnect();
+      return;
+    }
     const eventId = Number(event && event.id);
     if (!Number.isSafeInteger(eventId) || eventId <= cursor) return;
     if (eventId > cursorHint) cursorHint = eventId;

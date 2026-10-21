@@ -1,6 +1,6 @@
 from retail_genie.auth.tenant_policy import can_access_data_domain
 from retail_genie.extensions import db
-from retail_genie.models import AuditEvent, Company, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, User
+from retail_genie.models import AuditEvent, Company, RealtimeEvent, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, User
 
 
 def _login(client, username: str, password: str = "A-long-test-password-4!"):
@@ -78,6 +78,13 @@ def test_main_admin_can_change_domain_scopes_and_policy_change_is_audited(app, c
         assert event.company_id is None
         assert event.before_data["sharing_mode"] == "company"
         assert event.after_data["sharing_mode"] == "selected_units"
+        access_event = RealtimeEvent.query.filter_by(
+            tenant_container_id="test-container",
+            domain="access",
+            recipient_user_id=viewer_id,
+            event_type="access.revoked",
+        ).one()
+        assert access_event.payload == {}
         viewer = db.session.get(User, viewer_id)
         assert can_access_data_domain(
             viewer,

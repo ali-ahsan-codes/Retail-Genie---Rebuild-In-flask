@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}New message · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Phase 3 · Tenant messaging</p><h1>New conversation</h1><p class="muted">Recipients must be active members of the selected tenant.</p></div></section>
+<section class="panel"><form method="post" action="{{ url_for('messaging.create_conversation_api') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="company_id" value="{{ company_id or '' }}"><div class="form-field"><label for="subject">Subject</label><input id="subject" name="subject" class="form-control" maxlength="160"></div><div class="form-field"><label for="recipient_ids">Recipient</label><select id="recipient_ids" name="recipient_ids" class="form-control" required>{% for recipient in recipients %}<option value="{{ recipient.id }}">{{ recipient.username }} · {{ recipient.role }}</option>{% endfor %}</select></div><button class="button button-primary" type="submit">Create conversation</button></form></section>
+{% endblock %}

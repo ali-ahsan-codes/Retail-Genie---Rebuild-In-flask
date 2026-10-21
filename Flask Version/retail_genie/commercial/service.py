@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 
 from ..auth.store_scope import accessible_store_ids
 from ..auth.tenant_policy import can_access_data_domain
 from ..extensions import db
 from ..models import (
     BusinessNumberSeries,
+    DemandNoticeFulfillment,
     CatalogProduct,
     Company,
     DemandNotice,
@@ -150,13 +151,21 @@ def _product_for_document(actor, company: Company, store: Store, product_id: str
 
 
 def demand_notice_dict(notice: DemandNotice) -> dict:
-    linked_order = db.session.execute(
+    linked_orders = db.session.execute(
         select(SalesOrder).where(
             SalesOrder.tenant_container_id == notice.tenant_container_id,
             SalesOrder.company_id == notice.company_id,
             SalesOrder.source_demand_notice_id == notice.id,
-        )
-    ).scalar_one_or_none()
+        ).order_by(SalesOrder.created_at.asc())
+    ).scalars().all()
+    linked_order = linked_orders[-1] if linked_orders else None
+    fulfillments = db.session.execute(
+        select(DemandNoticeFulfillment).where(
+            DemandNoticeFulfillment.tenant_container_id == notice.tenant_container_id,
+            DemandNoticeFulfillment.company_id == notice.company_id,
+            DemandNoticeFulfillment.notice_id == notice.id,
+        ).order_by(DemandNoticeFulfillment.created_at.asc())
+    ).scalars().all()
     return {
         "id": notice.id,
         "tenant_container_id": notice.tenant_container_id,
@@ -172,12 +181,15 @@ def demand_notice_dict(notice: DemandNotice) -> dict:
         "quantity_requested": notice.quantity_requested,
         "quantity_fulfilled": notice.quantity_fulfilled,
         "agreed_price": format(Decimal(notice.agreed_price), ".3f") if notice.agreed_price is not None else None,
+        "amount_paid": format(Decimal(notice.amount_paid or 0), ".3f"),
+        "payments": list(notice.payments or []),
         "expected_availability_date": notice.expected_availability_date.isoformat() if notice.expected_availability_date else None,
         "status": notice.status,
         "is_new_product": bool(notice.is_new_product),
         "notes": notice.notes,
         "linked_order_id": linked_order.id if linked_order else None,
         "linked_order_number": linked_order.order_number if linked_order else None,
+        "fulfillments": [{"id": row.id, "order_id": row.order_id, "quantity": row.quantity, "created_at": row.created_at.isoformat() if row.created_at else None} for row in fulfillments],
         "created_at": notice.created_at.isoformat() if notice.created_at else None,
         "updated_at": notice.updated_at.isoformat() if notice.updated_at else None,
     }
@@ -659,41 +671,270 @@ def convert_quotation_to_order(actor, *, quotation_id: str, company_id: str | No
     return order, False
 
 
-def convert_demand_notice_to_order(actor, *, notice_id: str, company_id: str | None = None) -> tuple[SalesOrder, bool]:
+def fulfill_demand_notice(
+    actor, *, notice_id: str, quantity, idempotency_key: str, company_id: str | None = None
+) -> tuple[SalesOrder, bool]:
     company = _company_for_actor(actor, company_id)
-    notice = db.session.execute(
-        select(DemandNotice).where(
-            DemandNotice.id == notice_id,
-            DemandNotice.tenant_container_id == company.tenant_container_id,
-            DemandNotice.company_id == company.id,
-        ).with_for_update()
-    ).scalar_one_or_none()
+    key = str(idempotency_key or "").strip()
+    if not key or len(key) > 128:
+        raise SalesRuleError("A valid fulfillment idempotency key is required.")
+    notice = db.session.execute(select(DemandNotice).where(
+        DemandNotice.id == notice_id,
+        DemandNotice.tenant_container_id == company.tenant_container_id,
+        DemandNotice.company_id == company.id,
+    ).with_for_update()).scalar_one_or_none()
     if notice is None:
         raise SalesRuleError("Demand notice not found.", 404, "not_found")
     store = _require_assigned_store(actor, notice.store_id, company.id)
     _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="add", company_id=company.id, store_id=store.id)
-    prior = db.session.execute(
-        select(SalesOrder).where(
+    prior = db.session.execute(select(DemandNoticeFulfillment).where(
+        DemandNoticeFulfillment.tenant_container_id == company.tenant_container_id,
+        DemandNoticeFulfillment.company_id == company.id,
+        DemandNoticeFulfillment.notice_id == notice.id,
+        DemandNoticeFulfillment.idempotency_key == key,
+    )).scalar_one_or_none()
+    if prior is not None:
+        return db.session.execute(select(SalesOrder).where(
+            SalesOrder.id == prior.order_id,
             SalesOrder.tenant_container_id == company.tenant_container_id,
             SalesOrder.company_id == company.id,
-            SalesOrder.source_demand_notice_id == notice.id,
-        )
-    ).scalar_one_or_none()
-    if prior is not None:
-        return prior, True
+        )).scalar_one(), True
     if notice.status != "open":
-        raise SalesRuleError("Only an open demand notice can be converted.", 409, "invalid_state")
+        raise SalesRuleError("Only an open demand notice can be fulfilled.", 409, "invalid_state")
     if not notice.product_id:
-        raise SalesRuleError("Link this demand notice to a catalog product before conversion.", 409, "product_link_required")
+        raise SalesRuleError("Link the demand notice to a catalog product before fulfillment.", 409, "product_link_required")
+    quantity_value = _as_integer(quantity, field="Fulfillment quantity")
+    if quantity_value <= 0 or quantity_value > notice.quantity_requested - notice.quantity_fulfilled:
+        raise SalesRuleError("Fulfillment quantity must not exceed the remaining notice quantity.", 409, "quantity_exceeded")
     overrides = [notice.agreed_price] if notice.agreed_price is not None else None
-    order = create_order(
+    return create_order(
         actor,
         store_id=notice.store_id,
         customer_phone=notice.customer_phone,
         customer_name=notice.customer_name,
-        items=[{"product_id": notice.product_id, "quantity": notice.quantity_requested}],
+        items=[{"product_id": notice.product_id, "quantity": quantity_value}],
         company_id=company.id,
         source_demand_notice_id=notice.id,
+        source_demand_notice_fulfillment_key=key,
         line_price_overrides=overrides,
+    ), False
+
+
+def convert_demand_notice_to_order(actor, *, notice_id: str, company_id: str | None = None) -> tuple[SalesOrder, bool]:
+    company, store, notice = _demand_notice_for_actor(actor, notice_id, company_id=company_id, lock=True)
+    key = "full-conversion-v1"
+    prior = db.session.execute(select(DemandNoticeFulfillment).where(
+        DemandNoticeFulfillment.tenant_container_id == company.tenant_container_id,
+        DemandNoticeFulfillment.company_id == company.id,
+        DemandNoticeFulfillment.notice_id == notice.id,
+        DemandNoticeFulfillment.idempotency_key == key,
+    )).scalar_one_or_none()
+    if prior is not None:
+        order = db.session.execute(select(SalesOrder).where(SalesOrder.id == prior.order_id, SalesOrder.tenant_container_id == company.tenant_container_id, SalesOrder.company_id == company.id)).scalar_one()
+        return order, True
+    if notice.status != "open":
+        raise SalesRuleError("Only an open demand notice can be converted.", 409, "invalid_state")
+    remaining = notice.quantity_requested - notice.quantity_fulfilled
+    order, replayed = fulfill_demand_notice(actor, notice_id=notice.id, quantity=remaining, idempotency_key=key, company_id=company.id)
+    return order, replayed
+
+
+def _demand_notice_for_actor(actor, notice_id: str, *, company_id: str | None = None, lock: bool = False):
+    company = _company_for_actor(actor, company_id)
+    statement = select(DemandNotice).where(
+        DemandNotice.id == notice_id,
+        DemandNotice.tenant_container_id == company.tenant_container_id,
+        DemandNotice.company_id == company.id,
     )
-    return order, False
+    if lock:
+        statement = statement.with_for_update()
+    notice = db.session.execute(statement).scalar_one_or_none()
+    if notice is None:
+        raise SalesRuleError("Demand notice not found.", 404, "not_found")
+    store = _require_assigned_store(actor, notice.store_id, company.id)
+    return company, store, notice
+
+
+def record_demand_notice_payment(
+    actor,
+    *,
+    notice_id: str,
+    amount,
+    method: str,
+    idempotency_key: str,
+    reference: str | None = None,
+    company_id: str | None = None,
+):
+    """Record a serialized, replay-safe deposit against an open demand notice."""
+    company, store, notice = _demand_notice_for_actor(actor, notice_id, company_id=company_id, lock=True)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="add", company_id=company.id, store_id=store.id)
+    key = str(idempotency_key or "").strip()
+    if not key or len(key) > 128:
+        raise SalesRuleError("A valid payment idempotency key is required.")
+    method = str(method or "").strip().lower()
+    if method not in {"cash", "bank", "bank_transfer", "other"}:
+        raise SalesRuleError("Choose a supported payment method.")
+    amount_value = as_money(amount, field="Payment amount")
+    if amount_value <= 0:
+        raise SalesRuleError("Payment amount must be greater than zero.")
+    reference_value = _optional_text(reference, field="Payment reference", maximum=120)
+    payments = list(notice.payments or [])
+    if len(payments) >= 2000:
+        raise SalesRuleError("This demand notice has reached its deposit history limit.", 409, "payment_limit")
+    prior = next((p for p in payments if isinstance(p, dict) and p.get("idempotency_key") == key), None)
+    if prior:
+        if Decimal(str(prior.get("amount", "0"))).quantize(MONEY_QUANTUM) != amount_value or prior.get("method") != method:
+            raise SalesRuleError("This idempotency key was already used for a different payment.", 409, "idempotency_conflict")
+        return notice, True
+    if notice.status != "open":
+        raise SalesRuleError("Only an open demand notice can accept a deposit.", 409, "invalid_state")
+    if notice.agreed_price is None:
+        raise SalesRuleError("Set an agreed unit price before accepting a deposit.", 409, "price_required")
+    contract_total = (Decimal(notice.agreed_price) * notice.quantity_requested).quantize(MONEY_QUANTUM)
+    current_paid = Decimal(notice.amount_paid or 0).quantize(MONEY_QUANTUM)
+    if current_paid + amount_value > contract_total:
+        raise SalesRuleError("The deposit would exceed the demand notice total.", 409, "overpayment")
+    before = {"amount_paid": format(current_paid, ".3f"), "payments": payments}
+    payments.append({
+        "idempotency_key": key,
+        "amount": format(amount_value, ".3f"),
+        "method": method,
+        "reference": reference_value,
+        "received_by_id": actor.id,
+        "received_at": datetime.now(timezone.utc).isoformat(),
+    })
+    notice.payments = payments
+    notice.amount_paid = current_paid + amount_value
+    notice.updated_by_id = actor.id
+    db.session.flush()
+    _add_audit(company.id, actor.id, "commercial.demand_notice.deposit_received", "demand_notice", notice.id, store_id=store.id,
+               before=before, after={"amount_paid": format(notice.amount_paid, ".3f"), "payment": payments[-1]})
+    db.session.commit()
+    return notice, False
+
+
+def update_demand_notice(actor, *, notice_id: str, data: dict, company_id: str | None = None) -> DemandNotice:
+    company, store, notice = _demand_notice_for_actor(actor, notice_id, company_id=company_id, lock=True)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="edit", company_id=company.id, store_id=store.id)
+    if notice.status != "open":
+        raise SalesRuleError("Only an open demand notice can be edited.", 409, "invalid_state")
+    before = demand_notice_dict(notice)
+    if "customer_name" in data:
+        notice.customer_name = _optional_text(data["customer_name"], field="Customer name", maximum=160)
+    if "customer_phone" in data:
+        phone = str(data["customer_phone"] or "").strip()
+        if not phone or len(phone) > 64:
+            raise SalesRuleError("A valid customer phone number is required.")
+        notice.customer_phone = phone
+        notice.phone_search = normalize_phone(phone)
+    if "quantity_requested" in data:
+        quantity = _as_integer(data["quantity_requested"], field="Requested quantity")
+        if quantity <= 0 or quantity < notice.quantity_fulfilled:
+            raise SalesRuleError("Requested quantity must be positive and cannot be below the fulfilled quantity.")
+        notice.quantity_requested = quantity
+    if "agreed_price" in data:
+        notice.agreed_price = as_money(data["agreed_price"], field="Agreed price") if data["agreed_price"] not in (None, "") else None
+    if "expected_availability_date" in data:
+        notice.expected_availability_date = _valid_date(data["expected_availability_date"], field="Expected availability date")
+    if "notes" in data:
+        notice.notes = _optional_text(data["notes"], field="Notes", maximum=4000)
+    notice.updated_by_id = actor.id
+    db.session.flush()
+    _add_audit(company.id, actor.id, "commercial.demand_notice.updated", "demand_notice", notice.id, store_id=store.id,
+               before=before, after=demand_notice_dict(notice))
+    db.session.commit()
+    return notice
+
+
+def update_quotation(actor, *, quotation_id: str, data: dict, company_id: str | None = None) -> Quotation:
+    company, store, quotation = _quotation_for_actor(actor, quotation_id, company_id=company_id, lock=True)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="edit", company_id=company.id, store_id=store.id)
+    if quotation.status not in {"draft", "sent"}:
+        raise SalesRuleError("Only draft or sent quotations can be edited.", 409, "invalid_state")
+    before = quotation_dict(quotation)
+    fields = {"customer_name": (160, "Customer name"), "customer_email": (254, "Customer email"),
+              "customer_address": (2000, "Customer address"), "notes": (4000, "Notes")}
+    for field, (limit, label) in fields.items():
+        if field in data:
+            value = _optional_text(data[field], field=label, maximum=limit)
+            if field == "customer_email" and value and ("@" not in value or value.startswith("@") or value.endswith("@")):
+                raise SalesRuleError("Enter a valid customer email address.")
+            setattr(quotation, field, value)
+    if "customer_phone" in data:
+        phone = str(data["customer_phone"] or "").strip()
+        if not phone or len(phone) > 64:
+            raise SalesRuleError("A valid customer phone number is required.")
+        quotation.customer_phone = phone
+    if "preparation_days" in data:
+        days = _as_integer(data["preparation_days"], field="Preparation days")
+        if days < 0 or days > 3650:
+            raise SalesRuleError("Preparation days must be between 0 and 3650.")
+        quotation.preparation_days = days
+    if "valid_until" in data:
+        quotation.valid_until = _valid_date(data["valid_until"], field="Valid until")
+    if "lines" in data:
+        if quotation.status != "draft":
+            raise SalesRuleError("Only draft quotation lines may be edited.", 409, "invalid_state")
+        raw_lines = data["lines"]
+        if not isinstance(raw_lines, list) or not raw_lines or len(raw_lines) > 50:
+            raise SalesRuleError("Provide between one and 50 quotation lines.")
+        normalized = []
+        new_total = Decimal("0.000")
+        for index, raw in enumerate(raw_lines, start=1):
+            if not isinstance(raw, dict):
+                raise SalesRuleError(f"Quotation line {index} must be an object.")
+            external = _parse_bool(raw.get("is_external", False), field=f"Line {index} external flag")
+            product_id = str(raw.get("product_id") or "").strip()
+            product = None
+            if external:
+                if product_id:
+                    raise SalesRuleError(f"External quotation line {index} cannot reference a catalog product.")
+                product_name = _optional_text(raw.get("product_name"), field=f"Line {index} product name", maximum=255)
+                product_sku = _optional_text(raw.get("product_sku"), field=f"Line {index} product SKU", maximum=128)
+                if not product_name:
+                    raise SalesRuleError(f"Line {index} product name is required.")
+            else:
+                if not product_id:
+                    raise SalesRuleError(f"Select a catalog product on line {index}.")
+                product = _product_for_document(actor, company, store, product_id)
+                product_name, product_sku = product.name, product.sku
+            quantity = _as_integer(raw.get("quantity"), field=f"Line {index} quantity")
+            price_raw = raw.get("unit_price") if raw.get("unit_price") not in (None, "") else (product.price if product else None)
+            price = as_money(price_raw, field=f"Line {index} unit price", allow_zero=False)
+            line_total = (price * quantity).quantize(MONEY_QUANTUM)
+            new_total += line_total
+            normalized.append({"product": product, "name": product_name, "sku": product_sku, "quantity": quantity, "price": price, "total": line_total, "external": external})
+        if new_total >= Decimal("100000000000"):
+            raise SalesRuleError("Quotation total exceeds the supported amount.")
+        db.session.execute(delete(QuotationLine).where(
+            QuotationLine.tenant_container_id == company.tenant_container_id,
+            QuotationLine.company_id == company.id,
+            QuotationLine.quotation_id == quotation.id,
+        ))
+        for line_number, item in enumerate(normalized, start=1):
+            product = item["product"]
+            db.session.add(QuotationLine(
+                tenant_container_id=company.tenant_container_id, company_id=company.id, quotation_id=quotation.id,
+                line_number=line_number, product_owner_company_id=product.company_id if product else None,
+                product_id=product.id if product else None, product_name=item["name"], product_sku=item["sku"],
+                unit_price=item["price"], quantity=item["quantity"], line_total=item["total"], is_external=item["external"], converted=False,
+            ))
+        quotation.total_amount = new_total
+    quotation.updated_by_id = actor.id
+    db.session.flush()
+    _add_audit(company.id, actor.id, "commercial.quotation.updated", "quotation", quotation.id, store_id=store.id,
+               before=before, after=quotation_dict(quotation))
+    db.session.commit()
+    return quotation
+
+
+def get_demand_notice_document(actor, *, notice_id: str, company_id: str | None = None) -> dict:
+    company, store, notice = _demand_notice_for_actor(actor, notice_id, company_id=company_id)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id, store_id=store.id)
+    return demand_notice_dict(notice)
+
+
+def get_quotation_document(actor, *, quotation_id: str, company_id: str | None = None) -> dict:
+    company, store, quotation = _quotation_for_actor(actor, quotation_id, company_id=company_id)
+    _require_sales_domain(actor, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id, store_id=store.id)
+    return quotation_dict(quotation)

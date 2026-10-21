@@ -1,6 +1,6 @@
 # Retail Genie — Flask Version
 
-This directory is the **Node-free Flask rebuild**. Phase 0 and the local Phase 1 foundation are complete; Phase 2 has passed SQLite-backed local verification, and **Phase 3 is active but incomplete**. Per the user's updated direction, isolated SQLite tests/checks may be used without waiting for attached MySQL; the app's intended runtime/configuration remains MySQL. The user will verify MySQL locally later. Live MySQL/staging reconciliation, real backup/restore, approved real-media migration, and the two-browser office-network test remain pending and are not implied by local test success. Phase 4 remains paused until Phase 3 acceptance. See [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference.
+This directory is the **Node-free Flask rebuild**. Phase 0–5 workflows and UI plus Phase 7 SaaS productization have passed local verification. The combined suite passes **157 tests, 1 skipped**; the skipped test requires a migrated disposable MySQL test database. The app's intended runtime/configuration remains MySQL. Phase 6 live MySQL/staging reconciliation, real backup/restore, approved real-media migration, true MySQL concurrency, and the two-browser office-network test remain separate pending gates and are not implied by local tests. See [`PHASE_6_ACCEPTANCE.md`](PHASE_6_ACCEPTANCE.md), [`PHASE_7_SAAS.md`](PHASE_7_SAAS.md), [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference. For a full Windows-local installation with MySQL, first-admin setup, same-Wi-Fi access, and the desktop/tablet-only login QR, follow [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md).
 
 The application does not use Node.js, npm, React, or a frontend build step. Flask serves the HTML templates and static CSS. The browser never connects directly to MySQL.
 
@@ -17,13 +17,17 @@ Create a MySQL database and a dedicated application user. Run these statements i
 
 ```sql
 CREATE DATABASE retail_genie CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE USER 'retail_genie'@'localhost' IDENTIFIED BY 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD';
-GRANT ALL PRIVILEGES ON retail_genie.* TO 'retail_genie'@'localhost';
+CREATE USER 'retail_genie'@'127.0.0.1' IDENTIFIED BY 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD';
+GRANT ALL PRIVILEGES ON retail_genie.* TO 'retail_genie'@'127.0.0.1';
 ```
 
 Keep MySQL bound to the office server; do not expose port 3306 to client devices or the public internet. Only the Flask server should connect to the database. For production, set `BACKUP_DATABASE_URL` to a restricted dump account with the metadata/read privileges required by your MySQL version for `mysqldump --routines --events --triggers`. It must target the same MySQL server and database as `DATABASE_URL`. If unset, backups use `DATABASE_URL` credentials. Validate the dump account against the office MySQL server.
 
-## Local setup (PowerShell)
+## Local setup
+
+The complete, ordered installation steps—including MySQL Server/Workbench, creating the schema and restricted database user, Python virtual environment, `.env` settings, first Main Admin, same-Wi-Fi access, and phone/tablet QR sharing—are in [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md).
+
+Quick start from PowerShell after MySQL is installed and `.env` is configured:
 
 ```powershell
 cd "Flask Version"
@@ -31,22 +35,12 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-Edit `.env` before starting. Set a strong `SECRET_KEY` (generate one with `python -c "import secrets; print(secrets.token_urlsafe(48))"`) and update `DATABASE_URL` with the local MySQL credentials. URL-encode any special characters in the database password. `SESSION_COOKIE_SECURE=false` is only for local HTTP development; set it to `true` once the office deployment is served over HTTPS.
-
-Initialize the schema and create the first administrator interactively:
-
-```powershell
 flask --app wsgi db upgrade
 flask --app wsgi create-admin --username admin
 python run.py
 ```
 
-The create-admin command prompts for a password and confirmation. There is no default/demo account or password. Use a unique password of at least 12 characters.
-
-Open `http://127.0.0.1:5000/`. Health endpoints are available at `/healthz` and `/readyz` (the latter checks the MySQL connection).
+Open `http://127.0.0.1:5000/`. `/healthz` reports process health and `/readyz` checks the MySQL connection. For same-Wi-Fi QR access, follow the guide before exposing the local runner to other devices.
 
 ## Automatic database backups
 
@@ -66,11 +60,31 @@ The worker uses a MySQL advisory lock to refuse a second scheduler for the same 
 
 The backup directory is intentionally outside Flask's static directory, is ignored by Git, and is created with owner-only permissions on POSIX hosts. Keep it on persistent storage and arrange a separate encrypted/off-host copy for disaster recovery; a backup on the same server is not protection against disk loss. Test restores before production use.
 
-## Current Phase 3 catalog and sales slice (unfinished)
+## Phase 3 implementation and local verification
 
-`/catalog/products` provides tenant/policy-scoped product and inventory search, including SKU, category, and barcode lookup (USB barcode scanners can enter a code in the search field). Authorized users can import/export CSV: imports are limited to 2 MB/1000 rows, match updates by SKU only within the selected company, roll back as one transaction on any invalid row, and apply stock quantities only with the required inventory permissions. Exports omit stock and threshold values when the account cannot view inventory. Store transfers are limited to accessible stores within one legal company and update both balances with paired ledger entries, audit history, and per-store events in one transaction.
+Phase 3 business workflows are implemented locally across the catalog, sales, commercial, SCM, attendance, stock-audit, messaging, cloud-file, reports, display, and admin/settings modules. Highlights include scoped category/barcode/label workflows; transactional inventory ledger, imports/transfers/receiving; POS, open bills, exchange/store-credit, tax/discount, refund/cashup, fulfillment, and print views; commercial deposits, partial fulfillment, editing, conversion, print and opt-in SMTP email; supplier/PO attachments and logistics; attendance/breaks, evidence access, private messages/files, sales/activity reports, and privacy-limited LCD output. Role, tenant, store, and domain-policy checks plus audit history are retained.
 
-The sales slice also has a manager/admin-only settled-order return/refund screen and API. Each return requires an idempotency key, is limited to unreturned line quantities and the amount paid, restores catalog stock with audit/realtime history, and reduces the applicable tender's daily cashup total. Initial demand-notice and quotation workflows include company-scoped numbering, audit/status controls, and conversion of eligible catalog-linked documents into stock-backed open bills while preserving quote prices. Deposits, partial fulfillment, quote printing/email, exchanges/store credit, tax/discount handling and return-slip printing remain open. This is still not Phase 3 acceptance: purchasing/receiving, attendance/audits, messaging/files/reports, category management, barcode/label printing, the LCD display, and other legacy workflows remain. Phase 4 remains paused until Phase 3 is explicitly completed and accepted.
+Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the last pre-Phase-7 suite passed **146 tests, 1 skipped**. The combined all-phase suite now passes **157 tests, 1 skipped**; the skipped opt-in MySQL test requires a configured disposable database. The Phase 7 SQLite Alembic upgrade/check/downgrade/re-upgrade cycle passes with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
+
+## Phase 4 realtime/offline implementation and local verification
+
+A generalized MySQL-backed realtime outbox now emits scoped inventory, sales, payment, return, cashup, receiving, and access-change events in the transaction that changes the business record. Authenticated Socket.IO subscriptions recheck current tenant/domain/role/company/store authorization. Each app worker polls the shared outbox and emits only to its own local sockets; clients replay by event cursor after reconnect, including sales and inventory events. Retention preserves per-scope cursor floors and returns an explicit expired-cursor response. The sales pages display a refresh notice when another session changes store data.
+
+Products & Inventory supports a browser IndexedDB queue for stock adjustments only. Retries use actor-scoped idempotency keys, so a lost response does not apply the same delta twice; mismatched retries and access changes are blocked and surfaced. Financial checkout/payment are deliberately not queued offline. See `MIGRATION_PLAN.md` for Phase 4 coverage and pending live-MySQL concurrency acceptance.
+
+At Phase 4 closure, the local suite passed 142 tests. The current combined all-phase suite passes **157 tests, 1 skipped**; the opt-in MySQL preflight test is skipped because no disposable MySQL test URL is configured. The complete SQLite migration/check/downgrade/re-upgrade cycle passes. These are not live MySQL or staging verification.
+
+## Phase 5 UI parity
+
+The shared Flask shell now uses a responsive collapsible navigation, permission-filtered module links, and role-aware dashboard shortcuts. Existing module pages use the same Jinja/CSS foundation. POS and Express checkout accept keyboard-wedge barcode/SKU scans; label printing retains Code 39 output for supported values. Customer receipts are bilingual English/Arabic, OMR values keep three decimals, thermal receipts use an 80 mm print layout, and return/commercial documents include bilingual field labels. Express checkout exposes a print-last-receipt action, and the LCD order display remains a read-only, auto-refreshing surface. The Node app remains unchanged as a reference.
+
+Phase 5 local implementation and automated checks pass; real device/printer/browser matrix and production workflow acceptance remain external gates. Phase 6 readiness work is in progress. The read-only `flask --app wsgi phase6-preflight` command is documented in `PHASE_6_ACCEPTANCE.md`; it must be run against approved staging MySQL before pilot acceptance.
+
+## Phase 7 SaaS productization (implemented and locally verified)
+
+The selected scope adds Main Admin-controlled tenant plans/subscriptions, company/store/active-user usage limits, tenant plan-change requests with Main Admin review, tenant subscription visibility, and manually issued/reconciled subscription invoices in OMR. Subscription invoices store only an external payment reference entered by an administrator; there is no payment gateway, automatic charge, public registration, or automatic non-payment suspension. Tenants without an assigned subscription remain unmetered. A Main Admin-set suspended/canceled status blocks tenant write requests but retains read access and the service-request portal. See [`PHASE_7_SAAS.md`](PHASE_7_SAAS.md) for decisions and acceptance criteria.
+
+The combined all-phase local suite passes **157 tests, 1 skipped**. The SQLite migration was upgraded through Phase 7, schema-checked, explicitly downgraded to the prior head, re-upgraded, and checked again. This is not live MySQL validation. Phase 6's live MySQL, staging, backup/restore, office-browser, concurrency, pilot and cutover gates remain distinct and pending.
 
 ## Phase 2 SQLite-to-MySQL import
 
@@ -117,7 +131,7 @@ For an approved data migration, run `db upgrade` first, then import before creat
 
 ## SaaS tenant-container status
 
-The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), with current status and build order in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). The confirmed design is one shared MySQL database, one logical container per independent customer, and child companies/branches inside that tenant. Phase 0 and local Phase 1 are closed; Phase 2's isolated SQLite implementation checks have passed, with live MySQL/staging/restore/media acceptance deferred to the user's local MySQL environment and Phase 6. Phase 3 is active but incomplete; Phase 4 remains paused. Company-level sharing remains the conservative default, and only Main Admin can change policies. The Phase 0 choices and outstanding external gates are recorded in the inventory and migration plan.
+The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), with current status and build order in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). The confirmed design is one shared MySQL database, one logical container per independent customer, and child companies/branches inside that tenant. Phases 0–5 and 7 have passed local implementation checks; live MySQL/staging/restore/media and concurrent-session acceptance are deferred to an available MySQL environment. Phase 6 readiness is in progress; pilot/cutover has not started. Company-level sharing remains the conservative default, and only Main Admin can change policies. The Phase 0 choices and outstanding external gates are recorded in the inventory and migration plan.
 
 ## Run tests
 
@@ -125,7 +139,7 @@ The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.m
 python -m pytest
 ```
 
-The suite currently passes 114 tests (36 Phase 2-focused tests; 52 selected Phase 3 sales/catalog/tenancy/commercial tests). Tests use an isolated in-memory SQLite database and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and `flask db check` pass, and MySQL DDL can be generated offline. These results are local checks only: no live office MySQL connection, staging reconciliation, real backup restore, production import, or real-media migration has been verified in this workspace. The user plans to run the MySQL acceptance checks locally.
+The combined suite passes **157 tests, 1 skipped**; the skipped opt-in MySQL test requires a migrated disposable MySQL test URL. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade/schema check, explicit downgrade to the prior head, re-upgrade, and final schema check pass with no model drift. These are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
 
 ## Security and deployment notes
 
@@ -135,5 +149,5 @@ The suite currently passes 114 tests (36 Phase 2-focused tests; 52 selected Phas
 - Admins create accounts from **Accounts**. There is no public registration. Managers with `manage_users` may create non-admin accounts, and cannot grant permissions they do not hold. Only the `admin` role can view or change backup settings.
 - Do not commit `.env`, database backups, uploaded files, or production credentials. Back up the MySQL database and `UPLOADS_DIR` separately.
 - In production, use HTTPS, set `SESSION_COOKIE_SECURE=true`, restrict the office firewall, and configure a shared rate-limit store if running multiple workers. Select and test the production WSGI/WebSocket server after the office server OS is confirmed. `python run.py` is for local development only.
-- A partial Products & Inventory realtime slice remains in the working tree from earlier out-of-order work: it uses a locally vendored Socket.IO browser client and a cursor replay API, but is paused and not phase-accepted. No Node/npm runtime or frontend build is required; the broader Phase 4 work still awaits its turn in the phase gate sequence.
+- Phase 4 uses durable DB outbox events and per-worker polling for Socket.IO fanout; Redis is not required for this implementation. The browser reconnects/replays authorized events and exposes a refresh notice on sales pages. Stock adjustments alone may be queued offline; financial operations remain online-only. No Node/npm runtime or frontend build is required.
 - Apply schema changes with Alembic/Flask-Migrate and review every migration before it is run against production.
