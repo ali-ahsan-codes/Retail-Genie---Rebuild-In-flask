@@ -195,6 +195,27 @@ def register_cli_commands(app: Flask) -> None:
 
     from .models import User
 
+    @app.cli.command("phase6-preflight")
+    def phase6_preflight() -> None:
+        """Run read-only MySQL, schema, migration-head, and InnoDB checks."""
+        from .phase6 import PreflightError, mysql_deployment_preflight
+
+        try:
+            checks = mysql_deployment_preflight(
+                db.engine,
+                migrate.get_config(),
+                db.metadata.tables.keys(),
+            )
+        except PreflightError as error:
+            raise click.ClickException(str(error)) from None
+
+        for check in checks:
+            label = "PASS" if check.passed else "FAIL"
+            click.echo(f"{label}: {check.name}: {check.detail}")
+        if any(not check.passed for check in checks):
+            raise click.ClickException("Deployment preflight did not pass; resolve the reported checks before pilot testing.")
+        click.echo("Read-only deployment preflight passed. No database writes were performed.")
+
     @app.cli.command("create-admin")
     @click.option("--username", prompt=True, help="Username for the first administrator.")
     def create_admin(username: str) -> None:

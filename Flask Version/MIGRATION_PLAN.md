@@ -1,8 +1,8 @@
 # Retail Genie: Flask + MySQL Migration Plan
 
-**Status:** Phase 0 scope baseline, local Phase 1 foundation, Phase 2 local verification, Phase 3 implementation, **Phase 4 realtime/offline implementation**, and **Phase 5 UI parity implementation plus local verification are complete**. The Flask runtime remains configured for MySQL; SQLite is used only for isolated tests and migration/schema checks. Phase 6 is not started. Live MySQL/staging reconciliation, real backup/restore, approved-media migration, office-network/two-browser, and true MySQL concurrency checks remain external acceptance gates and are not passed by local SQLite results.
+**Status:** Phase 0 scope baseline, local Phase 1 foundation, Phase 2 local verification, Phase 3 implementation, **Phase 4 realtime/offline implementation**, and **Phase 5 UI parity implementation plus local verification are complete**. The Flask runtime remains configured for MySQL; SQLite is used only for isolated tests and migration/schema checks. Phase 6 is in progress: a read-only MySQL deployment preflight and a gated acceptance checklist are being added. No live MySQL/staging reconciliation, real backup/restore, approved-media migration, office-network/two-browser, or true MySQL concurrency checks have passed; these remain external acceptance gates and are not established by local SQLite results.
 
-**Remaining work:** Phase 5 implementation and local verification are complete. Phase 6 live MySQL/importer reconciliation, real backup/restore, approved media migration, office-network/two-browser checks, and true MySQL concurrency remain pending. Do not claim staging, production-data, restore, or real-media success from local tests or offline DDL.
+**Remaining work:** Phase 5 implementation and local verification are complete; Phase 6 local readiness and acceptance planning are in progress. The full local suite passes 146 tests, including a preflight guard, and SQLite migrations pass upgrade/check/explicit reversible downgrade/re-upgrade. Live MySQL/importer reconciliation, real backup/restore, approved media migration, office-network/two-browser checks, and true MySQL concurrency remain pending. Do not claim staging, production-data, restore, or real-media success from local tests or offline DDL.
 
 **Target directory:** `Flask Version/`
 **Migration principle:** Keep `Node Js Version/` unchanged as the reference and rollback copy until the Flask version passes feature and data checks.
@@ -132,7 +132,7 @@ Offline financial actions remain online-only by design; do not queue checkout/pa
 
 ### Phase 5 — UI migration and feature parity (implementation and local verification complete)
 
-**Status:** Shared Flask/Jinja layouts, responsive role-aware navigation and dashboards, form/table workflows, validation, and printing surfaces have been completed in the existing Flask UI. The role dashboards now present actions based on current permissions and tenant/company context. Sales, express checkout, catalog/inventory, commercial, SCM, attendance, stock audit, messaging/files, reports, settings/admin, and LCD workflows are presented through the shared shell. Printed receipts, return slips, quotations, and demand notices now include bilingual English/Arabic labels; OMR output remains three-decimal. POS and express checkout support keyboard-wedge barcode scans; Code 39 product/document label printing and 80 mm thermal receipts are retained. The legacy Node application remains untouched as the comparison/reference. The current full local suite passes **145 tests**. This is local UI/API evidence, not browser matrix, live MySQL, or production parity sign-off.
+**Status:** Shared Flask/Jinja layouts, responsive role-aware navigation and dashboards, form/table workflows, validation, and printing surfaces have been completed in the existing Flask UI. The role dashboards now present actions based on current permissions and tenant/company context. Sales, express checkout, catalog/inventory, commercial, SCM, attendance, stock audit, messaging/files, reports, settings/admin, and LCD workflows are presented through the shared shell. Printed receipts, return slips, quotations, and demand notices now include bilingual English/Arabic labels; OMR output remains three-decimal. POS and express checkout support keyboard-wedge barcode scans; Code 39 product/document label printing and 80 mm thermal receipts are retained. The legacy Node application remains untouched as the comparison/reference. Phase 5 closed with **145 passing tests**; Phase 6 adds local preflight coverage. These are local UI/API checks, not browser matrix, live MySQL, or production parity sign-off.
 
 - [x] Build the shared Flask layout and a responsive collapsible navigation that shows links according to active role/permissions.
 - [x] Replace the phase roadmap placeholder with role-aware dashboards and authorized module shortcuts.
@@ -140,13 +140,20 @@ Offline financial actions remain online-only by design; do not queue checkout/pa
 - [x] Keep `Node Js Version/` available unchanged; no Node runtime or build is introduced.
 - [ ] Live office-browser, device/printer matrix, MySQL/staging, and production workflow parity acceptance remain Phase 6 gates.
 
-### Phase 6 — Verification, pilot, and cutover (not started; wait for Phase 5 acceptance)
+### Phase 6 — Verification, pilot, and cutover (in progress; external acceptance blocked pending staging access)
 
-- Verify two separate browsers on the shared office/local-network server against the same central MySQL database; validate LAN routing, TLS, session isolation and shared canonical data. This deployment integration check was moved from the local Phase 1 foundation gate and remains outstanding.
-- Add unit, API, MySQL integration, permission/security, migration, and multi-session synchronization tests.
-- Test backup and restore, large uploads, duplicate request retries, concurrent checkout/receiving, reconnect after network loss, and permission changes during active sessions.
-- Pilot with a copy of real data and a small set of users. Reconcile old/new counts and financial reports before changing the primary URL.
-- Cut over only after approval and a final backup. Keep a tested rollback path; retire the Node version only after Flask feature parity and data reconciliation are signed off.
+See [`PHASE_6_ACCEPTANCE.md`](PHASE_6_ACCEPTANCE.md) for the gated runbook and evidence log. A read-only `flask --app wsgi phase6-preflight` command now checks MySQL 8, Alembic head parity, mapped tables/InnoDB, and foreign-key enforcement. It rejects SQLite before issuing SQL; it performs no writes.
+
+- [x] Re-run the complete local suite and isolated SQLite migration cycle as engineering checks; neither is live MySQL acceptance.
+- [x] Add the preflight guard and verify it refuses the local SQLite target without executing MySQL queries.
+- [ ] Run the preflight and reviewed Alembic migration path on an approved disposable MySQL staging database; retain sanitized evidence.
+- [ ] Verify two separate browsers on the shared office/local-network server against one central MySQL database: LAN routing, TLS, session isolation, sharing, permissions, and reconnect/replay.
+- [ ] Test real MySQL backup and restore into a separate disposable database; verify schema, row/financial/stock totals, and private media.
+- [ ] Run true MySQL concurrency tests for checkout, payment, returns, receiving, and stock changes, plus real large uploads, duplicate retries, network interruption, and active-session permission revocation.
+- [ ] Pilot only with approved copied data and a small user group; reconcile old/new counts and reports.
+- [ ] Cut over only after explicit approval and a final verified backup. Preserve rollback; do not retire Node until feature parity and data reconciliation are signed off.
+
+No MySQL server/client, approved staging URL/data, office network, or real printer/scanner set is available in this workspace. Those checks remain pending; Phase 6 is not complete and no production cutover has been performed.
 
 ## 4. Definition of done
 
@@ -174,4 +181,4 @@ Offline financial actions remain online-only by design; do not queue checkout/pa
 - **Automatic backups:** An administrator-configurable scheduler writes private MySQL dump files under `Flask Version/backup/` by default. Keep backups persistent/private and replicate off-host for disaster recovery. The future tenant model remains in one physical database.
 - **Remaining decisions before schema freeze:** whether child companies have their own delegated admins and whether one staff login may be explicitly a member of multiple independent containers. Company-level defaults, company-scoped billing series, order-reference creation timing, and Main Admin-only policy authority are recorded.
 
-**Current work status:** Phase 0, local Phase 1/2 verification, Phase 3, Phase 4, and Phase 5 local implementation/verification are complete. Phase 6 pilot/cutover has not started. The two-browser office/MySQL check, live MySQL/staging reconciliation, restore, real-media checks, device/printer matrix, and true MySQL concurrency tests remain deployment acceptance gates. SQLite results and offline MySQL DDL are local engineering evidence, not production or live-MySQL sign-off.
+**Current work status:** Phase 0, local Phase 1/2 verification, Phase 3, Phase 4, and Phase 5 local implementation/verification are complete. Phase 6 readiness/preflight work is in progress; pilot/cutover is not complete. The two-browser office/MySQL check, live MySQL/staging reconciliation, restore, real-media checks, device/printer matrix, and true MySQL concurrency tests remain deployment acceptance gates. SQLite results and offline MySQL DDL are local engineering evidence, not production or live-MySQL sign-off.

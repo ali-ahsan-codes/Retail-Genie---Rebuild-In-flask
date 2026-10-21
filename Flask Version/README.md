@@ -1,6 +1,6 @@
 # Retail Genie — Flask Version
 
-This directory is the **Node-free Flask rebuild**. Phase 0–3 business workflows, **Phase 4 realtime/offline sync**, and **Phase 5 UI parity implementation** have passed local verification. The app's intended runtime/configuration remains MySQL. Live MySQL/staging reconciliation, real backup/restore, approved real-media migration, true MySQL concurrency checks, and the two-browser office-network test remain pending and are not implied by local test success. Phase 6 pilot/cutover has not started. See [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference.
+This directory is the **Node-free Flask rebuild**. Phase 0–3 business workflows, **Phase 4 realtime/offline sync**, and **Phase 5 UI parity implementation** have passed local verification. The app's intended runtime/configuration remains MySQL. Phase 6 local readiness work is in progress; a read-only MySQL preflight is available, while live MySQL/staging reconciliation, real backup/restore, approved real-media migration, true MySQL concurrency, and the two-browser office-network test remain pending and are not implied by local test success. See [`PHASE_6_ACCEPTANCE.md`](PHASE_6_ACCEPTANCE.md), [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference.
 
 The application does not use Node.js, npm, React, or a frontend build step. Flask serves the HTML templates and static CSS. The browser never connects directly to MySQL.
 
@@ -70,7 +70,7 @@ The backup directory is intentionally outside Flask's static directory, is ignor
 
 Phase 3 business workflows are implemented locally across the catalog, sales, commercial, SCM, attendance, stock-audit, messaging, cloud-file, reports, display, and admin/settings modules. Highlights include scoped category/barcode/label workflows; transactional inventory ledger, imports/transfers/receiving; POS, open bills, exchange/store-credit, tax/discount, refund/cashup, fulfillment, and print views; commercial deposits, partial fulfillment, editing, conversion, print and opt-in SMTP email; supplier/PO attachments and logistics; attendance/breaks, evidence access, private messages/files, sales/activity reports, and privacy-limited LCD output. Role, tenant, store, and domain-policy checks plus audit history are retained.
 
-Phase 3 closed with **135 passing tests**; after Phase 4 and Phase 5 work, the full local suite passes **145 tests**. Isolated SQLite migration/schema upgrade/check/downgrade/re-upgrade also pass with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
+Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the current Phase 6 local suite passes **146**. Isolated SQLite migration/schema upgrade/check/downgrade/re-upgrade also pass with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
 
 ## Phase 4 realtime/offline implementation and local verification
 
@@ -78,13 +78,13 @@ A generalized MySQL-backed realtime outbox now emits scoped inventory, sales, pa
 
 Products & Inventory supports a browser IndexedDB queue for stock adjustments only. Retries use actor-scoped idempotency keys, so a lost response does not apply the same delta twice; mismatched retries and access changes are blocked and surfaced. Financial checkout/payment are deliberately not queued offline. See `MIGRATION_PLAN.md` for Phase 4 coverage and pending live-MySQL concurrency acceptance.
 
-The current full local suite passes **145 tests**. Offline MySQL migration SQL generation succeeds (168,839 characters), while fresh SQLite migration/check/downgrade/re-upgrade passes. No live MySQL server is available here, so this is not live MySQL or staging verification.
+The current full local suite passes **146 tests**. Offline MySQL migration SQL generation succeeds (168,839 characters), while fresh SQLite migration/check/downgrade/re-upgrade passes. No live MySQL server is available here, so this is not live MySQL or staging verification.
 
 ## Phase 5 UI parity
 
 The shared Flask shell now uses a responsive collapsible navigation, permission-filtered module links, and role-aware dashboard shortcuts. Existing module pages use the same Jinja/CSS foundation. POS and Express checkout accept keyboard-wedge barcode/SKU scans; label printing retains Code 39 output for supported values. Customer receipts are bilingual English/Arabic, OMR values keep three decimals, thermal receipts use an 80 mm print layout, and return/commercial documents include bilingual field labels. Express checkout exposes a print-last-receipt action, and the LCD order display remains a read-only, auto-refreshing surface. The Node app remains unchanged as a reference.
 
-Phase 5 local implementation and automated checks pass; real device/printer/browser matrix and production workflow acceptance remain external gates. Phase 6 pilot/cutover has not started.
+Phase 5 local implementation and automated checks pass; real device/printer/browser matrix and production workflow acceptance remain external gates. Phase 6 readiness work is in progress. The read-only `flask --app wsgi phase6-preflight` command is documented in `PHASE_6_ACCEPTANCE.md`; it must be run against approved staging MySQL before pilot acceptance.
 
 ## Phase 2 SQLite-to-MySQL import
 
@@ -131,7 +131,7 @@ For an approved data migration, run `db upgrade` first, then import before creat
 
 ## SaaS tenant-container status
 
-The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), with current status and build order in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). The confirmed design is one shared MySQL database, one logical container per independent customer, and child companies/branches inside that tenant. Phase 0–5 local implementation checks have passed; live MySQL/staging/restore/media and concurrent-session acceptance are deferred to an available MySQL environment. Phase 6 pilot/cutover has not started. Company-level sharing remains the conservative default, and only Main Admin can change policies. The Phase 0 choices and outstanding external gates are recorded in the inventory and migration plan.
+The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), with current status and build order in [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). The confirmed design is one shared MySQL database, one logical container per independent customer, and child companies/branches inside that tenant. Phase 0–5 local implementation checks have passed; live MySQL/staging/restore/media and concurrent-session acceptance are deferred to an available MySQL environment. Phase 6 readiness is in progress; pilot/cutover has not started. Company-level sharing remains the conservative default, and only Main Admin can change policies. The Phase 0 choices and outstanding external gates are recorded in the inventory and migration plan.
 
 ## Run tests
 
@@ -139,7 +139,7 @@ The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.m
 python -m pytest
 ```
 
-The suite currently passes **145 tests**. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and schema check, downgrade, and re-upgrade pass with no model drift. Offline MySQL DDL generation succeeds, but these are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
+The suite currently passes **146 tests**. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade and schema check, downgrade, and re-upgrade pass with no model drift. Offline MySQL DDL generation succeeds, but these are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
 
 ## Security and deployment notes
 
