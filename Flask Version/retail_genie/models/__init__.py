@@ -20,6 +20,15 @@ from .attendance import AttendanceLog, ATTENDANCE_METHODS, BreakLog
 from .stock_audit import StockAudit, StockAuditImage, StockAuditItem, StockAuditItemCount, STOCK_AUDIT_STATUSES
 from .messaging import Conversation, Message, MessageAttachment, MessageRecipient, RECIPIENT_TYPES
 from .cloud import CloudFile, CloudFileShare, CLOUD_SHARE_SCOPE
+from .saas import (
+    PLAN_CHANGE_STATUSES,
+    SUBSCRIPTION_STATUSES,
+    PlanChangeRequest,
+    PlatformAuditEvent,
+    SubscriptionInvoice,
+    SubscriptionPlan,
+    TenantSubscription,
+)
 from .tenancy import (
     DATA_DOMAINS,
     SHARING_MODES,
@@ -118,4 +127,11 @@ __all__ = [
     "CloudFile",
     "CloudFileShare",
     "CLOUD_SHARE_SCOPE",
+    "SubscriptionPlan",
+    "TenantSubscription",
+    "PlanChangeRequest",
+    "SubscriptionInvoice",
+    "PlatformAuditEvent",
+    "SUBSCRIPTION_STATUSES",
+    "PLAN_CHANGE_STATUSES",
 ]

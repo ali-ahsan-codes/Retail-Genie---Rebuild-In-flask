@@ -10,6 +10,7 @@ from ..extensions import db
 from ..models import AuditEvent, BillingSeries, Company, ContainerMembership, DATA_DOMAINS, INVOICE_CATEGORIES, OrderNumberSeries, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, User, UserStoreAssignment, normalize_username
 from ..tenancy.service import seed_tenant_data_policies
 from ..auth.tenant_context import current_membership
+from ..saas.service import SaaSRuleError, ensure_capacity
 from ..models.user import is_valid_username
 from .tenancy_forms import AssignmentForm, BillingSettingsForm, CreateCompanyForm, DomainPolicyForm, StoreForm
 
@@ -147,6 +148,13 @@ def create_child_company(tenant_container_id: str, parent_company_id: str):
 
     form = CreateCompanyForm()
     if form.validate_on_submit():
+        try:
+            ensure_capacity(container.id, "company")
+            ensure_capacity(container.id, "store")
+            ensure_capacity(container.id, "active_user")
+        except SaaSRuleError as error:
+            form.slug.errors.append(str(error))
+            return render_template("admin/child_company.html", form=form, container=container, parent_company=parent), 400
         slug = (form.slug.data or "").strip().lower()
         username = normalize_username(form.admin_username.data or "")
         if not is_valid_username(username):
@@ -232,6 +240,12 @@ def toggle_company(company_id: str):
     company = db.session.get(Company, company_id)
     if company is None:
         abort(404)
+    if not company.is_active:
+        try:
+            ensure_capacity(company.tenant_container_id, "company")
+        except SaaSRuleError as error:
+            flash(str(error), "error")
+            return redirect(url_for("tenancy_admin.companies"))
     before = {"is_active": company.is_active}
     company.is_active = not company.is_active
     company.updated_at = db.func.now()
@@ -256,6 +270,16 @@ def stores(company_id: str):
     company = _company_or_404(company_id)
     form = StoreForm()
     if form.validate_on_submit():
+        try:
+            ensure_capacity(company.tenant_container_id, "store")
+        except SaaSRuleError as error:
+            form.code.errors.append(str(error))
+            return render_template(
+                "admin/stores.html",
+                form=form,
+                company=company,
+                stores=Store.query.filter_by(company_id=company.id).order_by(Store.code.asc()).all(),
+            ), 400
         store = Store(
             tenant_container_id=company.tenant_container_id,
             company_id=company.id,

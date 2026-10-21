@@ -43,7 +43,11 @@
         {% if current_user.has_permission('manage_users') or current_user.has_permission('manage_accounts') %}
           <a href="{{ url_for('admin.users') }}">Accounts</a>
         {% endif %}
+        {% if current_user.is_company_admin %}<a href="{{ url_for('saas.tenant_portal') }}">Subscription &amp; plan</a>{% endif %}
         {% if current_user.is_super_admin %}
+          <a href="{{ url_for('saas.plans') }}">SaaS plans</a>
+          <a href="{{ url_for('saas.subscriptions') }}">Tenant subscriptions</a>
+          <a href="{{ url_for('saas.plan_requests') }}">Plan requests</a>
           <a href="{{ url_for('tenancy_admin.companies') }}">Companies</a>
           <a href="{{ url_for('tenancy_admin.domain_policy_index') }}">Data policies</a>
           <a href="{{ url_for('admin_backups.settings') }}">Database backups</a>

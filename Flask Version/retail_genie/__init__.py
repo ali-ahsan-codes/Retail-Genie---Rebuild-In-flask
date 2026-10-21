@@ -100,6 +100,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     from .reports import reports_bp
     from .display import display_bp
     from .express import express_bp
+    from .saas import saas_bp
 
     initialize_realtime_registry(app)
     from .realtime.service import start_realtime_dispatcher
@@ -127,6 +128,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(reports_bp)
     app.register_blueprint(display_bp)
     app.register_blueprint(express_bp)
+    app.register_blueprint(saas_bp)
 
     @app.before_request
     def require_tenant_context_and_password_change():

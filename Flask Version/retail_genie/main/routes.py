@@ -46,7 +46,12 @@ def _dashboard_cards():
     add("Workspace setup", "Quotations", "Prepare, print, and convert customer quotations.", "commercial.quotations_page", "QT", any_permission=("sales.view", "manage_orders"))
     add("Workspace setup", "Settings", "Configure company-wide tax, discounts, billing, and preferences.", "settings.settings_index", "SE", any_permission=("manage_settings", "manage_commissions"))
     add("Administration", "Accounts & permissions", "Create staff accounts and manage their role permissions.", "admin.users", "US", any_permission=("manage_users", "manage_accounts"))
+    if current_user.is_company_admin:
+        add("Administration", "Subscription & plan", "Review your tenant plan, usage, OMR invoices, and request a plan change.", "saas.tenant_portal", "SA")
     if current_user.is_super_admin:
+        add("Administration", "SaaS plans", "Manage subscription tiers, OMR prices, and tenant usage limits.", "saas.plans", "PL")
+        add("Administration", "Tenant subscriptions", "Assign plans, review status, and issue or reconcile manual subscription invoices.", "saas.subscriptions", "SU")
+        add("Administration", "Plan requests", "Review tenant plan requests and maintain an auditable decision trail.", "saas.plan_requests", "RQ")
         add("Administration", "Companies & stores", "Set up companies and active branches inside the selected tenant.", "tenancy_admin.companies", "CO")
         add("Administration", "Data policies", "Review tenant data-sharing modes and scoped grants.", "tenancy_admin.domain_policy_index", "DP")
     if current_user.is_company_admin:

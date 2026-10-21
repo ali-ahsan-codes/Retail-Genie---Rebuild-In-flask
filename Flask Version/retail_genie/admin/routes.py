@@ -20,6 +20,7 @@ from ..models import (
     normalize_username,
 )
 from .forms import CreateUserForm
+from ..saas.service import SaaSRuleError, ensure_capacity
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 ROLE_LABELS = {
@@ -183,6 +184,11 @@ def users():
         if User.query.filter_by(username=username).first():
             form.username.errors.append("That username is already in use.")
             return _render_accounts(form, 400, company_id)
+        try:
+            ensure_capacity(company.tenant_container_id, "active_user")
+        except SaaSRuleError as error:
+            form.username.errors.append(str(error))
+            return _render_accounts(form, 400, company_id)
 
         account = User(
             company_id=company.id,
@@ -245,6 +251,13 @@ def toggle_user_active(user_id: str):
         ).count()
         if active_company_admins <= 1:
             flash("The last active Company Admin cannot be deactivated.", "error")
+            return redirect(url_for("admin.users", company_id=membership.company_id if current_user.is_super_admin else None))
+
+    if not membership.is_active:
+        try:
+            ensure_capacity(membership.tenant_container_id, "active_user")
+        except SaaSRuleError as error:
+            flash(str(error), "error")
             return redirect(url_for("admin.users", company_id=membership.company_id if current_user.is_super_admin else None))
 
     membership.is_active = not membership.is_active
