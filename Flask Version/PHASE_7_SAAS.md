@@ -20,7 +20,7 @@
 - [x] Active company/store/user provisioning respects the assigned tenant plan under a tenant-row lock; legacy unassigned tenants remain unaffected.
 - [x] Suspended/canceled tenant write requests fail closed while reads and the plan-request path remain accessible.
 - [x] Invoice printing uses three-decimal OMR; manual payment references are audited and duplicate invoice periods are rejected.
-- [x] Full local all-phase regression: **157 passed, 1 skipped**. The skipped test requires a migrated disposable MySQL test database.
+- [x] Full local all-phase regression: **158 passed, 1 skipped**. The skipped test requires a migrated disposable MySQL test database.
 - [x] Complete Alembic chain upgraded on a temporary SQLite database; schema check, explicit downgrade to the prior head, re-upgrade to Phase 7 head, and final schema check passed.
 - [x] Alembic rendered the full migration chain to offline MySQL DDL, including the Phase 7 tables. This generated SQL was not executed against a MySQL server.
 - [ ] Live MySQL Phase 7 integration is not available in this workspace. No live-MySQL, staging, restore, or production readiness claim is made.

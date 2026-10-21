@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Sales · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">{{ company.name if company else 'PLATFORM' }} · POINT OF SALE</p><h1>Open customer bill</h1><p class="muted">Search by phone number. Bills stay open until fully paid; other company stores are shown only when your Main Admin grants bill access.</p></div><span class="pill">Phone lookup</span></section>
+
+{% if current_user.is_super_admin and not company %}
+  <section class="card company-picker-card"><h2>Select company</h2><p class="muted">Super Admin must choose a company context before opening the POS.</p><div class="company-choice-list">{% for item in companies %}<a class="button button-secondary" href="{{ url_for('sales.point_of_sale', company_id=item.id) }}">{{ item.name }}</a>{% else %}<p class="empty-state">No active companies exist yet.</p>{% endfor %}</div></section>
+{% elif not company or not stores %}
+  <section class="card empty-state">No active store is assigned to this account. Ask an administrator to assign a shop before using the POS.</section>
+{% else %}
+  <div id="pos-app" data-company-id="{{ company.id if current_user.is_super_admin else '' }}" data-today="{{ company_today if company_today is defined else '' }}">
+    <input type="hidden" id="csrf-token" value="{{ csrf_token() }}">
+    <section class="card pos-lookup">
+      <label class="field"><span>Shop / store</span><select id="store-id" class="control">{% for store in stores %}<option value="{{ store.id }}">{{ store.code }} — {{ store.name }}</option>{% endfor %}</select></label>
+      <label class="field"><span>Customer phone number</span><input id="phone-number" class="control" type="tel" autocomplete="tel" required maxlength="64" placeholder="Enter phone number"></label>
+      <label class="field"><span>Scan barcode / SKU</span><input id="scan-code" class="control" type="search" autocomplete="off" placeholder="Scan, then press Enter"><small class="field-help">Works with keyboard-wedge barcode scanners.</small></label>
+      <button id="lookup-button" class="button button-primary" type="button">Find open bill</button>
+      <p class="field-help">Phone number alone is enough. Search is limited to {{ company.name }}; unpaid bills from earlier dates remain open and findable.</p>
+      <div id="pos-message" class="flash-stack" aria-live="polite"></div>
+    </section>
+
+    <div class="pos-columns">
+      <section class="card"><div class="card-heading"><p class="eyebrow">MATCHING OPEN BILLS</p><h2>Customer bills</h2></div><div id="order-results" class="order-list"><p class="empty-state">Search a phone number to see open bills.</p></div></section>
+      <section class="card"><div class="card-heading"><p class="eyebrow">NEW BILL</p><h2>Create open bill</h2><p class="muted">The bill remains open until its balance is paid.</p></div>
+        <label class="field"><span>Customer name (optional)</span><input id="customer-name" class="control" type="text" maxlength="160"></label>
+        <label class="field"><span>Catalog product</span><select id="new-item-product" class="control" required><option value="">Loading products…</option></select></label>
+        <div class="pos-inline-fields"><label class="field"><span>Quantity</span><input id="new-item-quantity" class="control" type="number" min="1" step="1" value="1"></label><span class="field-help" id="new-product-stock">Choose a product to see its current price and stock.</span></div>
+        <button id="create-order-button" class="button button-primary button-full" type="button">Create open bill</button>
+      </section>
+    </div>
+
+    <section id="selected-order-card" class="card selected-order-card" hidden>
+      <div class="card-heading"><p class="eyebrow">OPEN BILL</p><h2 id="selected-order-title">Bill</h2><p id="selected-order-summary" class="muted"></p><button id="print-selected-order" class="button button-quiet" type="button">Print order / receipt</button></div>
+      <div id="selected-order-items" class="order-items"></div>
+      <div class="pos-totals"><span>Total <strong id="order-total"></strong></span><span>Paid <strong id="order-paid"></strong></span><span>Balance <strong id="order-balance"></strong></span></div>
+      <div class="pos-actions-grid">
+        <section><h3>Add item</h3><label class="field"><span>Catalog product</span><select id="add-item-product" class="control"><option value="">Loading products…</option></select></label><div class="pos-inline-fields"><label class="field"><span>Qty</span><input id="add-item-quantity" class="control" type="number" min="1" step="1" value="1"></label><span class="field-help" id="add-product-stock">Choose a product to see its current price and stock.</span></div><button id="add-item-button" class="button button-secondary button-full" type="button">Add to bill</button></section>
+        <section><h3>Record payment</h3><label class="field"><span>Payment method</span><select id="payment-method" class="control"><option value="cash">Cash</option><option value="bank">Bank</option><option value="bank_transfer">Bank Transfer</option><option value="other">Other</option></select></label><label class="field"><span>Amount OMR</span><input id="payment-amount" class="control" type="number" min="0.001" step="0.001"></label><button id="payment-button" class="button button-primary button-full" type="button">Record payment</button><p class="field-help">The final invoice number is allocated on full settlement. Mixed-method bills use the Company's preconfigured invoice category.</p></section>
+      </div>
+      <p class="approval-note">Item removals and cancellations require an authorized manager's approval. The request and approval are audited; items are never silently deleted.</p>
+    </section>
+  </div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/pos.js') }}" defer></script>{% endblock %}

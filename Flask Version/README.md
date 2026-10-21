@@ -1,6 +1,6 @@
 # Retail Genie — Flask Version
 
-This directory is the **Node-free Flask rebuild**. Phase 0–5 workflows and UI plus Phase 7 SaaS productization have passed local verification. The combined suite passes **157 tests, 1 skipped**; the skipped test requires a migrated disposable MySQL test database. The app's intended runtime/configuration remains MySQL. Phase 6 live MySQL/staging reconciliation, real backup/restore, approved real-media migration, true MySQL concurrency, and the two-browser office-network test remain separate pending gates and are not implied by local tests. See [`PHASE_6_ACCEPTANCE.md`](PHASE_6_ACCEPTANCE.md), [`PHASE_7_SAAS.md`](PHASE_7_SAAS.md), [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference. For a full Windows-local installation with MySQL, first-admin setup, same-Wi-Fi access, and the desktop/tablet-only login QR, follow [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md).
+This directory is the **Node-free Flask rebuild**. Phase 0–5 workflows and UI plus Phase 7 SaaS productization have passed local verification. The combined suite passes **158 tests, 1 skipped**; the skipped test requires a migrated disposable MySQL test database. The app's intended runtime/configuration remains MySQL. Phase 6 live MySQL/staging reconciliation, real backup/restore, approved real-media migration, true MySQL concurrency, and the two-browser office-network test remain separate pending gates and are not implied by local tests. See [`PHASE_6_ACCEPTANCE.md`](PHASE_6_ACCEPTANCE.md), [`PHASE_7_SAAS.md`](PHASE_7_SAAS.md), [`PHASE_0_WORKFLOW_INVENTORY.md`](PHASE_0_WORKFLOW_INVENTORY.md), [`MIGRATION_PLAN.md`](MIGRATION_PLAN.md), [`SAAS_TENANCY_ARCHITECTURE.md`](SAAS_TENANCY_ARCHITECTURE.md), and [`MULTI_TENANT_PLAN.md`](MULTI_TENANT_PLAN.md). `Node Js Version/` remains the unchanged behavior reference. For a full Windows-local installation with MySQL, first-admin setup, same-Wi-Fi access, and the desktop/tablet-only login QR, follow [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md).
 
 The application does not use Node.js, npm, React, or a frontend build step. Flask serves the HTML templates and static CSS. The browser never connects directly to MySQL.
 
@@ -64,7 +64,7 @@ The backup directory is intentionally outside Flask's static directory, is ignor
 
 Phase 3 business workflows are implemented locally across the catalog, sales, commercial, SCM, attendance, stock-audit, messaging, cloud-file, reports, display, and admin/settings modules. Highlights include scoped category/barcode/label workflows; transactional inventory ledger, imports/transfers/receiving; POS, open bills, exchange/store-credit, tax/discount, refund/cashup, fulfillment, and print views; commercial deposits, partial fulfillment, editing, conversion, print and opt-in SMTP email; supplier/PO attachments and logistics; attendance/breaks, evidence access, private messages/files, sales/activity reports, and privacy-limited LCD output. Role, tenant, store, and domain-policy checks plus audit history are retained.
 
-Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the last pre-Phase-7 suite passed **146 tests, 1 skipped**. The combined all-phase suite now passes **157 tests, 1 skipped**; the skipped opt-in MySQL test requires a configured disposable database. The Phase 7 SQLite Alembic upgrade/check/downgrade/re-upgrade cycle passes with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
+Phase 3 closed with **135 passing tests**; Phase 5 closed with **145**, and the last pre-Phase-7 suite passed **146 tests, 1 skipped**. The combined all-phase suite now passes **158 tests, 1 skipped**; the skipped opt-in MySQL test requires a configured disposable database. The Phase 7 SQLite Alembic upgrade/check/downgrade/re-upgrade cycle passes with no model drift. These checks are not live MySQL, staging, production-data, backup/restore, concurrency, or real-media acceptance. Configure `SMTP_HOST`, `SMTP_SENDER`, and the remaining `SMTP_*` settings to enable commercial email; sending fails closed when SMTP is not configured.
 
 ## Phase 4 realtime/offline implementation and local verification
 
@@ -72,7 +72,7 @@ A generalized MySQL-backed realtime outbox now emits scoped inventory, sales, pa
 
 Products & Inventory supports a browser IndexedDB queue for stock adjustments only. Retries use actor-scoped idempotency keys, so a lost response does not apply the same delta twice; mismatched retries and access changes are blocked and surfaced. Financial checkout/payment are deliberately not queued offline. See `MIGRATION_PLAN.md` for Phase 4 coverage and pending live-MySQL concurrency acceptance.
 
-At Phase 4 closure, the local suite passed 142 tests. The current combined all-phase suite passes **157 tests, 1 skipped**; the opt-in MySQL preflight test is skipped because no disposable MySQL test URL is configured. The complete SQLite migration/check/downgrade/re-upgrade cycle passes. These are not live MySQL or staging verification.
+At Phase 4 closure, the local suite passed 142 tests. The current combined all-phase suite passes **158 tests, 1 skipped**; the opt-in MySQL preflight test is skipped because no disposable MySQL test URL is configured. The complete SQLite migration/check/downgrade/re-upgrade cycle passes. These are not live MySQL or staging verification.
 
 ## Phase 5 UI parity
 
@@ -84,7 +84,7 @@ Phase 5 local implementation and automated checks pass; real device/printer/brow
 
 The selected scope adds Main Admin-controlled tenant plans/subscriptions, company/store/active-user usage limits, tenant plan-change requests with Main Admin review, tenant subscription visibility, and manually issued/reconciled subscription invoices in OMR. Subscription invoices store only an external payment reference entered by an administrator; there is no payment gateway, automatic charge, public registration, or automatic non-payment suspension. Tenants without an assigned subscription remain unmetered. A Main Admin-set suspended/canceled status blocks tenant write requests but retains read access and the service-request portal. See [`PHASE_7_SAAS.md`](PHASE_7_SAAS.md) for decisions and acceptance criteria.
 
-The combined all-phase local suite passes **157 tests, 1 skipped**. The SQLite migration was upgraded through Phase 7, schema-checked, explicitly downgraded to the prior head, re-upgraded, and checked again. This is not live MySQL validation. Phase 6's live MySQL, staging, backup/restore, office-browser, concurrency, pilot and cutover gates remain distinct and pending.
+The combined all-phase local suite passes **158 tests, 1 skipped**. The SQLite migration was upgraded through Phase 7, schema-checked, explicitly downgraded to the prior head, re-upgraded, and checked again. This is not live MySQL validation. Phase 6's live MySQL, staging, backup/restore, office-browser, concurrency, pilot and cutover gates remain distinct and pending.
 
 ## Phase 2 SQLite-to-MySQL import
 
@@ -139,7 +139,7 @@ The tenant-container architecture is documented in [`SAAS_TENANCY_ARCHITECTURE.m
 python -m pytest
 ```
 
-The combined suite passes **157 tests, 1 skipped**; the skipped opt-in MySQL test requires a migrated disposable MySQL test URL. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade/schema check, explicit downgrade to the prior head, re-upgrade, and final schema check pass with no model drift. These are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
+The combined suite passes **158 tests, 1 skipped**; the skipped opt-in MySQL test requires a migrated disposable MySQL test URL. Tests use isolated SQLite databases and do not modify the sample database in `Node Js Version/`. A fresh SQLite Alembic upgrade/schema check, explicit downgrade to the prior head, re-upgrade, and final schema check pass with no model drift. These are local checks only: no live office MySQL connection, staging reconciliation, true MySQL concurrency, real backup restore, production import, or real-media migration has been verified in this workspace.
 
 ## Security and deployment notes
 
