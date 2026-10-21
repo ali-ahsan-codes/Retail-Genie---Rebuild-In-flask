@@ -130,7 +130,7 @@ ROLE_PERMISSION_LIMITS: dict[str, frozenset[str]] = {
     "company_admin": frozenset(PERMISSIONS),
     "admin": frozenset(PERMISSIONS),
     "manager": frozenset(PERMISSIONS),
-    "salesperson": CLOUD_PERMISSIONS | {"use_sales_pos"} | SALES_DOMAIN_PERMISSIONS,
+    "salesperson": CLOUD_PERMISSIONS | {"use_sales_pos", "view_salesperson_reports"} | SALES_DOMAIN_PERMISSIONS,
     "storekeeper": CLOUD_PERMISSIONS | INVENTORY_DOMAIN_PERMISSIONS,
     "cashier": CLOUD_PERMISSIONS | {"use_sales_pos"} | SALES_DOMAIN_PERMISSIONS,
     "logistics": CLOUD_PERMISSIONS | {"inventory.view", "inventory.add", "inventory.edit"},

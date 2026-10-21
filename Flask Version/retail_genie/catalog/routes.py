@@ -8,11 +8,11 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from ..auth.store_scope import can_access_store
-from ..auth.tenant_context import current_tenant_container_id
+from ..auth.store_scope import accessible_store_ids, can_access_store
+from ..auth.tenant_context import current_membership, current_tenant_container_id
 from ..auth.tenant_policy import can_access_data_domain
 from ..extensions import db
-from ..models import CatalogProduct, InventoryMovement, RealtimeEvent, Store
+from ..models import AuditEvent, CatalogProduct, Company, DemandNotice, InventoryMovement, ProductCategory, Quotation, RealtimeEvent, SalesOrder, Store
 from ..realtime.service import publish_realtime_event
 from . import catalog_bp
 from .forms import InventoryAdjustmentForm, ProductForm
@@ -91,6 +91,208 @@ def _perform_transfer(product_id: str, data: dict):
     for event in events:
         publish_realtime_event(event.id)
     return result
+
+
+def _category_company(company_id: str | None = None):
+    tenant_id = current_tenant_container_id(current_user)
+    if not tenant_id:
+        abort(403)
+    if current_user.is_super_admin:
+        company_id = company_id or request.args.get("company_id") or _payload().get("company_id")
+    else:
+        membership = current_membership(current_user, tenant_container_id=tenant_id)
+        if membership is None or not membership.company_id:
+            abort(403)
+        if company_id and company_id != membership.company_id:
+            abort(404)
+        company_id = membership.company_id
+    company = db.session.execute(select(Company).where(
+        Company.id == company_id,
+        Company.tenant_container_id == tenant_id,
+        Company.is_active.is_(True),
+    )).scalar_one_or_none() if company_id else None
+    if company is None:
+        abort(404)
+    return company
+
+
+def _category_access(company: Company, action: str) -> bool:
+    return can_access_data_domain(
+        current_user,
+        tenant_container_id=company.tenant_container_id,
+        domain="product_catalog",
+        action=action,
+        company_id=company.id,
+    )
+
+
+def _category_rows(company: Company):
+    rows = db.session.execute(select(ProductCategory).where(
+        ProductCategory.tenant_container_id == company.tenant_container_id,
+        ProductCategory.company_id == company.id,
+    ).order_by(ProductCategory.name.asc())).scalars().all()
+    registered_names = {row.name.casefold() for row in rows}
+    product_counts = dict(db.session.execute(select(CatalogProduct.category, func.count(CatalogProduct.id)).where(
+        CatalogProduct.tenant_container_id == company.tenant_container_id,
+        CatalogProduct.company_id == company.id,
+        CatalogProduct.category.is_not(None),
+        CatalogProduct.category != "",
+    ).group_by(CatalogProduct.category)).all())
+    product_names = sorted(product_counts, key=str.casefold)
+    result = [{"id": row.id, "name": row.name, "registered": True, "product_count": product_counts.get(row.name, 0)} for row in rows]
+    result.extend({"id": None, "name": name, "registered": False, "product_count": product_counts.get(name, 0)} for name in product_names if name.casefold() not in registered_names)
+    return result
+
+
+@catalog_bp.get("/admin/product-categories")
+@login_required
+def categories_page():
+    company = _category_company()
+    if not _category_access(company, "view"):
+        abort(403)
+    return render_template("catalog/categories.html", company=company, categories=_category_rows(company), can_edit=_category_access(company, "edit"))
+
+
+@catalog_bp.get("/api/v1/catalog/categories")
+@login_required
+def list_categories_api():
+    company = _category_company(request.args.get("company_id"))
+    if not _category_access(company, "view"):
+        return jsonify(error="permission_denied", message="Catalog view access is required."), 403
+    return jsonify(categories=_category_rows(company)), 200
+
+
+@catalog_bp.post("/api/v1/catalog/categories")
+@login_required
+def create_category_api():
+    data = _payload()
+    company = _category_company(data.get("company_id"))
+    if not _category_access(company, "add"):
+        return jsonify(error="permission_denied", message="Catalog category creation is not permitted."), 403
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 128:
+        return jsonify(error="invalid_category", message="Category name must contain 1-128 characters."), 400
+    name = name.strip()
+    existing = db.session.execute(select(ProductCategory).where(
+        ProductCategory.tenant_container_id == company.tenant_container_id,
+        ProductCategory.company_id == company.id,
+        func.lower(ProductCategory.name) == name.casefold(),
+    )).scalar_one_or_none()
+    if existing:
+        return jsonify(error="category_exists", message="That category is already registered."), 409
+    category = ProductCategory(tenant_container_id=company.tenant_container_id, company_id=company.id, name=name, created_by_id=current_user.id)
+    db.session.add(category)
+    db.session.flush()
+    db.session.add(AuditEvent(tenant_container_id=company.tenant_container_id, company_id=company.id, actor_user_id=current_user.id, action="catalog.category_created", entity_type="ProductCategory", entity_id=category.id, after_data={"name": name}))
+    db.session.commit()
+    return jsonify(category={"id": category.id, "name": category.name, "registered": True}), 201
+
+
+@catalog_bp.patch("/api/v1/catalog/categories/<string:category_id>")
+@login_required
+def rename_category_api(category_id: str):
+    data = _payload()
+    company = _category_company(data.get("company_id"))
+    if not _category_access(company, "edit"):
+        return jsonify(error="permission_denied", message="Catalog category editing is not permitted."), 403
+    category = db.session.execute(select(ProductCategory).where(ProductCategory.id == category_id, ProductCategory.tenant_container_id == company.tenant_container_id, ProductCategory.company_id == company.id).with_for_update()).scalar_one_or_none()
+    if category is None:
+        return jsonify(error="not_found", message="Category not found."), 404
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 128:
+        return jsonify(error="invalid_category", message="Category name must contain 1-128 characters."), 400
+    name = name.strip()
+    duplicate = db.session.execute(select(ProductCategory.id).where(ProductCategory.tenant_container_id == company.tenant_container_id, ProductCategory.company_id == company.id, func.lower(ProductCategory.name) == name.casefold(), ProductCategory.id != category.id)).scalar_one_or_none()
+    if duplicate:
+        return jsonify(error="category_exists", message="That category is already registered."), 409
+    before = category.name
+    affected = db.session.execute(select(func.count(CatalogProduct.id)).where(CatalogProduct.tenant_container_id == company.tenant_container_id, CatalogProduct.company_id == company.id, CatalogProduct.category == before)).scalar_one()
+    db.session.execute(CatalogProduct.__table__.update().where(CatalogProduct.tenant_container_id == company.tenant_container_id, CatalogProduct.company_id == company.id, CatalogProduct.category == before).values(category=name))
+    category.name = name
+    db.session.add(AuditEvent(tenant_container_id=company.tenant_container_id, company_id=company.id, actor_user_id=current_user.id, action="catalog.category_renamed", entity_type="ProductCategory", entity_id=category.id, before_data={"name": before}, after_data={"name": name, "products_updated": affected}))
+    db.session.commit()
+    return jsonify(category={"id": category.id, "name": category.name, "registered": True}, products_updated=affected), 200
+
+
+@catalog_bp.delete("/api/v1/catalog/categories/<string:category_id>")
+@login_required
+def delete_category_api(category_id: str):
+    data = _payload()
+    company = _category_company(data.get("company_id"))
+    if not _category_access(company, "delete"):
+        return jsonify(error="permission_denied", message="Catalog category deletion is not permitted."), 403
+    category = db.session.execute(select(ProductCategory).where(ProductCategory.id == category_id, ProductCategory.tenant_container_id == company.tenant_container_id, ProductCategory.company_id == company.id).with_for_update()).scalar_one_or_none()
+    if category is None:
+        return jsonify(error="not_found", message="Category not found."), 404
+    name = category.name
+    affected = db.session.execute(select(func.count(CatalogProduct.id)).where(CatalogProduct.tenant_container_id == company.tenant_container_id, CatalogProduct.company_id == company.id, CatalogProduct.category == name)).scalar_one()
+    db.session.execute(CatalogProduct.__table__.update().where(CatalogProduct.tenant_container_id == company.tenant_container_id, CatalogProduct.company_id == company.id, CatalogProduct.category == name).values(category=None))
+    db.session.add(AuditEvent(tenant_container_id=company.tenant_container_id, company_id=company.id, actor_user_id=current_user.id, action="catalog.category_deleted", entity_type="ProductCategory", entity_id=category.id, before_data={"name": name}, after_data={"products_uncategorized": affected}))
+    db.session.delete(category)
+    db.session.commit()
+    return jsonify(deleted=True, products_uncategorized=affected), 200
+
+
+def _label_company():
+    if not (current_user.is_admin or current_user.has_permission("manage_labels")):
+        abort(403)
+    tenant_id = current_tenant_container_id(current_user)
+    if not tenant_id:
+        abort(403)
+    if current_user.is_super_admin:
+        company_id = request.args.get("company_id")
+    else:
+        membership = current_membership(current_user, tenant_container_id=tenant_id)
+        if membership is None or not membership.company_id:
+            abort(403)
+        company_id = membership.company_id
+        if request.args.get("company_id") and request.args.get("company_id") != company_id:
+            abort(404)
+    company = db.session.execute(select(Company).where(Company.id == company_id, Company.tenant_container_id == tenant_id, Company.is_active.is_(True))).scalar_one_or_none() if company_id else None
+    if company is None:
+        abort(404)
+    stores = accessible_store_ids(current_user, company_id=company.id, tenant_container_id=tenant_id)
+    return company, stores
+
+
+@catalog_bp.get("/admin/label-printing")
+@login_required
+def label_printing_page():
+    company, _stores = _label_company()
+    return render_template("catalog/labels.html", company=company)
+
+
+@catalog_bp.get("/api/v1/labels/products")
+@login_required
+def label_products_api():
+    company, stores = _label_company()
+    if not (current_user.is_admin or any(can_access_data_domain(current_user, tenant_container_id=company.tenant_container_id, domain="product_catalog", action="view", company_id=company.id, store_id=store_id) for store_id in stores)):
+        return jsonify(error="permission_denied", message="Catalog view access is required."), 403
+    term = (request.args.get("q") or "").strip()[:80]
+    statement = select(CatalogProduct).where(CatalogProduct.tenant_container_id == company.tenant_container_id, CatalogProduct.company_id == company.id, CatalogProduct.is_active.is_(True))
+    if term:
+        statement = statement.where(CatalogProduct.name.ilike(f"%{term}%") | CatalogProduct.sku.ilike(f"%{term}%") | CatalogProduct.barcode.ilike(f"%{term}%"))
+    products = db.session.execute(statement.order_by(CatalogProduct.name.asc()).limit(50)).scalars()
+    return jsonify(products=[{"id":p.id,"name":p.name,"sku":p.sku,"barcode":p.barcode,"price":str(p.price) if p.price is not None else None} for p in products]), 200
+
+
+@catalog_bp.get("/api/v1/labels/documents")
+@login_required
+def label_documents_api():
+    company, stores = _label_company()
+    if not (current_user.is_admin or any(can_access_data_domain(current_user, tenant_container_id=company.tenant_container_id, domain="sales", action="view", company_id=company.id, store_id=store_id) for store_id in stores)):
+        return jsonify(error="permission_denied", message="Sales document view access is required."), 403
+    term = (request.args.get("q") or "").strip()[:80]
+    if not term or not stores:
+        return jsonify(documents=[]), 200
+    results = []
+    orders = db.session.execute(select(SalesOrder).where(SalesOrder.tenant_container_id == company.tenant_container_id, SalesOrder.company_id == company.id, SalesOrder.origin_store_id.in_(stores), (SalesOrder.order_number.ilike(f"%{term}%") | SalesOrder.invoice_number.ilike(f"%{term}%"))).order_by(SalesOrder.created_at.desc()).limit(20)).scalars()
+    results.extend({"type":"invoice","id":o.id,"number":o.invoice_number or o.order_number,"customer":o.customer_name or o.customer_phone} for o in orders)
+    notices = db.session.execute(select(DemandNotice).where(DemandNotice.tenant_container_id == company.tenant_container_id, DemandNotice.company_id == company.id, DemandNotice.store_id.in_(stores), DemandNotice.notice_number.ilike(f"%{term}%")).order_by(DemandNotice.created_at.desc()).limit(20)).scalars()
+    results.extend({"type":"demand_notice","id":n.id,"number":n.notice_number,"customer":n.customer_name or n.customer_phone} for n in notices)
+    quotes = db.session.execute(select(Quotation).where(Quotation.tenant_container_id == company.tenant_container_id, Quotation.company_id == company.id, Quotation.store_id.in_(stores), Quotation.quotation_number.ilike(f"%{term}%")).order_by(Quotation.created_at.desc()).limit(20)).scalars()
+    results.extend({"type":"quotation","id":q.id,"number":q.quotation_number,"customer":q.customer_name or q.customer_phone} for q in quotes)
+    return jsonify(documents=results[:50]), 200
 
 
 @catalog_bp.get("/catalog/products/export.csv")
@@ -384,7 +586,7 @@ def adjust_inventory_page(product_id: str):
         flash("Enter a whole-number stock change and a reason.", "error")
         return redirect(url_for("catalog.products_page", store_id=request.form.get("store_id", "")))
     try:
-        balance, _movement, event = adjust_inventory(
+        balance, _movement, event, _replayed = adjust_inventory(
             current_user,
             product_id,
             store_id=form.store_id.data,
@@ -482,15 +684,18 @@ def archive_product_api(product_id: str):
 def adjust_inventory_api(product_id: str):
     data = _payload()
     try:
-        balance, movement, event = adjust_inventory(
+        idempotency_key = str(data.get("idempotency_key", "")).strip() or None
+        balance, movement, event, replayed = adjust_inventory(
             current_user,
             product_id,
             store_id=str(data.get("store_id", "")),
             quantity_delta=data.get("quantity_delta", data.get("delta")),
             reason=data.get("reason", ""),
+            idempotency_key=idempotency_key,
         )
         db.session.commit()
-        publish_realtime_event(event.id)
+        if event is not None:
+            publish_realtime_event(event.id)
         return jsonify(
             inventory={
                 "id": balance.id,
@@ -505,8 +710,9 @@ def adjust_inventory_api(product_id: str):
                 "reason": movement.reason,
                 "created_at": movement.created_at.isoformat(),
             },
-            event={"id": event.id, "type": event.event_type},
-        ), 201
+            event={"id": event.id, "type": event.event_type} if event is not None else None,
+            replayed=replayed,
+        ), 200 if replayed else 201
     except CatalogRuleError as error:
         return _error_response(error)
     except IntegrityError:

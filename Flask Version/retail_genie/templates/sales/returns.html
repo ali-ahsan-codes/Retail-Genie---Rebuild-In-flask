@@ -69,6 +69,7 @@
     {% if returnable_items %}
       <form method="post" action="{{ url_for('sales.submit_order_return_page', order_id=order.id) }}" class="return-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="company_id" value="{{ company.id }}">
         <input type="hidden" name="store_id" value="{{ selected_store_id }}">
         <input type="hidden" name="search" value="{{ search }}">
         <input type="hidden" name="idempotency_key" value="{{ order.return_idempotency_key }}">

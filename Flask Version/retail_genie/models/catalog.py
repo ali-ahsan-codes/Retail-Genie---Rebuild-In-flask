@@ -140,6 +140,7 @@ class InventoryMovement(db.Model):
         ),
         Index("ix_inventory_movements_container_store_created", "tenant_container_id", "store_id", "created_at"),
         Index("ix_inventory_movements_product_created", "tenant_container_id", "product_id", "created_at"),
+        Index("uq_inventory_movement_actor_idempotency", "tenant_container_id", "actor_user_id", "idempotency_key", unique=True),
         {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4"},
     )
 
@@ -153,4 +154,5 @@ class InventoryMovement(db.Model):
     quantity_delta: Mapped[int] = mapped_column(Integer, nullable=False)
     reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     actor_user_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utc_now)

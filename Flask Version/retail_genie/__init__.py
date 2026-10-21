@@ -1,8 +1,9 @@
 """Flask application factory for Retail Genie."""
 
 from pathlib import Path
+import secrets
 
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, g, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user
 from sqlalchemy import text
 
@@ -22,6 +23,10 @@ def create_app(test_config: dict | None = None) -> Flask:
         raise RuntimeError("DATABASE_URL must point to the central MySQL database before starting Retail Genie.")
 
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+
+    @app.context_processor
+    def inject_csp_nonce():
+        return {"csp_nonce": getattr(g, "csp_nonce", "")}
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -86,8 +91,23 @@ def create_app(test_config: dict | None = None) -> Flask:
     from .realtime import realtime_bp
     from .realtime.service import initialize_realtime_registry
     from .sales import sales_bp
+    from .settings import settings_bp
+    from .scm import scm_bp
+    from .attendance import attendance_bp
+    from .stock_audits import stock_audits_bp
+    from .messaging import messaging_bp
+    from .cloud import cloud_bp
+    from .reports import reports_bp
+    from .display import display_bp
+    from .express import express_bp
 
     initialize_realtime_registry(app)
+    from .realtime.service import start_realtime_dispatcher
+
+    @app.before_request
+    def _ensure_realtime_dispatcher_started():
+        start_realtime_dispatcher(app)
+
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -98,9 +118,19 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(tenancy_admin_bp)
     app.register_blueprint(backup_admin_bp)
+    app.register_blueprint(settings_bp)
+    app.register_blueprint(scm_bp)
+    app.register_blueprint(attendance_bp)
+    app.register_blueprint(stock_audits_bp)
+    app.register_blueprint(messaging_bp)
+    app.register_blueprint(cloud_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(display_bp)
+    app.register_blueprint(express_bp)
 
     @app.before_request
     def require_tenant_context_and_password_change():
+        g.csp_nonce = secrets.token_urlsafe(18)
         if current_user.is_authenticated and current_user.force_password_change:
             allowed_endpoints = {"auth.change_password", "auth.logout", "auth.select_tenant", "static", "health.liveness", "health.readiness"}
             if request.endpoint not in allowed_endpoints:
@@ -119,6 +149,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.after_request
     def add_security_headers(response):
+        nonce = getattr(g, "csp_nonce", None) or secrets.token_urlsafe(18)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -128,8 +159,9 @@ def create_app(test_config: dict | None = None) -> Flask:
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; "
-            "object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
-            "connect-src 'self' ws: wss:",
+            "object-src 'none'; "
+            f"script-src 'self' 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}'; "
+            "img-src 'self' data:; connect-src 'self' ws: wss:",
         )
         return response
 

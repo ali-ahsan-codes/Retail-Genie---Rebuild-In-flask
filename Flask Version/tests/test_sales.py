@@ -284,6 +284,8 @@ def test_settled_order_returns_refund_once_restore_stock_and_reduce_cashup_colle
         json={"store_id": "test-store", "method": "cash", "amount": "10.000", "idempotency_key": "return-sale-payment"},
     )
     assert paid.status_code == 200
+    return_form = client.get(f"/returns?company_id=test-company&store_id=test-store&q={order['order_number']}")
+    assert return_form.status_code == 200 and b'name="company_id" value="test-company"' in return_form.data
     payload = {
         "store_id": "test-store",
         "items": [{"line_id": line_id, "quantity": 1}],
@@ -783,7 +785,13 @@ def test_pos_cashup_and_removal_review_pages_render(app, client, create_user):
     create_user("pages.manager", role="manager", permissions=SALES_PERMISSIONS)
     _sign_in(client, "pages.manager")
     assert client.get("/pos").status_code == 200
-    assert b"Open customer bill" in client.get("/pos").data
+    pos_page = client.get("/pos")
+    assert b"Open customer bill" in pos_page.data
+    assert b"id=\"scan-code\"" in pos_page.data
+    assert b"keyboard-wedge barcode scanners" in pos_page.data
+    pos_script = client.get("/static/js/pos.js")
+    assert pos_script.status_code == 200 and b"formatOmr(product.price)" in pos_script.data
+    assert b"event.key === 'Enter'" in pos_script.data
     assert client.get("/cashups").status_code == 200
     assert client.get("/removals").status_code == 200
 
@@ -796,3 +804,37 @@ def test_pos_cashup_and_removal_review_pages_render(app, client, create_user):
     cashups = main_client.get("/cashups")
     assert cashups.status_code == 200
     assert b"Select company" in cashups.data
+
+
+def test_order_register_fulfillment_transitions_and_print_views(client, create_user):
+    create_user("fulfillment.manager", role="manager", permissions=SALES_PERMISSIONS)
+    _sign_in(client, "fulfillment.manager")
+    order = _create_api_order(client, quantity=1, price="8.000")
+
+    register = client.get("/admin/orders")
+    assert register.status_code == 200
+    assert order["order_number"].encode() in register.data
+
+    receipt = client.get(f"/sales/orders/{order['id']}/print?company_id=test-company")
+    assert receipt.status_code == 200
+    assert b"NOT A TAX INVOICE" in receipt.data
+    assert "فاتورة مفتوحة".encode() in receipt.data
+    assert b"@page{size:80mm auto" in receipt.data
+    assert b"Sam Customer" in receipt.data
+
+    partial = client.patch(
+        f"/api/v1/orders/{order['id']}/fulfillment",
+        json={"company_id": "test-company", "delivery_status": "partially_delivered", "delivery_address": "Main Street", "storekeeper_notes": "One item delivered"},
+    )
+    assert partial.status_code == 200, partial.get_json()
+    assert partial.get_json()["order"]["delivery_status"] == "partially_delivered"
+    delivered = client.patch(
+        f"/api/v1/orders/{order['id']}/fulfillment",
+        json={"company_id": "test-company", "delivery_status": "delivered"},
+    )
+    assert delivered.status_code == 200, delivered.get_json()
+    backwards = client.patch(
+        f"/api/v1/orders/{order['id']}/fulfillment",
+        json={"company_id": "test-company", "delivery_status": "pending"},
+    )
+    assert backwards.status_code == 409

@@ -236,7 +236,16 @@ def toggle_company(company_id: str):
     company.is_active = not company.is_active
     company.updated_at = db.func.now()
     _audit(company.id, "company.status_changed", "company", company.id, before=before, after={"is_active": company.is_active})
+    from ..realtime.service import publish_realtime_event, stage_company_access_revocations
+
+    access_event_ids = stage_company_access_revocations(
+        tenant_container_id=company.tenant_container_id,
+        company_id=company.id,
+        actor_user_id=current_user.id,
+    )
     db.session.commit()
+    for event_id in access_event_ids:
+        publish_realtime_event(event_id)
     flash(f"Company '{company.name}' is now {'active' if company.is_active else 'inactive'}.", "success")
     return redirect(url_for("tenancy_admin.companies"))
 
@@ -564,12 +573,20 @@ def edit_domain_policy(tenant_container_id: str, domain: str):
                     after_data=after,
                 )
             )
+            from ..realtime.service import publish_realtime_event, stage_container_access_revocations
+
+            access_event_ids = stage_container_access_revocations(
+                tenant_container_id=container.id,
+                actor_user_id=current_user.id,
+            )
             try:
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
                 form.sharing_mode.errors.append("The policy could not be saved. Refresh and verify its company/store scopes.")
             else:
+                for event_id in access_event_ids:
+                    publish_realtime_event(event_id)
                 flash(f"{_domain_label(domain)} policy saved. Change recorded in the tenant audit log.", "success")
                 return redirect(url_for("tenancy_admin.domain_policies", tenant_container_id=container.id))
 
@@ -699,7 +716,17 @@ def store_assignments():
             before=before,
             after={"user_id": target.id, "store_id": target_store.id, "can_view_shared_bills": allow_shared_bills, "is_active": True},
         )
+        from ..realtime.service import publish_realtime_event, stage_access_revocation
+
+        access_event_id = stage_access_revocation(
+            user_id=target.id,
+            tenant_container_id=company.tenant_container_id,
+            company_id=company.id,
+            store_id=target_store.id,
+            actor_user_id=current_user.id,
+        )
         db.session.commit()
+        publish_realtime_event(access_event_id)
         flash(f"Store access for '{target.username}' saved.", "success")
         return redirect(url_for("tenancy_admin.store_assignments", company_id=company.id))
 
@@ -751,6 +778,16 @@ def revoke_store_assignment(assignment_id: str):
         before=before,
         after={"is_active": False, "can_view_shared_bills": False},
     )
+    from ..realtime.service import publish_realtime_event, stage_access_revocation
+
+    access_event_id = stage_access_revocation(
+        user_id=assignment.user_id,
+        tenant_container_id=assignment.tenant_container_id,
+        company_id=assignment.company_id,
+        store_id=assignment.store_id,
+        actor_user_id=current_user.id,
+    )
     db.session.commit()
+    publish_realtime_event(access_event_id)
     flash("Store access revoked.", "success")
     return redirect(url_for("tenancy_admin.store_assignments", company_id=assignment.company_id))

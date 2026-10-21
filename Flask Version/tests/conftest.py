@@ -50,6 +50,9 @@ def app():
 
 @pytest.fixture(autouse=True)
 def clear_database(app):
+    from retail_genie.realtime.service import initialize_realtime_registry
+
+    initialize_realtime_registry(app)
     with app.app_context():
         container = TenantContainer(
             id="test-container",

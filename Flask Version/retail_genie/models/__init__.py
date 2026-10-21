@@ -2,8 +2,24 @@
 
 from .backup import BackupRun, BackupSettings
 from .catalog import CatalogProduct, InventoryBalance, InventoryMovement, INVENTORY_MOVEMENT_TYPES
-from .billing import BillingSeries, DailyCashup, INVOICE_CATEGORIES, OrderNumberSeries, OrderPayment, OrderRemovalRequest, OrderReturn, OrderReturnLine, SalesOrder, SalesOrderLine
-from .commercial import BusinessNumberSeries, DemandNotice, Quotation, QuotationLine
+from .billing import BillingSeries, DailyCashup, INVOICE_CATEGORIES, OrderNumberSeries, OrderPayment, OrderRemovalRequest, OrderReturn, OrderReturnLine, SalesOrder, SalesOrderLine, RETURN_KINDS, StoreCredit, StoreCreditRedemption
+from .commercial import BusinessNumberSeries, DemandNotice, DemandNoticeFulfillment, Quotation, QuotationLine
+from .settings import AttendanceSetting, CommissionSetting, GlobalDiscountSetting, ProductCategory, TaxSetting
+from .scm import (
+    PO_ATTACHMENT_TYPES,
+    PO_STATUS_VALUES,
+    PurchaseOrder,
+    PurchaseOrderAttachment,
+    PurchaseOrderItem,
+    Supplier,
+    SupplierAttachment,
+    SupplierProduct,
+    SUPPLIER_STATUS_VALUES,
+)
+from .attendance import AttendanceLog, ATTENDANCE_METHODS, BreakLog
+from .stock_audit import StockAudit, StockAuditImage, StockAuditItem, StockAuditItemCount, STOCK_AUDIT_STATUSES
+from .messaging import Conversation, Message, MessageAttachment, MessageRecipient, RECIPIENT_TYPES
+from .cloud import CloudFile, CloudFileShare, CLOUD_SHARE_SCOPE
 from .tenancy import (
     DATA_DOMAINS,
     SHARING_MODES,
@@ -42,8 +58,12 @@ __all__ = [
     "OrderRemovalRequest",
     "OrderReturn",
     "OrderReturnLine",
+    "RETURN_KINDS",
+    "StoreCredit",
+    "StoreCreditRedemption",
     "BusinessNumberSeries",
     "DemandNotice",
+    "DemandNoticeFulfillment",
     "Quotation",
     "QuotationLine",
     "INVOICE_CATEGORIES",
@@ -68,4 +88,34 @@ __all__ = [
     "User",
     "is_valid_username",
     "normalize_username",
+    "AttendanceSetting",
+    "CommissionSetting",
+    "GlobalDiscountSetting",
+    "ProductCategory",
+    "TaxSetting",
+    "PurchaseOrder",
+    "PurchaseOrderAttachment",
+    "PurchaseOrderItem",
+    "PO_ATTACHMENT_TYPES",
+    "PO_STATUS_VALUES",
+    "Supplier",
+    "SupplierAttachment",
+    "SupplierProduct",
+    "SUPPLIER_STATUS_VALUES",
+    "AttendanceLog",
+    "ATTENDANCE_METHODS",
+    "BreakLog",
+    "StockAudit",
+    "StockAuditImage",
+    "StockAuditItem",
+    "StockAuditItemCount",
+    "STOCK_AUDIT_STATUSES",
+    "Conversation",
+    "Message",
+    "MessageAttachment",
+    "MessageRecipient",
+    "RECIPIENT_TYPES",
+    "CloudFile",
+    "CloudFileShare",
+    "CLOUD_SHARE_SCOPE",
 ]

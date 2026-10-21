@@ -9,6 +9,7 @@
     <h1>Product catalog</h1>
     <p class="muted">Company-owned products with stock balances and an auditable movement history for each authorized store.</p>
   </div>
+  {% if selected_store %}<div class="button-row"><a class="button button-secondary" href="{{ url_for('catalog.categories_page', company_id=selected_store.company_id) }}">Manage categories</a>{% if current_user.is_admin or current_user.has_permission('manage_labels') %}<a class="button button-secondary" href="{{ url_for('catalog.label_printing_page', company_id=selected_store.company_id) }}">Print labels</a>{% endif %}</div>{% endif %}
 </section>
 
 {% if not stores %}
@@ -114,7 +115,9 @@
   <section
     class="panel catalog-list-panel"
     data-realtime-store="{{ selected_store.id if selected_store and can_view_inventory else '' }}"
+    data-stock-adjust-store="{{ selected_store.id if selected_store and can_adjust_inventory else '' }}"
     data-tenant-container="{{ selected_store.tenant_container_id if selected_store else '' }}"
+    data-user-id="{{ current_user.id if current_user.is_authenticated else '' }}"
     data-realtime-cursor="{{ realtime_cursor }}"
   >
     <div class="section-heading">
@@ -162,7 +165,7 @@
                 {% endif %}
                 {% if can_adjust_inventory %}
                   <td>
-                    <form method="post" action="{{ url_for('catalog.adjust_inventory_page', product_id=row.product.id) }}" class="stock-adjust-form">
+                    <form method="post" action="{{ url_for('catalog.adjust_inventory_page', product_id=row.product.id) }}" data-api-url="{{ url_for('catalog.adjust_inventory_api', product_id=row.product.id) }}" class="stock-adjust-form">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="hidden" name="store_id" value="{{ selected_store.id }}">
                       <label class="visually-hidden" for="delta-{{ row.product.id }}">Quantity change for {{ row.product.name }}</label>
@@ -170,6 +173,7 @@
                       <label class="visually-hidden" for="reason-{{ row.product.id }}">Reason for changing {{ row.product.name }} stock</label>
                       <input id="reason-{{ row.product.id }}" type="text" name="reason" maxlength="500" required placeholder="Reason">
                       <button class="button button-small button-secondary" type="submit">Update</button>
+                      <small class="stock-sync-status" aria-live="polite"></small>
                     </form>
                   </td>
                 {% endif %}
@@ -212,5 +216,8 @@
   {% if selected_store and can_view_inventory %}
     <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/catalog-realtime.js') }}" defer></script>
+  {% endif %}
+  {% if selected_store and can_adjust_inventory %}
+    <script src="{{ url_for('static', filename='js/catalog-offline-stock.js') }}" defer></script>
   {% endif %}
 {% endblock %}

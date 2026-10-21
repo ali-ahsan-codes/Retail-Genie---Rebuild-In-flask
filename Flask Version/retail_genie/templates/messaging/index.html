@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Messaging · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Phase 3 · Tenant messaging</p><h1>Messages</h1><p class="muted">Private threads are visible only to their listed participants.</p></div><a class="button button-primary" href="{{ url_for('messaging.compose_page', company_id=company_id) }}">New message</a></section>
+<section class="panel"><h2>Your conversations</h2>{% if conversations %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Subject</th><th>Created</th><th>Unread</th><th></th></tr></thead><tbody>{% for conversation in conversations %}<tr><td>{{ conversation.subject or 'Conversation' }}</td><td>{{ conversation.created_at or '—' }}</td><td>{{ conversation.unread_count }}</td><td><a class="button button-secondary" href="{{ url_for('messaging.conversation_page', conversation_id=conversation.id) }}">Open</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">No conversations yet.</p>{% endif %}</section>
+{% endblock %}

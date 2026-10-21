@@ -1,6 +1,9 @@
 """Flask APIs and server-rendered pages for commercial workflows."""
 
-from flask import abort, flash, jsonify, redirect, render_template, request, url_for
+import re
+from html import escape
+
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -10,19 +13,26 @@ from ..auth.tenant_context import current_membership
 from ..auth.tenant_policy import can_access_data_domain
 from ..extensions import db
 from ..models import CatalogProduct, Company, Store
-from ..sales.service import SalesRuleError, order_dict
+from ..sales.service import SalesRuleError, _add_audit, order_dict
+from .emailing import CommercialEmailError, send_commercial_email
 from . import commercial_bp
 from .service import (
     cancel_demand_notice,
     change_quotation_status,
     convert_demand_notice_to_order,
     convert_quotation_to_order,
+    fulfill_demand_notice,
     create_demand_notice,
     create_quotation,
     demand_notice_dict,
     list_demand_notices,
     list_quotations,
     quotation_dict,
+    get_demand_notice_document,
+    get_quotation_document,
+    record_demand_notice_payment,
+    update_demand_notice,
+    update_quotation,
 )
 
 
@@ -34,6 +44,7 @@ def _payload() -> dict:
 
 
 def _error(error: SalesRuleError):
+    db.session.rollback()
     return jsonify(error=error.code, message=str(error)), error.status_code
 
 
@@ -241,6 +252,26 @@ def api_cancel_demand_notice(notice_id: str):
         return _error(error)
 
 
+@commercial_bp.post("/api/v1/demand-notices/<string:notice_id>/fulfill")
+@login_required
+def api_fulfill_demand_notice(notice_id: str):
+    data = _payload()
+    try:
+        order, replayed = fulfill_demand_notice(
+            current_user,
+            notice_id=notice_id,
+            company_id=data.get("company_id"),
+            quantity=data.get("quantity"),
+            idempotency_key=data.get("idempotency_key") or request.headers.get("Idempotency-Key", ""),
+        )
+        return jsonify(order=order_dict(order), replayed=replayed), (200 if replayed else 201)
+    except SalesRuleError as error:
+        return _error(error)
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="integrity_conflict", message="The fulfillment conflicted; retry using the same idempotency key."), 409
+
+
 @commercial_bp.post("/api/v1/demand-notices/<string:notice_id>/convert")
 @login_required
 def api_convert_demand_notice(notice_id: str):
@@ -333,3 +364,165 @@ def api_convert_quotation(quotation_id: str):
     except IntegrityError:
         db.session.rollback()
         return jsonify(error="integrity_conflict", message="The quotation conversion conflicted; retry safely."), 409
+
+
+@commercial_bp.patch("/api/v1/demand-notices/<string:notice_id>")
+@login_required
+def api_update_demand_notice(notice_id: str):
+    data = _payload()
+    try:
+        notice = update_demand_notice(current_user, notice_id=notice_id, data=data, company_id=data.get("company_id"))
+        return jsonify(demand_notice=demand_notice_dict(notice))
+    except SalesRuleError as error:
+        return _error(error)
+
+
+@commercial_bp.post("/api/v1/demand-notices/<string:notice_id>/payments")
+@login_required
+def api_record_demand_notice_payment(notice_id: str):
+    data = _payload()
+    try:
+        notice, replayed = record_demand_notice_payment(
+            current_user,
+            notice_id=notice_id,
+            company_id=data.get("company_id"),
+            amount=data.get("amount"),
+            method=data.get("method", ""),
+            reference=data.get("reference"),
+            idempotency_key=data.get("idempotency_key") or request.headers.get("Idempotency-Key", ""),
+        )
+        return jsonify(demand_notice=demand_notice_dict(notice), replayed=replayed), (200 if replayed else 201)
+    except SalesRuleError as error:
+        return _error(error)
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="integrity_conflict", message="The payment conflicted with existing data; retry with the same key."), 409
+
+
+@commercial_bp.patch("/api/v1/quotations/<string:quotation_id>")
+@login_required
+def api_update_quotation(quotation_id: str):
+    data = _payload()
+    try:
+        quotation = update_quotation(current_user, quotation_id=quotation_id, data=data, company_id=data.get("company_id"))
+        return jsonify(quotation=quotation_dict(quotation))
+    except SalesRuleError as error:
+        return _error(error)
+
+
+@commercial_bp.get("/commercial/demand-notices/<string:notice_id>/print")
+@login_required
+def print_demand_notice(notice_id: str):
+    try:
+        notice = get_demand_notice_document(current_user, notice_id=notice_id, company_id=request.args.get("company_id"))
+        return render_template("commercial/demand_notice_print.html", document=notice, company_id=request.args.get("company_id"))
+    except SalesRuleError as error:
+        return _error(error)
+
+
+@commercial_bp.get("/commercial/quotations/<string:quotation_id>/print")
+@login_required
+def print_quotation(quotation_id: str):
+    try:
+        quotation = get_quotation_document(current_user, quotation_id=quotation_id, company_id=request.args.get("company_id"))
+        return render_template("commercial/quotation_print.html", document=quotation, company_id=request.args.get("company_id"))
+    except SalesRuleError as error:
+        return _error(error)
+
+
+def _email_document(kind: str, document_id: str):
+    data = _payload()
+    company_id = data.get("company_id")
+    try:
+        if kind == "quotation":
+            document = get_quotation_document(current_user, quotation_id=document_id, company_id=company_id)
+            reference = document["quotation_number"]
+            entity_type = "quotation"
+            action = "commercial.quotation.emailed"
+        else:
+            document = get_demand_notice_document(current_user, notice_id=document_id, company_id=company_id)
+            reference = document["notice_number"]
+            entity_type = "demand_notice"
+            action = "commercial.demand_notice.emailed"
+    except SalesRuleError as error:
+        return _error(error)
+
+    can_edit_domain = can_access_data_domain(
+        current_user,
+        tenant_container_id=document["tenant_container_id"],
+        domain="sales",
+        action="edit",
+        company_id=document["company_id"],
+        store_id=document["store_id"],
+    )
+    if not can_edit_domain or not (current_user.is_admin or current_user.has_permission("sales.edit")):
+        return jsonify(error="permission_denied", message="You are not allowed to email this commercial document."), 403
+
+    recipient = str(data.get("recipient", document.get("customer_email") or "")).strip()
+    if len(recipient) > 254 or not re.fullmatch(r"[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}", recipient):
+        return jsonify(error="invalid_email", message="Enter a valid recipient email address."), 400
+
+    rows = []
+    if kind == "quotation":
+        rows.extend(
+            f"<tr><td>{escape(str(line.get('product_name') or 'Item'))}</td>"
+            f"<td>{escape(str(line.get('quantity', '')))}</td>"
+            f"<td>{escape(str(line.get('unit_price', '')))}</td>"
+            f"<td>{escape(str(line.get('line_total', '')))}</td></tr>"
+            for line in document.get("lines", [])
+        )
+        heading = "Quotation"
+        details = f"<p>Valid until: {escape(str(document.get('valid_until') or '—'))}</p><p>Total OMR: {escape(str(document.get('total_amount') or '0.000'))}</p>"
+        table = "<table><thead><tr><th>Item</th><th>Quantity</th><th>Unit price (OMR)</th><th>Line total (OMR)</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+    else:
+        heading = "Demand notice"
+        details = (
+            f"<p>Product: {escape(str(document.get('product_name') or '—'))}</p>"
+            f"<p>Quantity requested: {escape(str(document.get('quantity_requested') or 0))}; fulfilled: {escape(str(document.get('quantity_fulfilled') or 0))}</p>"
+            f"<p>Agreed unit price (OMR): {escape(str(document.get('agreed_price') or '—'))}</p>"
+            f"<p>Deposit paid (OMR): {escape(str(document.get('amount_paid') or '0.000'))}</p>"
+        )
+        table = ""
+    customer = escape(str(document.get("customer_name") or "Customer"))
+    notes = f"<p>Notes: {escape(str(document['notes']))}</p>" if document.get("notes") else ""
+    html_body = (
+        "<!doctype html><html><head><meta charset=\"utf-8\"><style>body{font:16px Arial,sans-serif;color:#172033}"
+        "table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd3dd;padding:8px;text-align:left}</style></head><body>"
+        f"<h1>Retail Genie · {heading} {escape(str(reference))}</h1><p>Customer: {customer}</p>"
+        f"<p>Phone: {escape(str(document.get('customer_phone') or '—'))}</p>{details}{table}{notes}</body></html>"
+    )
+    try:
+        send_commercial_email(recipient=recipient, subject=f"{heading} {reference}", html_body=html_body)
+    except CommercialEmailError as error:
+        current_app.logger.warning("Commercial document email failed for %s: %s", entity_type, error)
+        return jsonify(error="email_delivery_failed", message=str(error)), 503
+
+    company = db.session.get(Company, document["company_id"])
+    _add_audit(
+        company.id,
+        current_user.id,
+        action,
+        entity_type,
+        document_id,
+        store_id=document["store_id"],
+        after={"recipient": recipient},
+    )
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Commercial document email audit could not be committed")
+        return jsonify(error="audit_write_failed", message="The email was sent, but its audit record could not be saved. Contact an administrator."), 500
+    return jsonify(status="sent", document_number=reference, recipient=recipient), 201
+
+
+@commercial_bp.post("/api/v1/demand-notices/<string:notice_id>/email")
+@login_required
+def email_demand_notice(notice_id: str):
+    return _email_document("demand_notice", notice_id)
+
+
+@commercial_bp.post("/api/v1/quotations/<string:quotation_id>/email")
+@login_required
+def email_quotation(quotation_id: str):
+    return _email_document("quotation", quotation_id)

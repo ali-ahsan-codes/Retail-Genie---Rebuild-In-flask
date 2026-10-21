@@ -44,3 +44,20 @@ class Config:
     BACKUP_TIMEOUT_SECONDS = int(os.getenv("BACKUP_TIMEOUT_SECONDS", "7200"))
     BACKUP_SCHEDULER_POLL_SECONDS = int(os.getenv("BACKUP_SCHEDULER_POLL_SECONDS", "15"))
     BACKUP_LOCK_NAME = os.getenv("BACKUP_LOCK_NAME", "retail_genie_backup_scheduler")
+
+    # SMTP is opt-in. Commercial email actions fail clearly when not configured.
+    SMTP_HOST = os.getenv("SMTP_HOST")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_SENDER = os.getenv("SMTP_SENDER")
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+    SMTP_USE_TLS = _env_bool("SMTP_USE_TLS", True)
+    SMTP_USE_SSL = _env_bool("SMTP_USE_SSL", False)
+    SMTP_TIMEOUT_SECONDS = int(os.getenv("SMTP_TIMEOUT_SECONDS", "15"))
+
+    # Each WSGI worker polls the shared durable event table, then emits only to
+    # its own local Socket.IO clients; replay remains the reconnect fallback.
+    REALTIME_DISPATCH_ENABLED = _env_bool("REALTIME_DISPATCH_ENABLED", True)
+    REALTIME_POLL_INTERVAL_SECONDS = float(os.getenv("REALTIME_POLL_INTERVAL_SECONDS", "0.5"))
+    REALTIME_RETENTION_DAYS = int(os.getenv("REALTIME_RETENTION_DAYS", "30"))
+    REALTIME_RETENTION_SWEEP_SECONDS = int(os.getenv("REALTIME_RETENTION_SWEEP_SECONDS", "21600"))

@@ -251,9 +251,16 @@ def toggle_user_active(user_id: str):
     active_memberships = ContainerMembership.query.filter_by(user_id=target.id, is_active=True).count()
     target.is_active = membership.is_active or active_memberships > 0
     target.auth_version += 1
-    db.session.commit()
-    from ..realtime.service import clear_user_subscriptions
+    from ..realtime.service import clear_user_subscriptions, publish_realtime_event, stage_user_access_revocations
 
+    access_event_ids = stage_user_access_revocations(
+        user_id=target.id,
+        actor_user_id=current_user.id,
+        include_inactive=True,
+    )
+    db.session.commit()
+    for event_id in access_event_ids:
+        publish_realtime_event(event_id)
     clear_user_subscriptions(target.id)
     state = "activated" if membership.is_active else "deactivated"
     flash(f"Account '{target.username}' {state} in this tenant.", "success")

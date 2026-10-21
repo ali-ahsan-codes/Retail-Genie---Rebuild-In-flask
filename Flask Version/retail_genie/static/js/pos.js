@@ -3,8 +3,14 @@
   if (!app) return;
 
   const $ = (selector) => document.querySelector(selector);
+  const formatOmr = (value) => {
+    if (value === null || value === undefined || value === '') return '—';
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toFixed(3) : '—';
+  };
   const storeSelect = $('#store-id');
   const phoneInput = $('#phone-number');
+  const scanInput = $('#scan-code');
   const messages = $('#pos-message');
   const results = $('#order-results');
   const selectedCard = $('#selected-order-card');
@@ -43,7 +49,7 @@
     if (!select || !summary) return;
     const product = catalogProducts.find((row) => row.id === select.value);
     summary.textContent = product
-      ? `Price OMR ${product.price ?? 'not set'} · ${product.stock_quantity === null ? 'stock visibility restricted' : `on hand ${product.stock_quantity}`}`
+      ? `Price OMR ${formatOmr(product.price)} · ${product.stock_quantity === null ? 'stock visibility restricted' : `on hand ${product.stock_quantity}`}`
       : 'Choose a product to see its current price and stock.';
   }
 
@@ -58,7 +64,7 @@
       const option = document.createElement('option');
       option.value = product.id;
       const stockText = product.stock_quantity === null ? 'stock restricted' : `stock ${product.stock_quantity}`;
-      option.textContent = `${product.sku ? `${product.sku} · ` : ''}${product.name} · OMR ${product.price ?? '—'} · ${stockText}`;
+      option.textContent = `${product.sku ? `${product.sku} · ` : ''}${product.name} · OMR ${formatOmr(product.price)} · ${stockText}`;
       option.disabled = !product.price || Number(product.price) <= 0 || (product.stock_quantity !== null && Number(product.stock_quantity) <= 0);
       select.append(option);
     }
@@ -96,6 +102,56 @@
     }
   }
 
+  async function scanProductCode() {
+    const code = scanInput?.value.trim();
+    if (!code) return;
+    const normalized = code.toLocaleUpperCase();
+    let product = catalogProducts.find((item) =>
+      [item.barcode, item.sku].some((value) => String(value || '').trim().toLocaleUpperCase() === normalized),
+    );
+    if (!product) {
+      const query = new URLSearchParams({ store_id: storeSelect.value, q: code });
+      if (companyId) query.set('company_id', companyId);
+      try {
+        const body = await api(`/api/v1/products?${query.toString()}`);
+        product = (body.products || []).find((item) =>
+          [item.barcode, item.sku].some((value) => String(value || '').trim().toLocaleUpperCase() === normalized),
+        );
+        if (product) catalogProducts = [...catalogProducts.filter((item) => item.id !== product.id), product];
+      } catch (_error) {
+        message('Could not verify that barcode in the selected store.', 'error');
+        return;
+      }
+    }
+    if (!product) {
+      message(`No authorized product matches “${code}” in this store.`, 'error');
+      scanInput.select();
+      return;
+    }
+
+    const targetSelect = selectedOrderId ? addProductSelect : newProductSelect;
+    if (targetSelect) {
+      if (![...targetSelect.options].some((option) => option.value === product.id)) {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = `${product.sku || product.barcode || ''} · ${product.name} · OMR ${formatOmr(product.price)}`;
+        targetSelect.append(option);
+      }
+      targetSelect.value = product.id;
+      updateProductSummary(targetSelect, selectedOrderId ? $('#add-product-stock') : $('#new-product-stock'));
+    }
+    scanInput.value = '';
+    if (selectedOrderId) {
+      $('#add-item-quantity').value = '1';
+      await addItem();
+      scanInput.focus();
+    } else {
+      $('#new-item-quantity').value = '1';
+      message(`Scanned ${product.name}. Enter the customer phone, then create the bill.`, 'success');
+      phoneInput.focus();
+    }
+  }
+
   function clearResults(text) {
     results.replaceChildren();
     const empty = document.createElement('p');
@@ -123,7 +179,7 @@
       heading.append(customer, date);
       const details = document.createElement('p');
       details.className = 'muted';
-      details.textContent = `${order.order_number || order.id} · ${order.items.length} item${order.items.length === 1 ? '' : 's'} · ${order.origin_store_id} · Balance OMR ${order.balance}`;
+      details.textContent = `${order.order_number || order.id} · ${order.items.length} item${order.items.length === 1 ? '' : 's'} · ${order.origin_store_id} · Balance OMR ${formatOmr(order.balance)}`;
       const button = document.createElement('button');
       button.className = 'button button-secondary button-full';
       button.type = 'button';
@@ -177,9 +233,9 @@
     selectedCard.hidden = false;
     $('#selected-order-title').textContent = order.customer_name || order.customer_phone;
     $('#selected-order-summary').textContent = `Order ${order.order_number || order.id} · ${order.business_date} · opened at ${order.origin_store_id}`;
-    $('#order-total').textContent = `OMR ${order.total_amount}`;
-    $('#order-paid').textContent = `OMR ${order.paid_amount}`;
-    $('#order-balance').textContent = `OMR ${order.balance}`;
+    $('#order-total').textContent = `OMR ${formatOmr(order.total_amount)}`;
+    $('#order-paid').textContent = `OMR ${formatOmr(order.paid_amount)}`;
+    $('#order-balance').textContent = `OMR ${formatOmr(order.balance)}`;
     $('#payment-amount').value = Number(order.balance) > 0 ? order.balance : '';
     const list = $('#selected-order-items');
     list.replaceChildren();
@@ -197,10 +253,10 @@
       name.textContent = item.name;
       const meta = document.createElement('span');
       meta.className = 'muted';
-      meta.textContent = `${item.quantity} × OMR ${item.unit_price} · Added at ${item.added_store_id}`;
+      meta.textContent = `${item.quantity} × OMR ${formatOmr(item.unit_price)} · Added at ${item.added_store_id}`;
       label.append(name, meta);
       const total = document.createElement('strong');
-      total.textContent = `OMR ${item.line_total}`;
+      total.textContent = `OMR ${formatOmr(item.line_total)}`;
       row.append(label, total);
       const remove = document.createElement('button');
       remove.className = 'text-button';
@@ -214,7 +270,7 @@
     paidList.className = 'payment-history';
     for (const payment of order.payments) {
       const row = document.createElement('p');
-      row.textContent = `${payment.method.replace('_', ' ')} · OMR ${payment.amount} · ${payment.created_at || ''}`;
+      row.textContent = `${payment.method.replace('_', ' ')} · OMR ${formatOmr(payment.amount)} · ${payment.created_at || ''}`;
       paidList.append(row);
     }
     if (order.payments.length) list.append(paidList);
@@ -331,7 +387,18 @@
   $('#create-order-button').addEventListener('click', createOrder);
   $('#add-item-button').addEventListener('click', addItem);
   $('#payment-button').addEventListener('click', makePayment);
+  $('#print-selected-order')?.addEventListener('click', () => {
+    if (!selectedOrderId) return;
+    const query = companyId ? `?company_id=${encodeURIComponent(companyId)}` : '';
+    window.open(`/sales/orders/${encodeURIComponent(selectedOrderId)}/print${query}`, '_blank', 'noopener');
+  });
   phoneInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') lookup(); });
+  scanInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void scanProductCode();
+    }
+  });
   newProductSelect?.addEventListener('change', () => updateProductSummary(newProductSelect, $('#new-product-stock')));
   addProductSelect?.addEventListener('change', () => updateProductSummary(addProductSelect, $('#add-product-stock')));
   storeSelect.addEventListener('change', () => {

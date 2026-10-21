@@ -51,14 +51,18 @@ def subscribe_store(payload=None):
         tenant_container_id=tenant_id,
     ):
         return {"ok": False, "error": "store_forbidden"}
-    if not can_access_data_domain(
-        current_user,
-        tenant_container_id=tenant_id,
-        domain="inventory",
-        action="view",
-        company_id=store.company_id,
-        store_id=store.id,
-    ):
+    may_subscribe_to_domain = any(
+        can_access_data_domain(
+            current_user,
+            tenant_container_id=tenant_id,
+            domain=domain,
+            action="view",
+            company_id=store.company_id,
+            store_id=store.id,
+        )
+        for domain in ("inventory", "sales")
+    )
+    if not may_subscribe_to_domain:
         return {"ok": False, "error": "permission_denied"}
 
     if not add_subscription(
@@ -66,6 +70,7 @@ def subscribe_store(payload=None):
         user=current_user,
         tenant_container_id=tenant_id,
         store_id=store.id,
+        company_id=store.company_id,
     ):
         return {"ok": False, "error": "authentication_required"}
     latest_cursor = db.session.execute(
