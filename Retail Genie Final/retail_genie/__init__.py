@@ -237,6 +237,50 @@ def register_cli_commands(app: Flask) -> None:
 
         click.echo(f"Main Admin '{normalized_username}' created.")
 
+    @app.cli.command("seed-demo")
+    @click.option(
+        "--confirm-demo-data",
+        is_flag=True,
+        help="Confirm writing sample company, store, products, and opening stock to a fresh local database.",
+    )
+    def seed_demo(confirm_demo_data: bool) -> None:
+        """Add opt-in demo records to a fresh local Retail Genie database."""
+        if not confirm_demo_data:
+            raise click.ClickException(
+                "No data was written. Re-run with --confirm-demo-data only for a fresh local retail_genie database."
+            )
+
+        database_url = db.engine.url
+        if (
+            database_url.get_backend_name() != "mysql"
+            or database_url.database != "retail_genie"
+            or database_url.host not in {"localhost", "127.0.0.1", "::1"}
+        ):
+            raise click.ClickException(
+                "Demo seeding is restricted to a local MySQL database named retail_genie. No data was written."
+            )
+
+        from .models import CatalogProduct, Company, Store, TenantContainer
+        from .demo_data import DEMO_CONTAINER_SLUG, seed_demo_records
+
+        existing_demo = TenantContainer.query.filter_by(slug=DEMO_CONTAINER_SLUG).first()
+        if existing_demo is not None:
+            click.echo("Demo data already exists; no changes were made.")
+            return
+        if TenantContainer.query.first() or Company.query.first() or Store.query.first() or CatalogProduct.query.first():
+            raise click.ClickException("Business data already exists; refusing to add demo records.")
+
+        try:
+            created = seed_demo_records()
+        except Exception as error:
+            app.logger.error("Demo data seeding failed (%s)", type(error).__name__)
+            raise click.ClickException("Demo data was not seeded. Check local MySQL connectivity and schema setup.") from None
+
+        if created:
+            click.echo("Demo tenant, company, store, five products, and opening stock created.")
+        else:
+            click.echo("Demo data already exists; no changes were made.")
+
     @app.cli.command("backup-scheduler")
     @click.option("--once", "run_once", is_flag=True, help="Check for one due backup and exit.")
     def backup_scheduler(run_once: bool) -> None:
