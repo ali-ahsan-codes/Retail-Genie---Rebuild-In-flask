@@ -21,6 +21,18 @@ The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is
 - `requirements.txt` — application runtime dependencies.
 - `run.py`, `wsgi.py`, `.env.example`, `.gitignore` — application entry points and configuration support.
 - `LOCAL_INSTALL_GUIDE.md` — Windows/MySQL Workbench setup, LAN QR access, and initial account configuration.
-- `preview/dashboard.png` — illustrative dashboard screenshot from a temporary UI preview. Its QR graphic contains a temporary preview URL; an actual installation generates a fresh QR code for its current address.
+
+## UI previews
+
+These screenshots were captured from an isolated local browser preview using synthetic demo records. They are illustrative only and do **not** represent live-MySQL validation.
+
+- [Dashboard](preview/dashboard.png)
+- [Sign-in — desktop](preview/login-desktop.png) · [mobile](preview/login-mobile.png)
+- [Products & inventory — desktop](preview/products-inventory.png) · [mobile](preview/products-mobile.png)
+- [Point of sale — initial view](preview/point-of-sale.png) · [open demo bill](preview/pos-demo-open-bill.png) · [settled demo invoice](preview/pos-demo-settled-invoice.png)
+- [Supply chain](preview/supply-chain.png)
+- [Stock audits](preview/stock-audits.png)
+- [Settings](preview/settings.png)
+- [Accounts](preview/accounts.png)
 
 The directory is intended to be copied or deployed as an independent application. Local credentials, environment files, database data, uploads, and backups are not included.

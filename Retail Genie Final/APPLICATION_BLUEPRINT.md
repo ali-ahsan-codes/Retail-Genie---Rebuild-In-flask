@@ -146,7 +146,7 @@ python run.py
 
 - `database-schema.sql` is initial schema for a fresh empty database, not a way to upgrade existing business data.
 - `/healthz` checks process liveness; `/readyz` checks database readiness.
-- `preview/dashboard.png` is illustrative; its QR image contains an old temporary preview URL. A running installation generates its own login QR.
+- `preview/` contains illustrative desktop/mobile screenshots captured with synthetic local demo data. The desktop screenshot shows the QR launcher; mobile clients intentionally omit it. Screenshot data does not represent live-MySQL validation.
 
 ## 9. Reading the indexes
 
@@ -1240,7 +1240,7 @@ Index generated from the application Python source: **600 function/method defini
 
 ## Appendix C — Complete application file tree
 
-Local `.env`, caches, and runtime-created upload/backup folders are intentionally omitted.
+Local `.env`, Python caches, and runtime-created upload/backup folders are intentionally omitted. The preview directory contains illustrative synthetic-data screenshots.
 
 ```text
 .env.example
@@ -1249,7 +1249,18 @@ APPLICATION_BLUEPRINT.md
 LOCAL_INSTALL_GUIDE.md
 README.md
 database-schema.sql
+preview/accounts.png
 preview/dashboard.png
+preview/login-desktop.png
+preview/login-mobile.png
+preview/point-of-sale.png
+preview/pos-demo-open-bill.png
+preview/pos-demo-settled-invoice.png
+preview/products-inventory.png
+preview/products-mobile.png
+preview/settings.png
+preview/stock-audits.png
+preview/supply-chain.png
 requirements.txt
 retail_genie/__init__.py
 retail_genie/admin/__init__.py
