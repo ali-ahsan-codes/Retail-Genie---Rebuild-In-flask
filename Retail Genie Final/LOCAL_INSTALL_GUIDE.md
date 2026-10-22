@@ -20,10 +20,10 @@ If needed, start the MySQL service from Windows Services or from elevated PowerS
 
 ## 2. Install the application and database
 
-Open PowerShell at the repository location:
+Open PowerShell in the standalone `Retail Genie Final` application folder (the folder containing `install.ps1`):
 
 ```powershell
-cd "path\to\Retail-Genie"
+cd "path\to\Retail Genie Final"
 .\install.ps1
 ```
 

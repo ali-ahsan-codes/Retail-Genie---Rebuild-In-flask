@@ -96,7 +96,7 @@ h3 { margin-bottom: 6px; font-size: 16px; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; color: #54657b; background: #eef2f7; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .pill-success { color: #126342; background: var(--green-pale); }
 .pill-muted { color: #6b7788; background: #edf0f4; }
-.status-note { display: inline-flex; gap: 8px; align-items: center; margin-top: 25px; color: #d9e8f8; font-size: 12px; }
+.status-note { display: inline-flex; gap: 8px; align-items: center; margin-top: 25px; color: #3c6f58; font-size: 12px; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #7ee0ad; box-shadow: 0 0 0 4px rgba(126, 224, 173, .13); }
 .auth-layout { display: grid; grid-template-columns: 1fr minmax(340px, 450px); gap: clamp(30px, 8vw, 110px); align-items: center; min-height: min(620px, 75vh); }
 .auth-aside { max-width: 530px; padding: 30px 0; }
@@ -122,7 +122,19 @@ h3 { margin-bottom: 6px; font-size: 16px; }
 .admin-grid { display: grid; grid-template-columns: minmax(290px, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .create-account-card { position: sticky; top: 18px; }
 .accounts-card { min-width: 0; }
-.table-wrap { width: 100%; overflow-x: auto; }
+.table-wrap, .table-scroll { width: 100%; max-width: 100%; overflow-x: auto; }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { padding: 13px 10px; border-bottom: 1px solid #edf1f6; vertical-align: middle; }
 th { color: #74839a; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
