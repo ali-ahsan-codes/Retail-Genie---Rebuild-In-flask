@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Overview · Retail Genie{% endblock %}
+{% block content %}
+<section class="workspace-hero">
+  <div class="workspace-hero-copy">
+    <p class="eyebrow">RETAIL GENIE · WORKSPACE</p>
+    <h1>Good to see you, {{ current_user.username }}</h1>
+    <p class="muted">Your dashboard is tailored to your role and current access.</p>
+  </div>
+  <div class="workspace-context">
+    <span class="workspace-role">{{ current_user.effective_role|replace('_', ' ')|title }}</span>
+    {% if active_tenant %}<span class="workspace-tenant">{{ active_tenant.name }}{% if active_company %} · {{ active_company.name }}{% endif %}</span>{% elif current_user.is_super_admin %}<span class="workspace-tenant">Platform administration</span>{% endif %}
+  </div>
+</section>
+
+{% if dashboard_cards %}
+  {% for group, cards in dashboard_cards|groupby('group') %}
+    <section class="workspace-section" aria-labelledby="workspace-group-{{ loop.index }}">
+      <div class="workspace-section-heading">
+        <div><p class="eyebrow">{{ group }}</p><h2 id="workspace-group-{{ loop.index }}">{% if group == 'Daily work' %}Your daily work{% elif group == 'Insights' %}Insights & reporting{% elif group == 'Workspace setup' %}Workspace tools{% elif group == 'Administration' %}Administration{% else %}{{ group }}{% endif %}</h2></div>
+        <span class="workspace-count">{{ cards|length }} available</span>
+      </div>
+      <div class="workspace-card-grid">
+        {% for card in cards %}
+          <a class="workspace-card" href="{{ card.url }}">
+            <span class="workspace-card-icon" aria-hidden="true">{{ card.icon }}</span>
+            <span class="workspace-card-copy"><strong>{{ card.title }}</strong><small>{{ card.description }}</small></span>
+            <span class="workspace-card-arrow" aria-hidden="true">→</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+{% else %}
+  <section class="workspace-empty panel">
+    <span class="workspace-card-icon" aria-hidden="true">RG</span>
+    <h2>Your workspace is ready</h2>
+    <p class="muted">There are no modules assigned to this account yet. Ask an administrator to review your role, permissions, and store access.</p>
+    <a class="button button-secondary" href="{{ url_for('auth.change_password') }}">Review account security</a>
+  </section>
+{% endif %}
+{% endblock %}
