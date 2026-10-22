@@ -133,7 +133,7 @@ ROLE_PERMISSION_LIMITS: dict[str, frozenset[str]] = {
     "salesperson": CLOUD_PERMISSIONS | {"use_sales_pos", "view_salesperson_reports"} | SALES_DOMAIN_PERMISSIONS,
     "storekeeper": CLOUD_PERMISSIONS | INVENTORY_DOMAIN_PERMISSIONS,
     "cashier": CLOUD_PERMISSIONS | {"use_sales_pos"} | SALES_DOMAIN_PERMISSIONS,
-    "logistics": CLOUD_PERMISSIONS | {"inventory.view", "inventory.add", "inventory.edit"},
+    "logistics": CLOUD_PERMISSIONS | {"product_catalog.view", "inventory.view", "inventory.add", "inventory.edit"},
     "auditor": CLOUD_PERMISSIONS | {"conduct_audits"} | AUDIT_DOMAIN_PERMISSIONS,
     "display": frozenset(),
     "express": CLOUD_PERMISSIONS | {"express_checkout", "use_sales_pos"} | SALES_DOMAIN_PERMISSIONS,

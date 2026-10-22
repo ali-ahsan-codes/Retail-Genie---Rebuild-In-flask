@@ -35,5 +35,6 @@ These screenshots were captured from an isolated local browser preview using syn
 - [Stock audits](preview/stock-audits.png)
 - [Settings](preview/settings.png)
 - [Accounts](preview/accounts.png)
+- [Role-by-role dashboards and navigation (all 11 account types)](preview/account-roles/README.md)
 
 The directory is intended to be copied or deployed as an independent application. Local credentials, environment files, database data, uploads, and backups are not included.

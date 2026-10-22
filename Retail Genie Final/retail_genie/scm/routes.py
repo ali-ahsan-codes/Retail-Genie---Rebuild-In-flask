@@ -14,6 +14,7 @@ from ..models import CatalogProduct, Company, PurchaseOrder, Store, Supplier
 from . import scm_bp
 from .service import (
     ScmRuleError,
+    cancel_purchase_order,
     add_po_attachment,
     add_supplier_attachment,
     confirm_purchase_order,
