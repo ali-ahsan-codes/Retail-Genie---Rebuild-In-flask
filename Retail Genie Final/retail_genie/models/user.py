@@ -16,7 +16,7 @@ from .tenancy import DATA_DOMAINS
 ROLES: tuple[str, ...] = (
     "super_admin",
     "company_admin",
-    "admin",  # Legacy alias for a company administrator.
+    "admin",  # Company administrator account role.
     "manager",
     "salesperson",
     "storekeeper",

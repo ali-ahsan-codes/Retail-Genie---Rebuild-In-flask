@@ -41,7 +41,6 @@ from .tenancy import (
     TenantDataPolicyScope,
     UserStoreAssignment,
 )
-from .legacy_schema import legacy_tables
 from .realtime import RealtimeEvent
 from .user import (
     PERMISSIONS,
@@ -89,7 +88,6 @@ __all__ = [
     "TenantDataPolicy",
     "TenantDataPolicyScope",
     "UserStoreAssignment",
-    "legacy_tables",
     "PERMISSIONS",
     "PERMISSION_LABELS",
     "ROLE_PERMISSION_LIMITS",

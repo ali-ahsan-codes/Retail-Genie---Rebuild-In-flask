@@ -8,7 +8,7 @@ from flask_login import current_user
 from sqlalchemy import text
 
 from .config import Config
-from .extensions import csrf, db, limiter, login_manager, migrate, socketio
+from .extensions import csrf, db, limiter, login_manager, socketio
 
 
 def create_app(test_config: dict | None = None) -> Flask:
@@ -40,7 +40,6 @@ def create_app(test_config: dict | None = None) -> Flask:
         }
 
     db.init_app(app)
-    migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
@@ -56,7 +55,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     login_manager.login_message_category = "info"
     login_manager.session_protection = "strong"
 
-    from .models import User  # Register model metadata before migrations run.
+    from .models import User  # Register all application models before database operations.
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User | None:
@@ -203,45 +202,22 @@ def create_app(test_config: dict | None = None) -> Flask:
 
 
 def register_cli_commands(app: Flask) -> None:
-    """Register safe account, backup-worker, and one-time import commands."""
+    """Register first-admin provisioning and the MySQL backup worker."""
     import click
 
     from .models import User
 
-    @app.cli.command("phase6-preflight")
-    def phase6_preflight() -> None:
-        """Run read-only MySQL, schema, migration-head, and InnoDB checks."""
-        from .phase6 import PreflightError, mysql_deployment_preflight
-
-        try:
-            checks = mysql_deployment_preflight(
-                db.engine,
-                migrate.get_config(),
-                db.metadata.tables.keys(),
-            )
-        except PreflightError as error:
-            raise click.ClickException(str(error)) from None
-
-        for check in checks:
-            label = "PASS" if check.passed else "FAIL"
-            click.echo(f"{label}: {check.name}: {check.detail}")
-        if any(not check.passed for check in checks):
-            raise click.ClickException("Deployment preflight did not pass; resolve the reported checks before pilot testing.")
-        click.echo("Read-only deployment preflight passed. No database writes were performed.")
-
     @app.cli.command("create-admin")
     @click.option("--username", prompt=True, help="Username for the first administrator.")
     def create_admin(username: str) -> None:
-        """Create the initial admin account after running `flask db upgrade`."""
+        """Create the initial Main Admin after loading the provided MySQL schema."""
         from .models.user import is_valid_username, normalize_username
 
         normalized_username = normalize_username(username)
         if not is_valid_username(normalized_username):
             raise click.ClickException("Username must be 3–48 characters using letters, numbers, dots, underscores, or hyphens.")
         if User.query.filter_by(role="super_admin", is_active=True).count():
-            raise click.ClickException(
-                "An active Main Admin already exists; use company administration or reset-imported-password for an approved account."
-            )
+            raise click.ClickException("An active Main Admin already exists.")
         if User.query.filter_by(username=normalized_username).first():
             raise click.ClickException("That username already exists.")
 
@@ -254,10 +230,10 @@ def register_cli_commands(app: Flask) -> None:
         db.session.add(user)
         try:
             db.session.commit()
-        except Exception as error:  # Keep provisioning errors generic; never print credentials.
+        except Exception as error:
             db.session.rollback()
             app.logger.error("Could not create initial administrator: %s", type(error).__name__)
-            raise click.ClickException("Administrator creation failed. Check database connectivity and migration status.") from None
+            raise click.ClickException("Administrator creation failed. Check database connectivity and confirm the schema is installed.") from None
 
         click.echo(f"Main Admin '{normalized_username}' created.")
 
@@ -276,155 +252,3 @@ def register_cli_commands(app: Flask) -> None:
             raise click.ClickException("Backup scheduler could not start; verify MySQL connectivity and configuration.") from None
         if run_once:
             click.echo("Backup scheduler check completed.")
-
-    @app.cli.command("import-sqlite")
-    @click.option("--source", "source_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
-    @click.option("--apply", "apply_import", is_flag=True, help="Apply the import; otherwise perform a read-only dry run.")
-    @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
-    @click.option("--password-policy", type=click.Choice(["reset", "hash"]), default="reset", show_default=True)
-    @click.option("--confirm-legacy-passwords", is_flag=True, help="Required with --password-policy=hash on apply.")
-    @click.option("--company-id", help="Company to receive the legacy rows; required when multiple companies exist.")
-    @click.option("--store-id", help="Store to receive legacy store-scoped rows; required when multiple stores exist.")
-    def import_sqlite(
-        source_path: Path,
-        apply_import: bool,
-        confirm_apply: bool,
-        password_policy: str,
-        confirm_legacy_passwords: bool,
-        company_id: str | None,
-        store_id: str | None,
-    ) -> None:
-        """Validate or import the reviewed legacy SQLite database."""
-        from .migrations.legacy_import import LegacyImportError, import_sqlite_database
-
-        if apply_import and not confirm_apply:
-            raise click.ClickException("Review a dry run first, then pass --apply --confirm-apply.")
-        if apply_import and password_policy == "hash" and not confirm_legacy_passwords:
-            raise click.ClickException(
-                "Preserving legacy passwords requires --confirm-legacy-passwords; the default policy resets them."
-            )
-        try:
-            report = import_sqlite_database(
-                source_path,
-                apply=apply_import,
-                password_policy=password_policy,
-                company_id=company_id,
-                store_id=store_id,
-            )
-        except LegacyImportError as error:
-            raise click.ClickException(str(error)) from None
-        except Exception as error:
-            app.logger.error(
-                "SQLite import failed and the target transaction was rolled back (%s)",
-                type(error).__name__,
-            )
-            raise click.ClickException(
-                f"SQLite import failed ({type(error).__name__}); check server logs."
-            ) from None
-
-        click.echo("Import mode: " + ("APPLIED" if apply_import else "DRY RUN — no target rows changed"))
-        click.echo(f"Password policy: {password_policy}; accounts will require a password change.")
-        click.echo("Table counts:")
-        for table_name in sorted(report.source_counts):
-            inserted = report.inserted_counts.get(table_name, 0)
-            skipped = report.skipped_counts.get(table_name, 0)
-            click.echo(
-                f"  {table_name}: source={report.source_counts[table_name]}, "
-                f"inserted={inserted}, skipped={skipped}"
-            )
-        click.echo(
-            f"User credentials reset={report.user_passwords_reset}, "
-            f"legacy credentials hashed={report.user_passwords_hashed}."
-        )
-        orders = report.reconciliation.get("orders", {})
-        payments = report.reconciliation.get("payments", {})
-        stock = report.reconciliation.get("stock", {})
-        counters = report.reconciliation.get("invoice_counters", {})
-        click.echo(
-            "Reconciliation: "
-            f"orders={orders.get('rows', 0)} total_OMR={orders.get('total_omr', '0')}; "
-            f"payments_OMR={payments.get('combined_total_omr', '0')}; "
-            f"stock_units={stock.get('quantity_total', 0)}; "
-            f"invoice_counter_rows={counters.get('rows', 0)}."
-        )
-
-    @app.cli.command("migrate-media")
-    @click.option("--source", "source_path", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
-    @click.option("--source-uploads", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-    @click.option("--company-id", help="Imported target company that owns these legacy uploads.")
-    @click.option("--destination", type=click.Path(file_okay=False, path_type=Path), help="Override UPLOADS_DIR for this run.")
-    @click.option("--apply", "apply_migration", is_flag=True, help="Copy files and update matching MySQL path metadata.")
-    @click.option("--confirm-apply", is_flag=True, help="Required with --apply after reviewing the dry-run report.")
-    def migrate_media(
-        source_path: Path,
-        source_uploads: Path,
-        company_id: str | None,
-        destination: Path | None,
-        apply_migration: bool,
-        confirm_apply: bool,
-    ) -> None:
-        """Preflight or migrate legacy uploads after the SQLite import."""
-        from .migrations.media import MediaMigrationError, migrate_legacy_media
-
-        if apply_migration and not confirm_apply:
-            raise click.ClickException("Review the media dry run first, then pass --apply --confirm-apply.")
-        if apply_migration and not company_id:
-            raise click.ClickException("Applying media migration requires --company-id.")
-        try:
-            report = migrate_legacy_media(
-                source_path,
-                source_uploads,
-                apply=apply_migration,
-                company_id=company_id,
-                destination_root=destination,
-            )
-        except MediaMigrationError as error:
-            raise click.ClickException(str(error)) from None
-        except Exception as error:
-            app.logger.error("Legacy media migration failed (%s)", type(error).__name__)
-            raise click.ClickException("Legacy media migration failed; check server logs.") from None
-
-        mode = "APPLIED" if apply_migration else "DRY RUN — no files or database paths changed"
-        click.echo(f"Media migration: {mode}")
-        click.echo(
-            f"References={report.source_references}; local={report.local_references}; "
-            f"unique_files={report.unique_local_files}; cloud_refs={report.cloud_file_references}; "
-            f"cloud_manifests={report.cloud_metadata_files}; orphan_cloud_users={len(report.orphaned_cloud_users)}; "
-            f"uploads_tree_files={report.source_upload_files}; unreferenced={report.unreferenced_files}; "
-            f"external={report.external_references}; "
-            f"embedded={report.embedded_references}; missing_source_files={len(report.missing_source_files)}."
-        )
-        if apply_migration:
-            click.echo(
-                f"Copied={report.copied_files}; already_present={report.already_present_files}; "
-                f"path_updates={report.rewritten_target_references}; "
-                f"already_updated={report.already_rewritten_references}; "
-                f"verified_database_paths={report.database_paths_verified}; "
-                f"verified_cloud_paths={report.cloud_paths_verified}."
-            )
-        if report.missing_source_files:
-            examples = ", ".join(report.missing_source_files[:5])
-            raise click.ClickException(
-                f"The source uploads directory is missing referenced files: {examples}"
-            )
-
-    @app.cli.command("reset-imported-password")
-    @click.option("--username", required=True, help="Imported account to reset.")
-    @click.option("--activate/--no-activate", default=True, show_default=True)
-    def reset_imported_password(username: str, activate: bool) -> None:
-        """Set an interactive temporary password for a migrated account."""
-        from .models.user import normalize_username
-
-        normalized_username = normalize_username(username)
-        target = User.query.filter_by(username=normalized_username).first()
-        if target is None:
-            raise click.ClickException("No account with that username exists.")
-        password = click.prompt("Temporary password (minimum 12 characters)", hide_input=True, confirmation_prompt=True)
-        if len(password) < 12:
-            raise click.ClickException("Password must be at least 12 characters.")
-        target.set_password(password)
-        target.is_active = activate
-        target.force_password_change = True
-        target.auth_version += 1
-        db.session.commit()
-        click.echo(f"Password reset for '{normalized_username}'. The account must change it at next sign-in.")
