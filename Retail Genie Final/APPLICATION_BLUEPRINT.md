@@ -1249,6 +1249,9 @@ APPLICATION_BLUEPRINT.md
 LOCAL_INSTALL_GUIDE.md
 README.md
 database-schema.sql
+file.md
+install.ps1
+list.md
 preview/accounts.png
 preview/dashboard.png
 preview/login-desktop.png
@@ -1418,5 +1421,7 @@ retail_genie/templates/stock_audits/report.html
 retail_genie/tenancy/__init__.py
 retail_genie/tenancy/service.py
 run.py
+scripts/setup_database.py
+seed_admin.py
 wsgi.py
 ```

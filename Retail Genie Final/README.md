@@ -6,13 +6,13 @@ Retail Genie is a standalone Flask application for retail operations, backed by 
 
 - **Install and configure the app:** [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md)
 - **Understand app architecture and functions:** [`APPLICATION_BLUEPRINT.md`](APPLICATION_BLUEPRINT.md)
-- **Configuration example:** copy `.env.example` to `.env`, set a strong `SECRET_KEY`, and configure the MySQL `DATABASE_URL`.
-- **Initial database structure:** execute [`database-schema.sql`](database-schema.sql) against a new, empty `retail_genie` database.
-- **Create the first administrator:** `flask --app wsgi create-admin --username admin`
-- **Optional local demo records:** `flask --app wsgi seed-demo --confirm-demo-data` (fresh local `retail_genie` database only; see the install guide).
+- **Configure a fresh local install:** run `install.ps1`; it creates the isolated `.env.retail-genie` settings file and provisions the new `retail_genie` database. Do not copy credentials from an unrelated `.env`.
+- **Initial database structure:** [`database-schema.sql`](database-schema.sql) is for a new, empty `retail_genie` database; the installer applies it during setup.
+- **Create the first administrator:** `python seed_admin.py` prompts for a new Main Admin account.
+- **Optional local demo records:** `python -m flask --app wsgi seed-demo --confirm-demo-data` (fresh local `retail_genie` database only; see the install guide).
 - **Run locally:** `python run.py`
 
-The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is for a fresh installation only; do not execute it against a database containing existing business data. Never expose MySQL port 3306 to client devices or the internet.
+The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is for a fresh installation only; do not execute it against a database containing existing business data. Never expose MySQL port 3306 to client devices or the internet. Retail Genie uses its separate `retail_genie` database and does not modify the existing `invoiceflow_v2` database.
 
 ## Application contents
 
@@ -20,7 +20,8 @@ The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is
 - `database-schema.sql` — initial MySQL tables and indexes for a fresh database.
 - `requirements.txt` — application runtime dependencies.
 - `run.py`, `wsgi.py`, `.env.example`, `.gitignore` — application entry points and configuration support.
-- `LOCAL_INSTALL_GUIDE.md` — Windows/MySQL Workbench setup, LAN QR access, and initial account configuration.
+- `install.ps1`, `scripts/setup_database.py`, `seed_admin.py` — local setup, database provisioning, and interactive administrator creation.
+- `LOCAL_INSTALL_GUIDE.md` — Windows/MySQL setup, LAN QR access, and initial account configuration.
 
 ## UI previews
 

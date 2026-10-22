@@ -4,6 +4,28 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import dotenv_values, load_dotenv
+
+
+RETAIL_GENIE_ENV_FILE = Path(__file__).resolve().parents[1] / ".env.retail-genie"
+
+
+def load_retail_genie_environment() -> None:
+    if RETAIL_GENIE_ENV_FILE.is_file():
+        load_dotenv(RETAIL_GENIE_ENV_FILE, override=True)
+        return
+
+    shared_env_file = RETAIL_GENIE_ENV_FILE.with_name(".env")
+    shared_database_url = dotenv_values(shared_env_file).get("DATABASE_URL")
+    if shared_database_url and os.getenv("DATABASE_URL") == shared_database_url:
+        raise RuntimeError(
+            "The shared .env DATABASE_URL is not used by Retail Genie. "
+            "Run .\\install.ps1 to create .env.retail-genie."
+        )
+
+
+load_retail_genie_environment()
+
 
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)

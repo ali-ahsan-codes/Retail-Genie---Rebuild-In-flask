@@ -2,9 +2,9 @@
 
 import os
 
-from dotenv import load_dotenv
+from retail_genie.config import load_retail_genie_environment
 
-load_dotenv()
+load_retail_genie_environment()
 
 from retail_genie import create_app, socketio  # noqa: E402
 
