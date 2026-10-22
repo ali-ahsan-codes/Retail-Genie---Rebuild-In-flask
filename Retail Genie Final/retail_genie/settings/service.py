@@ -54,8 +54,8 @@ def _active_company(actor: User, company_id: str | None, tenant_container_id: st
 def _require_manage_settings(actor: User) -> None:
     if not actor.is_authenticated:
         raise SettingsRuleError("Sign in to manage settings.", 401, "authentication_required")
-    if not actor.is_admin:
-        raise SettingsRuleError("Only administrators can change settings.", 403, "permission_denied")
+    if not actor.is_admin and not actor.has_permission("manage_settings"):
+        raise SettingsRuleError("You do not have permission to manage company settings.", 403, "permission_denied")
 
 
 def _record(

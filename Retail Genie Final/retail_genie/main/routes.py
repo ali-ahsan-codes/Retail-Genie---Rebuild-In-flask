@@ -53,12 +53,14 @@ def _dashboard_cards():
         })
 
     add("Daily work", "Point of sale", "Create a bill, find an open order, add items, and record payment.", "sales.point_of_sale", "POS", permission="use_sales_pos")
-    add("Daily work", "Express checkout", "Scan or search products and complete a quick sale.", "express.express_page", "EC", permission="express_checkout")
+    if not current_user.is_super_admin:
+        add("Daily work", "Express checkout", "Scan or search products and complete a quick sale.", "express.express_page", "EC", permission="express_checkout")
     add("Daily work", "Products & inventory", "Search the catalog, review stock, or submit an authorized adjustment.", "catalog.products_page", "ST", any_permission=("product_catalog.view", "manage_products", "inventory.view"))
     add("Daily work", "Orders & fulfillment", "Review open and completed orders and update delivery status.", "sales.admin_orders_page", "OR", any_permission=("sales.view", "manage_orders"))
-    add("Daily work", "Returns & refunds", "Find a completed sale and process an authorized return.", "sales.returns_page", "RT", any_permission=("sales.view", "manage_orders", "use_sales_pos"))
-    add("Daily work", "Removal approvals", "Review pending item-removal requests with reasons and audit history.", "sales.removal_approvals_page", "AP", any_permission=("manage_orders", "sales.view"))
-    add("Daily work", "Daily closeout", "Submit or review counted cash, bank, and mixed-tender collections.", "sales.daily_cashup_page", "CU", any_permission=("manage_settings", "manage_orders", "use_sales_pos"))
+    if current_user.effective_role == "manager" or current_user.is_company_admin or current_user.is_super_admin:
+        add("Daily work", "Returns & refunds", "Find a completed sale and process an authorized return.", "sales.returns_page", "RT", permission="use_sales_pos")
+        add("Daily work", "Removal approvals", "Review pending item-removal requests with reasons and audit history.", "sales.removal_approvals_page", "AP")
+        add("Daily work", "Daily closeout", "Submit or review counted cash, bank, and mixed-tender collections.", "sales.daily_cashup_page", "CU")
     add("Daily work", "Supply chain", "Manage suppliers, purchase orders, receiving, and logistics.", "scm.scm_dashboard", "SC", any_permission=("manage_suppliers", "create_pos", "approve_pos", "receive_stock", "manage_logistics"))
     add("Daily work", "Stock audits", "Create assigned counts, capture evidence, and reconcile variances.", "stock_audits.audits_page", "AU", any_permission=("manage_audits", "conduct_audits"))
     add("Daily work", "Attendance & breaks", "Record attendance and manage your work breaks.", "attendance.attendance_page", "AT")
@@ -85,7 +87,7 @@ def _dashboard_cards():
         add("Administration", "Billing setup", "Configure tender-specific invoice series and mixed-tender rules.", "tenancy_admin.billing_settings", "BI", company_id=current_user.company_id)
     if current_user.is_admin:
         add("Administration", "Database backups", "Review the private MySQL backup schedule and run history.", "admin_backups.settings", "BK")
-    if current_user.effective_role == "display" or current_user.has_permission("view_admin_dashboard"):
+    if not current_user.is_super_admin and (current_user.effective_role == "display" or current_user.has_permission("view_admin_dashboard")):
         add("Special displays", "LCD order display", "Open the read-only display for an authorized store.", "display.lcd_display_page", "TV")
 
     return cards

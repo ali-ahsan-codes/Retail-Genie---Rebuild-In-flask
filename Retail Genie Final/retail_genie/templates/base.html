@@ -29,7 +29,7 @@
         <nav class="main-nav" aria-label="Main navigation">
         <a href="{{ url_for('main.dashboard') }}">Overview</a>
         {% if current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.point_of_sale') }}">Sales / POS</a>{% endif %}
-        {% if current_user.has_permission('express_checkout') %}<a href="{{ url_for('express.express_page') }}">Express checkout</a>{% endif %}
+        {% if current_user.has_permission('express_checkout') and not current_user.is_super_admin %}<a href="{{ url_for('express.express_page') }}">Express checkout</a>{% endif %}
         {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') %}<a href="{{ url_for('sales.admin_orders_page') }}">Orders / fulfillment</a>{% endif %}
         {% if current_user.has_permission('sales.view') %}
           <a href="{{ url_for('commercial.demand_notices_page') }}">Demand notices</a>
@@ -47,9 +47,11 @@
         <a href="{{ url_for('messaging.messaging_page') }}">Messages</a>
         <a href="{{ url_for('cloud.my_cloud_page') }}">My files</a>
         {% if current_user.has_permission('manage_cloud_files') %}<a href="{{ url_for('cloud.file_management_page') }}">File management</a>{% endif %}
-        {% if current_user.has_permission('manage_settings') or current_user.has_permission('manage_orders') or current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.daily_cashup_page') }}">Daily cashup</a>{% endif %}
-        {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') %}<a href="{{ url_for('sales.removal_approvals_page') }}">Removals</a>{% endif %}
-        {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') or current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.returns_page') }}">Returns / refunds</a>{% endif %}
+        {% if current_user.effective_role == 'manager' or current_user.is_company_admin or current_user.is_super_admin %}
+          <a href="{{ url_for('sales.daily_cashup_page') }}">Daily cashup</a>
+          <a href="{{ url_for('sales.removal_approvals_page') }}">Removals</a>
+          {% if current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.returns_page') }}">Returns / refunds</a>{% endif %}
+        {% endif %}
         {% if current_user.has_permission('manage_users') or current_user.has_permission('manage_accounts') %}
           <a href="{{ url_for('admin.users') }}">Accounts</a>
         {% endif %}

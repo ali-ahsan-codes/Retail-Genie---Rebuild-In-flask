@@ -4,7 +4,7 @@ from flask import abort, flash, jsonify, redirect, render_template, request, url
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
-from ..auth.tenant_context import current_membership
+from ..auth.tenant_context import current_membership, current_tenant_container_id, select_container_for_session
 from ..extensions import db
 from ..models import (
     BillingSeries,
@@ -44,18 +44,29 @@ def _resolve_company():
     """Resolve the company the acting user may administer settings for."""
     if current_user.is_super_admin:
         company_id = request.args.get("company_id") or request.form.get("company_id")
-        company = db.session.get(Company, company_id) if company_id else None
-        if company is None or not company.is_active:
-            return None, []
+        if company_id:
+            company = db.session.get(Company, company_id)
+            if company is None or not company.is_active:
+                return None, []
+            active_container_id = current_tenant_container_id(current_user)
+            if active_container_id != company.tenant_container_id:
+                if not select_container_for_session(current_user, company.tenant_container_id):
+                    return None, []
+            companies = list(
+                db.session.execute(
+                    select(Company)
+                    .where(Company.tenant_container_id == company.tenant_container_id, Company.is_active.is_(True))
+                    .order_by(Company.name.asc())
+                )
+                .scalars()
+            )
+            return company, companies
         companies = list(
             db.session.execute(
-                select(Company)
-                .where(Company.tenant_container_id == company.tenant_container_id, Company.is_active.is_(True))
-                .order_by(Company.name.asc())
-            )
-            .scalars()
+                select(Company).where(Company.is_active.is_(True)).order_by(Company.name.asc())
+            ).scalars()
         )
-        return company, companies
+        return None, companies
     membership = current_membership(current_user)
     if membership is None or not membership.company_id:
         return None, []
@@ -66,7 +77,7 @@ def _resolve_company():
 
 
 def _require_company_admin() -> None:
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated or not (current_user.is_admin or current_user.has_permission("manage_settings")):
         abort(403)
 
 
@@ -76,7 +87,7 @@ def settings_index():
     _require_company_admin()
     company, companies = _resolve_company()
     if company is None:
-        return render_template("settings/index.html", company=None, companies=[], summary=None, series=[])
+        return render_template("settings/index.html", company=None, companies=companies, summary=None, series=[])
     summary = settings_summary(current_user, company.id)
     series = _series_rows(company)
     effective_discount = effective_global_discount_percentage(company)
