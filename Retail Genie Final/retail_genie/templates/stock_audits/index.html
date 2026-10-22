@@ -1,6 +1,0 @@
-{% extends "base.html" %}
-{% block title %}Stock audits · Retail Genie{% endblock %}
-{% block content %}
-<section class="page-heading"><div><p class="eyebrow">Phase 3 · Inventory control</p><h1>Stock audits</h1><p class="muted">{{ company.name if company else 'Select an active company.' }}</p></div>{% if company %}<a class="button button-primary" href="{{ url_for('stock_audits.create_audit_page') }}">Create audit</a>{% endif %}</section>
-{% if company %}<section class="panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Audit number</th><th>Title</th><th>Store</th><th>Status</th><th>Auditor</th><th>Created</th><th></th></tr></thead><tbody>{% for audit in audits %}<tr><td>{{ audit.audit_number }}</td><td>{{ audit.title }}</td><td>{{ audit.store_id }}</td><td>{{ audit.status }}</td><td>{{ audit.auditor_id or '—' }}</td><td>{{ audit.created_at }}</td><td><a class="button button-secondary" href="{{ url_for('stock_audits.audit_detail_page', audit_id=audit.id) }}">Open</a> <a class="button button-quiet" href="{{ url_for('stock_audits.audit_report_page', audit_id=audit.id) }}">Report</a></td></tr>{% else %}<tr><td colspan="7">No audits yet.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
-{% endblock %}
