@@ -5,6 +5,7 @@ Retail Genie is a standalone Flask application for retail operations, backed by 
 ## Start here
 
 - **Install and configure the app:** [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md)
+- **Understand app architecture and functions:** [`APPLICATION_BLUEPRINT.md`](APPLICATION_BLUEPRINT.md)
 - **Configuration example:** copy `.env.example` to `.env`, set a strong `SECRET_KEY`, and configure the MySQL `DATABASE_URL`.
 - **Initial database structure:** execute [`database-schema.sql`](database-schema.sql) against a new, empty `retail_genie` database.
 - **Create the first administrator:** `flask --app wsgi create-admin --username admin`
