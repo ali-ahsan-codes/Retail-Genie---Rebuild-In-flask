@@ -8,6 +8,7 @@ Retail Genie is a standalone Flask application for retail operations, backed by 
 - **Configuration example:** copy `.env.example` to `.env`, set a strong `SECRET_KEY`, and configure the MySQL `DATABASE_URL`.
 - **Initial database structure:** execute [`database-schema.sql`](database-schema.sql) against a new, empty `retail_genie` database.
 - **Create the first administrator:** `flask --app wsgi create-admin --username admin`
+- **Optional local demo records:** `flask --app wsgi seed-demo --confirm-demo-data` (fresh local `retail_genie` database only; see the install guide).
 - **Run locally:** `python run.py`
 
 The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is for a fresh installation only; do not execute it against a database containing existing business data. Never expose MySQL port 3306 to client devices or the internet.

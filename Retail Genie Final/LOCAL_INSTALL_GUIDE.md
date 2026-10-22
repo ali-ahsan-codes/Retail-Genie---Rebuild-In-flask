@@ -108,6 +108,14 @@ flask --app wsgi create-admin --username admin
 
 The command prompts for and confirms a password. Use a unique password with at least 12 characters. There is no default account or password.
 
+Optional: add sample company/store/products and opening inventory for a **fresh local development database only**:
+
+```powershell
+flask --app wsgi seed-demo --confirm-demo-data
+```
+
+This explicit command is restricted to a local MySQL database named `retail_genie`; it refuses to run if business records already exist. It adds one demo tenant, one company, one store, five sample products, and demo-only opening stock. It does not create a login account or sales/customer history. Skip it for a real installation.
+
 ## 6. Start Retail Genie
 
 ```powershell
