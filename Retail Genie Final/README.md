@@ -36,6 +36,7 @@ The 2026 interface refresh applies the forest-glass header, mineral canvas, citr
 - [Settings](preview/settings.png)
 - [Accounts](preview/accounts.png)
 - [Role-by-role dashboards and navigation (all 11 account types)](preview/account-roles/README.md)
+- [Latest role-based verification, link checks, and screenshots](preview/role-verification/README.md)
 - [Full-app module previews](preview/full-app/README.md)
 
 The directory is intended to be copied or deployed as an independent application. Local credentials, environment files, database data, uploads, and backups are not included.

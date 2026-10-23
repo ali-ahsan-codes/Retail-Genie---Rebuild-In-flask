@@ -16,3 +16,5 @@ These preview images show representative screens from the shared interface syste
 | Standalone display | [Live-order display](live-order-display.png) |
 
 The shared stylesheet is loaded from the common base template throughout the module pages. The separately rendered live-order board is also themed; print styles deliberately switch to clean paper output. Animation follows `prefers-reduced-motion`.
+
+The module screenshots were refreshed during the 2026-10-23 role verification. All **25** listed manager-accessible page routes returned HTTP 200; see the [role-verification report](../role-verification/README.md) for test scope and limitations.

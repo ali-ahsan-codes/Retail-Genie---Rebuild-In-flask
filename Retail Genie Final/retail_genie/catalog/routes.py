@@ -144,9 +144,34 @@ def _category_rows(company: Company):
     return result
 
 
+def _super_admin_company_picker(*, title: str, description: str, endpoint: str):
+    """Ask platform administrators to pick a company before opening company-scoped catalog tools."""
+    tenant_id = current_tenant_container_id(current_user)
+    if not tenant_id:
+        return redirect(url_for("auth.select_tenant"))
+    companies = db.session.execute(
+        select(Company)
+        .where(Company.tenant_container_id == tenant_id, Company.is_active.is_(True))
+        .order_by(Company.name.asc())
+    ).scalars().all()
+    return render_template(
+        "catalog/company_picker.html",
+        title=title,
+        description=description,
+        endpoint_url=url_for(endpoint),
+        companies=companies,
+    )
+
+
 @catalog_bp.get("/admin/product-categories")
 @login_required
 def categories_page():
+    if current_user.is_super_admin and not request.args.get("company_id"):
+        return _super_admin_company_picker(
+            title="Choose a company for categories",
+            description="Category management is scoped to one company. Choose the company whose catalog you want to review.",
+            endpoint="catalog.categories_page",
+        )
     company = _category_company()
     if not _category_access(company, "view"):
         abort(403)
@@ -258,6 +283,12 @@ def _label_company():
 @catalog_bp.get("/admin/label-printing")
 @login_required
 def label_printing_page():
+    if current_user.is_super_admin and not request.args.get("company_id"):
+        return _super_admin_company_picker(
+            title="Choose a company for label printing",
+            description="Product and document labels are scoped to one company. Choose a company to search its products and documents.",
+            endpoint="catalog.label_printing_page",
+        )
     company, _stores = _label_company()
     return render_template("catalog/labels.html", company=company)
 
