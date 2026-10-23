@@ -1,6 +1,6 @@
 # Account-role access previews
 
-Captured at 1440 × 1100 from the local Flask preview using disposable synthetic data. Each image shows the signed-in role's dashboard and expanded navigation. The additional settings images show manager access and the super-admin company picker. No live or production data was used; these images are not live-MySQL validation.
+Captured at 1440 × 1000 from the local Flask preview using disposable synthetic data. Each image shows the signed-in role's dashboard and expanded navigation. The additional settings images show manager access and the super-admin company picker. No live or production data was used; these images are not live-MySQL validation.
 
 | Account type | Screenshot |
 |---|---|
