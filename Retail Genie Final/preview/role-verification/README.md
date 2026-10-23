@@ -7,7 +7,8 @@
 - Signed in as all **11 account roles** and captured each role's dashboard with its navigation expanded at 1440 × 1000. See [`dashboards/`](dashboards/).
 - Exercised **156 role-specific dashboard/menu links** (deduplicated within each role): all returned HTTP 200 after authenticating; **0** unexpected 401/403 responses, request failures, or server errors.
 - The super-admin flow selected the demo tenant workspace, then the company before opening company-scoped catalog tools. The tenant selector, Settings company picker, category/label company pickers, and both label search APIs were verified in-browser; each returned HTTP 200 with the company scope present and no page errors. This revealed and closed the missing company-selection path for categories and barcode labels.
-- Revisited **25 manager-accessible module screens**; all returned HTTP 200. Current screenshots and route results are in [`../full-app/`](../full-app/) and [`../full-app/route-test-manager.json`](../full-app/route-test-manager.json).
+- Revisited **25 manager-accessible module screens**; all returned HTTP 200. Current screenshots are in [`../full-app/`](../full-app/).
+- Smoke-checked all **97 unique GET route templates** against all 11 role sessions (**1,067 calls**). There were no 5xx or unauthenticated 401 responses; role-denied 403s, not-found placeholder IDs, and validation responses were recorded as expected in this read-only smoke.
 - Ran the compatible application suite against the `Retail Genie Final` package with SQLite fixtures: **147 passed, 1 interactive CLI test deselected**. Migration/import-only tests were omitted because the final copy intentionally excludes the migration footprint. This is not live-MySQL validation.
 
 The navigation audit checked GET links only; it did not submit business mutations or claim end-to-end coverage for every write workflow. Authentication and explicit workspace/company selection were exercised with temporary demo accounts.
