@@ -25,7 +25,7 @@ The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is
 
 ## UI previews
 
-The 2026 interface refresh uses a deep forest-glass header, mineral canvas, citron highlights, larger workspace typography, and responsive cards. Screenshots were recaptured from an isolated browser preview using synthetic demo records; they are illustrative only and do **not** represent live-MySQL validation.
+The 2026 interface refresh uses a deep forest-glass header, mineral canvas, citron highlights, animated ambient gradients, staggered card entrances, larger workspace typography, and responsive cards. Motion respects the operating-system reduced-motion preference. Screenshots were recaptured from an isolated browser preview using synthetic demo records; they are illustrative only and do **not** represent live-MySQL validation.
 
 - [Dashboard — desktop](preview/dashboard.png) · [mobile](preview/dashboard-mobile.png)
 - [Sign-in — desktop](preview/login-desktop.png) · [mobile](preview/login-mobile.png)

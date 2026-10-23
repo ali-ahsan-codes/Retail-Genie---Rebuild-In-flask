@@ -565,3 +565,91 @@ th, td { border-bottom-color: rgba(19, 55, 49, .08); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Ambient color and motion — intentionally slow, lightweight, and motion-safe. */
+@keyframes hero-gradient-flow {
+  0%, 100% { background-position: 0% 50%, 100% 0%, 0% 50%; }
+  50% { background-position: 100% 50%, 0% 100%, 100% 50%; }
+}
+@keyframes orbit-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .78; }
+  50% { transform: translate3d(-12px, 9px, 0) scale(1.045); opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes menu-enter {
+  from { opacity: 0; transform: translateY(-7px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes accent-sheen {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+body { background: var(--canvas); }
+.topbar {
+  background-image: linear-gradient(112deg, rgba(12, 37, 35, .97), rgba(17, 69, 58, .96) 52%, rgba(12, 37, 35, .97));
+  background-size: 220% 220%;
+  animation: accent-sheen 22s ease-in-out infinite alternate;
+}
+.topbar::after {
+  position: absolute; right: 0; bottom: -1px; left: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(217, 250, 131, .55), rgba(119, 220, 177, .62), transparent);
+  content: ""; pointer-events: none;
+}
+.nav-menu[open] .main-nav { animation: menu-enter .2s cubic-bezier(.2,.8,.2,1) both; }
+.workspace-hero {
+  background-size: 150% 150%, 160% 160%, 180% 180%;
+  animation: hero-gradient-flow 20s ease-in-out infinite alternate;
+}
+.workspace-hero::after { animation: orbit-breathe 10s ease-in-out infinite; }
+.workspace-section { animation: rise-in .55s cubic-bezier(.2,.8,.2,1) both; }
+.workspace-section:nth-of-type(2) { animation-delay: .05s; }
+.workspace-section:nth-of-type(3) { animation-delay: .11s; }
+.workspace-section:nth-of-type(4) { animation-delay: .17s; }
+.workspace-section:nth-of-type(5) { animation-delay: .23s; }
+.workspace-section:nth-of-type(6) { animation-delay: .29s; }
+.workspace-card {
+  background-image: linear-gradient(145deg, rgba(255, 254, 250, .98), rgba(248, 252, 243, .94));
+  background-size: 160% 160%;
+  animation: rise-in .48s cubic-bezier(.2,.8,.2,1);
+}
+.workspace-card:nth-child(4n + 1) .workspace-card-icon { color: #176547; background: linear-gradient(145deg, #e4f9c9, #c8f1d9); }
+.workspace-card:nth-child(4n + 2) .workspace-card-icon { color: #226776; background: linear-gradient(145deg, #d7f3ea, #ccecf6); }
+.workspace-card:nth-child(4n + 3) .workspace-card-icon { color: #806027; background: linear-gradient(145deg, #fff1cb, #f9e5d3); }
+.workspace-card:nth-child(4n + 4) .workspace-card-icon { color: #65528b; background: linear-gradient(145deg, #eee2ff, #dce8fc); }
+.workspace-card:hover { background-image: linear-gradient(120deg, #fffefa, #f1f9e7 55%, #eef9f1); }
+.workspace-card:hover .workspace-card-icon { box-shadow: 0 0 0 4px rgba(112, 190, 133, .1); }
+.button-primary { background-size: 180% 180%; }
+.button-primary:hover { background-position: 100% 50%; }
+.flash { animation: rise-in .3s ease-out both; }
+
+@keyframes ambient-orb-drift {
+  from { transform: translate3d(-1.5%, 0, 0) scale(1); }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.035); }
+}
+body { position: relative; isolation: isolate; background: var(--canvas); }
+body::before {
+  position: fixed; z-index: -1; inset: -12%; content: ""; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 12% 14%, rgba(201, 235, 209, .82), transparent 38%),
+    radial-gradient(ellipse at 91% 21%, rgba(226, 239, 183, .72), transparent 35%),
+    radial-gradient(ellipse at 60% 84%, rgba(195, 243, 223, .48), transparent 40%);
+  filter: blur(24px); will-change: transform;
+  animation: ambient-orb-drift 36s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, body::before, .topbar, .workspace-hero, .workspace-hero::after, .workspace-section, .workspace-card, .flash,
+  .nav-menu[open] .main-nav { animation: none !important; }
+}
+.workspace-card:nth-child(1) { animation-delay: .02s; }
+.workspace-card:nth-child(2) { animation-delay: .05s; }
+.workspace-card:nth-child(3) { animation-delay: .08s; }
+.workspace-card:nth-child(4) { animation-delay: .11s; }
+.workspace-card:nth-child(5) { animation-delay: .14s; }
+.workspace-card:nth-child(6) { animation-delay: .17s; }
+.workspace-card:nth-child(7) { animation-delay: .20s; }
+.workspace-card:nth-child(8) { animation-delay: .23s; }
