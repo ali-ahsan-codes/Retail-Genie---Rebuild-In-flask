@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102a28">
   <title>{% block title %}Retail Genie{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=2026-10-23-aurora-motion-2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=2026-10-23-full-app">
 </head>
 <body>
   <header class="topbar">
@@ -28,6 +28,7 @@
         <summary class="nav-menu-toggle"><span aria-hidden="true">☰</span><span>Menu</span></summary>
         <nav class="main-nav" aria-label="Main navigation">
         <a href="{{ url_for('main.dashboard') }}">Overview</a>
+        {% if current_user.is_super_admin %}<a href="{{ url_for('auth.select_tenant') }}">Choose tenant workspace</a>{% endif %}
         {% if current_user.has_permission('use_sales_pos') %}<a href="{{ url_for('sales.point_of_sale') }}">Sales / POS</a>{% endif %}
         {% if current_user.has_permission('express_checkout') and not current_user.is_super_admin %}<a href="{{ url_for('express.express_page') }}">Express checkout</a>{% endif %}
         {% if current_user.has_permission('sales.view') or current_user.has_permission('manage_orders') %}<a href="{{ url_for('sales.admin_orders_page') }}">Orders / fulfillment</a>{% endif %}

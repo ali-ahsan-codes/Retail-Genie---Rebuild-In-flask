@@ -25,7 +25,7 @@ The target database is MySQL 8.0.16 or newer with InnoDB. The supplied schema is
 
 ## UI previews
 
-The 2026 interface refresh uses a deep forest-glass header, mineral canvas, citron highlights, animated ambient gradients, staggered card entrances, larger workspace typography, and responsive cards. Motion respects the operating-system reduced-motion preference. Screenshots were recaptured from an isolated browser preview using synthetic demo records; they are illustrative only and do **not** represent live-MySQL validation.
+The 2026 interface refresh applies the forest-glass header, mineral canvas, citron highlights, animated ambient gradients, and responsive component system across module pages (accounts, catalog, attendance, sales/POS, SCM, audits, messaging, reports, SaaS, and settings). The standalone live-order display now follows the same visual language, and print views use clean paper styling. Motion respects the operating-system reduced-motion preference. Screenshots were recaptured from an isolated browser preview using synthetic demo records; they are illustrative only and do **not** represent live-MySQL validation.
 
 - [Dashboard — desktop](preview/dashboard.png) · [mobile](preview/dashboard-mobile.png)
 - [Sign-in — desktop](preview/login-desktop.png) · [mobile](preview/login-mobile.png)
@@ -36,5 +36,7 @@ The 2026 interface refresh uses a deep forest-glass header, mineral canvas, citr
 - [Settings](preview/settings.png)
 - [Accounts](preview/accounts.png)
 - [Role-by-role dashboards and navigation (all 11 account types)](preview/account-roles/README.md)
+- [Latest role-based verification, link checks, and screenshots](preview/role-verification/README.md)
+- [Full-app module previews](preview/full-app/README.md)
 
 The directory is intended to be copied or deployed as an independent application. Local credentials, environment files, database data, uploads, and backups are not included.

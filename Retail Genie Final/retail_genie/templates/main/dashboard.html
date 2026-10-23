@@ -9,7 +9,7 @@
   </div>
   <div class="workspace-context">
     <span class="workspace-role">{{ current_user.effective_role|replace('_', ' ')|title }}</span>
-    {% if active_tenant %}<span class="workspace-tenant">{{ active_tenant.name }}{% if active_company %} · {{ active_company.name }}{% endif %}</span>{% elif current_user.is_super_admin %}<span class="workspace-tenant">Platform administration</span>{% endif %}
+    {% if active_tenant %}<span class="workspace-tenant">{{ active_tenant.name }}{% if active_company %} · {{ active_company.name }}{% endif %}</span>{% elif current_user.is_super_admin %}<span class="workspace-tenant">Platform administration</span><a class="workspace-tenant" href="{{ url_for('auth.select_tenant') }}">Choose tenant workspace →</a>{% endif %}
   </div>
 </section>
 
