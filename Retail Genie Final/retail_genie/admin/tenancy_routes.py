@@ -1,22 +1,33 @@
 """Tenant and store administration, scoped server-side to the signed-in actor."""
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from pathlib import Path
+
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from ..auth.permissions import company_admin_required, super_admin_required
 from ..extensions import db
-from ..models import AuditEvent, BillingSeries, Company, ContainerMembership, DATA_DOMAINS, INVOICE_CATEGORIES, OrderNumberSeries, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, User, UserStoreAssignment, normalize_username
+from ..models import AuditEvent, BillingSeries, Company, ContainerMembership, DATA_DOMAINS, INVOICE_CATEGORIES, OrderNumberSeries, PlatformAuditEvent, Store, TenantContainer, TenantDataPolicy, TenantDataPolicyScope, TenantSubscription, User, UserStoreAssignment, normalize_username
 from ..tenancy.service import seed_tenant_data_policies
 from ..auth.tenant_context import current_membership
 from ..saas.service import SaaSRuleError, ensure_capacity
 from ..models.user import is_valid_username
+from ..tenancy.company_transfer import CompanyTransferError, move_company_to_container, preview_company_transfer
 from .tenancy_forms import AssignmentForm, BillingSettingsForm, CreateCompanyForm, DomainPolicyForm, StoreForm
 
 tenancy_admin_bp = Blueprint("tenancy_admin", __name__, url_prefix="/admin")
 
 _ASSIGNABLE_STAFF_ROLES = {"manager", "salesperson", "cashier", "storekeeper", "logistics", "auditor", "display", "express"}
+_GUIDE_SCREENSHOT_DIRECTORY = Path(__file__).resolve().parents[2] / "preview"
+_GUIDE_SCREENSHOTS = {
+    "main-admin": "account-roles/super-admin.png",
+    "company-admin": "account-roles/company-admin.png",
+    "admin": "account-roles/admin.png",
+    "accounts": "full-app/accounts.png",
+    "inventory": "full-app/catalog.png",
+}
 
 
 def _company_or_404(company_id: str) -> Company:
@@ -815,3 +826,184 @@ def revoke_store_assignment(assignment_id: str):
     publish_realtime_event(access_event_id)
     flash("Store access revoked.", "success")
     return redirect(url_for("tenancy_admin.store_assignments", company_id=assignment.company_id))
+
+
+@tenancy_admin_bp.get("/containers")
+@super_admin_required
+def containers():
+    """List container boundaries and provide guarded company transfer tools."""
+    containers_list = TenantContainer.query.order_by(
+        TenantContainer.is_active.desc(), TenantContainer.name.asc()
+    ).all()
+    company_counts = {
+        row[0]: row[1]
+        for row in db.session.execute(
+            select(Company.tenant_container_id, db.func.count(Company.id))
+            .group_by(Company.tenant_container_id)
+        ).all()
+    }
+    company_rows = Company.query.order_by(Company.name.asc()).all()
+    companies_by_container: dict[str, list[Company]] = {}
+    for company in company_rows:
+        companies_by_container.setdefault(company.tenant_container_id, []).append(company)
+    return render_template(
+        "admin/containers.html",
+        containers=containers_list,
+        company_counts=company_counts,
+        companies_by_container=companies_by_container,
+    )
+
+
+@tenancy_admin_bp.route("/companies/<string:company_id>/move", methods=["GET", "POST"])
+@super_admin_required
+def move_company(company_id: str):
+    """Preview and explicitly confirm a company-scoped same-database move."""
+    company = db.session.get(Company, company_id)
+    if company is None:
+        abort(404)
+    source_container = db.session.get(TenantContainer, company.tenant_container_id)
+    if source_container is None:
+        abort(404)
+
+    destination_containers = TenantContainer.query.filter(
+        TenantContainer.id != source_container.id,
+        TenantContainer.is_active.is_(True),
+    ).order_by(TenantContainer.name.asc()).all()
+    destination_container_id = (request.values.get("destination_container_id") or "").strip()
+    destination_parent_company_id = (request.values.get("destination_parent_company_id") or "").strip() or None
+    destination_companies = []
+    if destination_container_id:
+        destination_companies = Company.query.filter_by(
+            tenant_container_id=destination_container_id,
+            is_active=True,
+        ).order_by(Company.name.asc()).all()
+
+    plan = None
+    errors: list[str] = []
+    if destination_container_id:
+        try:
+            plan = preview_company_transfer(
+                company.id,
+                destination_container_id,
+                destination_parent_company_id,
+            )
+        except CompanyTransferError as error:
+            errors.append(str(error))
+
+    if request.method == "POST":
+        confirmation = (request.form.get("confirmation") or "").strip()
+        reason = (request.form.get("reason") or "").strip()
+        if not destination_container_id:
+            errors.append("Choose an active destination container.")
+        if confirmation != f"MOVE {company.slug}":
+            errors.append(f"Type MOVE {company.slug} exactly to confirm.")
+        if len(reason) < 10:
+            errors.append("Enter a transfer reason with at least 10 characters.")
+        if request.form.get("policies_reviewed") != "yes":
+            errors.append("Review the destination data policies and acknowledge the sharing scope before transfer.")
+        if plan is None and destination_container_id:
+            try:
+                plan = preview_company_transfer(
+                    company.id,
+                    destination_container_id,
+                    destination_parent_company_id,
+                )
+            except CompanyTransferError as error:
+                errors.append(str(error))
+        if plan is not None and plan.blockers:
+            errors.extend(plan.blockers)
+        if not errors:
+            try:
+                result = move_company_to_container(
+                    company_id=company.id,
+                    destination_container_id=destination_container_id,
+                    destination_parent_company_id=destination_parent_company_id,
+                    actor_user_id=current_user.id,
+                    reason=reason,
+                )
+            except CompanyTransferError as error:
+                db.session.rollback()
+                errors.append(str(error))
+            else:
+                moved_rows = sum(result["moved_row_counts"].values()) + 1
+                message = f"{company.name} moved with {moved_rows} company-scoped records."
+                if result["source_container_archived"]:
+                    message += " Its now-empty source container was archived; history was retained."
+                flash(message, "success")
+                return redirect(url_for("tenancy_admin.containers"))
+
+    return render_template(
+        "admin/company_transfer.html",
+        company=company,
+        source_container=source_container,
+        destination_containers=destination_containers,
+        destination_container_id=destination_container_id,
+        destination_parent_company_id=destination_parent_company_id,
+        destination_companies=destination_companies,
+        plan=plan,
+        confirmation=f"MOVE {company.slug}",
+        errors=list(dict.fromkeys(errors)),
+        reason=request.form.get("reason", ""),
+    )
+
+
+@tenancy_admin_bp.post("/containers/<string:tenant_container_id>/archive")
+@super_admin_required
+def archive_empty_container(tenant_container_id: str):
+    """Archive an empty tenant container without deleting its billing/audit history."""
+    container = db.session.execute(
+        select(TenantContainer)
+        .where(TenantContainer.id == tenant_container_id)
+        .with_for_update()
+    ).scalar_one_or_none()
+    if container is None:
+        abort(404)
+    company_count = db.session.execute(
+        select(db.func.count(Company.id)).where(Company.tenant_container_id == container.id)
+    ).scalar_one()
+    if company_count:
+        flash("This container still has companies. Move them before archiving the container.", "error")
+        return redirect(url_for("tenancy_admin.containers"))
+    subscription_status = db.session.execute(
+        select(TenantSubscription.status).where(TenantSubscription.tenant_container_id == container.id)
+    ).scalar_one_or_none()
+    if subscription_status not in {None, "canceled", "suspended"}:
+        flash("Cancel or suspend the container subscription before archiving it; billing remains container-scoped.", "error")
+        return redirect(url_for("tenancy_admin.containers"))
+    before = {"is_active": container.is_active}
+    container.is_active = False
+    container.updated_at = db.func.now()
+    db.session.add(
+        PlatformAuditEvent(
+            tenant_container_id=container.id,
+            actor_user_id=current_user.id,
+            action="tenant_container.archived",
+            entity_type="tenant_container",
+            entity_id=container.id,
+            before_data=before,
+            after_data={"is_active": False},
+            reason="Archived by platform administrator after confirming the container has no companies.",
+        )
+    )
+    db.session.commit()
+    flash(f"Container '{container.name}' was archived. Its billing and audit history was retained.", "success")
+    return redirect(url_for("tenancy_admin.containers"))
+
+
+@tenancy_admin_bp.get("/company-container-guide")
+@company_admin_required
+def company_container_guide():
+    return render_template("admin/company_container_guide.html")
+
+
+@tenancy_admin_bp.get("/company-container-guide/screenshots/<string:screenshot_key>")
+@company_admin_required
+def company_container_guide_screenshot(screenshot_key: str):
+    """Serve only the curated, synthetic screenshots embedded in the guide."""
+    relative_path = _GUIDE_SCREENSHOTS.get(screenshot_key)
+    if relative_path is None:
+        abort(404)
+    image_path = _GUIDE_SCREENSHOT_DIRECTORY / relative_path
+    if not image_path.is_file():
+        abort(404)
+    return send_file(image_path, mimetype="image/png", conditional=True, max_age=3600)

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Company & container guide · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading guide-heading">
+  <div>
+    <p class="eyebrow">RETAIL GENIE · ADMIN GUIDE</p>
+    <h1>Companies, inventory, users &amp; tenant containers</h1>
+    <p class="muted">A practical guide to onboarding a company, setting up its first store and inventory, granting staff access, and safely managing container boundaries.</p>
+  </div>
+  {% if current_user.is_super_admin %}<a class="button button-primary" href="{{ url_for('tenancy_admin.containers') }}">Manage containers</a>{% endif %}
+</section>
+
+<nav class="guide-toc card" aria-label="Guide contents">
+  <strong>On this page</strong>
+  <a href="#model">Company vs. container</a>
+  <a href="#roles">Main Admin, Company Admin &amp; Admin</a>
+  <a href="#screenshots">Screenshots</a>
+  <a href="#new-company">Add a company</a>
+  <a href="#inventory">Set up stores &amp; inventory</a>
+  <a href="#users">Add users &amp; access</a>
+  <a href="#manage">Manage containers</a>
+  <a href="#move">Move a company safely</a>
+  <a href="#checklist">Before you finish</a>
+</nav>
+
+<section id="model" class="card guide-section">
+  <p class="eyebrow">THE TENANCY MODEL</p>
+  <h2>Company vs. tenant container</h2>
+  <p><strong>Company</strong> is the operating/legal business. It has its own stores, team memberships, inventory, sales, customers, settings, and business history.</p>
+  <p><strong>Tenant container</strong> is the SaaS isolation and billing boundary that holds one or more separate companies. Companies can share a container without becoming one company. Data sharing between sibling companies is controlled by the container's data policies; the default is company-level isolation.</p>
+  <div class="guide-callout"><strong>Example:</strong> Company A and Company B can both reside in Container 1, while their company IDs, users, stores, and records remain distinct. A container move changes the container boundary, not the company's identity.</div>
+</section>
+
+<section id="roles" class="card guide-section">
+  <p class="eyebrow">WHO DOES WHAT</p>
+  <h2>Main Admin, Company Admin and Admin</h2>
+  <div class="role-guide-grid">
+    <article class="role-guide-card">
+      <h3>Main Admin / Super Admin</h3>
+      <p>Platform-wide operator. Creates new companies and related companies, manages tenant containers and data policies, reviews SaaS plans, and runs guarded company transfers or empty-container archiving.</p>
+      <p><strong>Use for:</strong> customer onboarding, approved cross-container changes, subscription oversight, and platform controls.</p>
+      <p><strong>Boundary:</strong> confirm the selected tenant/workspace before company-specific work. Never bypass the transfer preflight or manually edit tenant IDs.</p>
+    </article>
+    <article class="role-guide-card">
+      <h3>Company Admin / Sub Admin</h3>
+      <p>Company-scoped administrator. Manages users and their permissions, store assignments, stores, and the operational setup available to that company. Can use the products/inventory and settings workspaces granted to the role.</p>
+      <p><strong>Use for:</strong> day-to-day administration of one company, onboarding its staff, and checking its stores and inventory.</p>
+      <p><strong>Boundary:</strong> cannot create or transfer companies, manage another company's container, or archive a tenant container.</p>
+    </article>
+    <article class="role-guide-card">
+      <h3>Admin (legacy account label)</h3>
+      <p>The existing <code>admin</code> role is displayed as “Company Admin (legacy)”. It retains company-level administrative access for its active membership. New accounts should use the current <strong>Company Admin / Sub Admin</strong> role instead.</p>
+      <p><strong>Use for:</strong> supporting existing legacy accounts while an administrator reviews and, if appropriate, transitions them to the current role.</p>
+      <p><strong>Boundary:</strong> it is not a Main Admin. Company/container creation and cross-container transfer remain Super Admin only.</p>
+    </article>
+  </div>
+  <p class="muted">Staff roles (Manager, Salesperson, Storekeeper, Cashier, Logistics, Auditor, Display and Express) should receive only the access needed for their duties and assigned stores.</p>
+</section>
+
+<section id="screenshots" class="card guide-section">
+  <p class="eyebrow">VISUAL WALKTHROUGH</p>
+  <h2>Role and workflow screenshots</h2>
+  <p class="muted">These reference screenshots come from the isolated synthetic-data preview; names and records are illustrative, not customer data. Your menus vary with role, permissions and enabled modules.</p>
+  <div class="guide-screenshot-grid">
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='main-admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='main-admin') }}" alt="Main Admin dashboard with platform tools and companies navigation" loading="lazy">
+      </a>
+      <figcaption><strong>Main Admin:</strong> platform controls and company/container entry points.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='company-admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='company-admin') }}" alt="Company Admin dashboard and company operations menu" loading="lazy">
+      </a>
+      <figcaption><strong>Company Admin:</strong> company-level accounts, stores and operational tools.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='admin') }}" alt="Legacy Admin dashboard and company-scoped menu" loading="lazy">
+      </a>
+      <figcaption><strong>Admin (legacy):</strong> existing company-scoped administrator access.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='accounts') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='accounts') }}" alt="Accounts screen showing new team member form and role permissions" loading="lazy">
+      </a>
+      <figcaption><strong>Accounts:</strong> create team accounts, choose roles and grant limited permissions.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='inventory') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='inventory') }}" alt="Products and inventory screen showing product catalog, stock and adjustments" loading="lazy">
+      </a>
+      <figcaption><strong>Products &amp; inventory:</strong> manage the catalog and store-level stock with recorded adjustments.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="new-company" class="card guide-section">
+  <p class="eyebrow">1 · ONBOARDING</p>
+  <h2>Add a company</h2>
+  <ol>
+    <li>Sign in as a <strong>Super Admin</strong> and open <strong>Companies</strong>.</li>
+    <li>For a new customer boundary, use <strong>Create company</strong>. Enter the company name/code, timezone, first store name/code, and the first Company Admin's username and temporary password. This creates a new active tenant container, company, store, and initial administrator membership together.</li>
+    <li>For another company in an existing container, choose <strong>Add related company</strong> on the parent company. The new company remains a separate entity under that parent, but is inside the same container.</li>
+    <li>Confirm the company and store appear in the directory. Give the Company Admin the temporary password through your approved secure channel; they must change it at first sign-in.</li>
+  </ol>
+  <p class="warning-note"><strong>Before adding a sibling company:</strong> review the container's data policies. Container-wide sharing can expose eligible shared data across siblings; do not change a policy unless the customer has approved that sharing scope.</p>
+</section>
+
+<section id="inventory" class="card guide-section">
+  <p class="eyebrow">2 · STORES &amp; INVENTORY</p>
+  <h2>Set up inventory</h2>
+  <ol>
+    <li>From <strong>Companies</strong>, open the company and choose <strong>Stores</strong> to add each branch/store. Use a distinct store code within that company.</li>
+    <li>Open the app's <strong>Products / Inventory</strong> workspace. Create or import the approved product catalog, including SKU/barcode, unit, category, and applicable tax details.</li>
+    <li>Use the inventory receiving or opening-stock workflow to record the starting quantities against the correct store. Use a dated opening adjustment or receipt with a reference; do not silently overwrite stock balances.</li>
+    <li>Check that stock-on-hand and the inventory movement history agree for each store. If a product catalog is shared by policy, confirm which company owns each product before recording stock.</li>
+  </ol>
+  <p class="muted">Menu names vary by enabled module and role. Only enter opening balances after quantities and valuation have been reconciled and approved by the customer.</p>
+</section>
+
+<section id="users" class="card guide-section">
+  <p class="eyebrow">3 · PEOPLE &amp; ACCESS</p>
+  <h2>Add users and assign least-privilege access</h2>
+  <ol>
+    <li>Open <strong>Admin → Users</strong> (or the user-management page available to your role) and create a user with a unique username and an approved temporary password.</li>
+    <li>Select the user's company membership and role. Assign only the permissions needed for their job.</li>
+    <li>For store-scoped staff, open <strong>Store assignments</strong> for that company and assign the stores they actually use. Avoid granting access across sibling companies by default.</li>
+    <li>Deliver credentials securely, require a password change when prompted, and verify that the user can see only the expected company and stores.</li>
+    <li>When a staff member changes duties or leaves, disable the account or revoke the relevant membership/store assignment promptly.</li>
+  </ol>
+  <div class="guide-callout">A user account is a global identity; company membership, role, permissions, and store assignment determine the user's tenant access. A company transfer moves company memberships and store assignments for its members, but it does not create duplicate user identities.</div>
+</section>
+
+<section id="manage" class="card guide-section">
+  <p class="eyebrow">4 · CONTAINER OPERATIONS</p>
+  <h2>Manage company containers</h2>
+  <ul>
+    <li>Open <strong>Tenant containers</strong> to see active and archived boundaries, the companies they contain, and available move/archival actions.</li>
+    <li>Use data policies to govern whether eligible data is container-wide, company-only, store-assigned, selected-unit, or disabled. Container sharing does not merge company identities.</li>
+    <li>Review the subscription, invoicing, timezone, backup, and policy implications before moving a customer. Those settings and histories are container-scoped and stay with their original container.</li>
+    <li>Prefer <strong>archive</strong> when a container is empty. Archiving disables its active boundary while retaining billing, audit, and platform history. Hard deletion is intentionally not offered in this workflow.</li>
+  </ul>
+</section>
+
+<section id="move" class="card guide-section">
+  <p class="eyebrow">5 · COMPANY TRANSFER</p>
+  <h2>Move a company without merging it</h2>
+  <ol>
+    <li>As a Super Admin, open <strong>Tenant containers</strong> and choose <strong>Move company</strong>.</li>
+    <li>Select the active destination container and, if appropriate, a parent company. Choosing Company A as the parent places Company B alongside A while preserving B as a separate company.</li>
+    <li>Run the read-only preflight. Review the stores, company memberships, per-table row counts, and any dependency blockers. No records move during preflight.</li>
+    <li>Resolve blockers first. The workflow intentionally stops for cross-company product/store references, external conversation participants or file shares, membership conflicts, missing destination policies, or unsupported child-company trees.</li>
+    <li>Reconcile billing and policy ownership separately. Container subscription/invoice records, backups, policies, and platform-level history are not transferred with the company. If this is the last company, cancel or suspend an active source subscription before transfer; the workflow will block auto-archiving an empty container that still has a live plan.</li>
+    <li>Enter a business reason and type the exact confirmation string. The app moves the company and its supported scoped data in one transaction, checks references, records audit events, and revokes moved users' old sessions.</li>
+    <li>Verify the destination company, stores, inventory, key historical records, memberships, and reports. If this was the source container's last company, that source container is archived automatically; its history remains retained.</li>
+  </ol>
+  <div class="warning-note"><strong>Scope and limits:</strong> this is an in-database tenant-scope transfer, not a cross-server backup/restore. It preserves IDs and moves mapped company/store/file/message/audit data. Platform subscriptions and container configuration remain at source. If the dependency report blocks the move, do not bypass foreign-key checks or edit tenant IDs manually; resolve the ownership/reference issue and run preflight again.</div>
+</section>
+
+<section id="checklist" class="card guide-section">
+  <p class="eyebrow">FINAL VERIFICATION</p>
+  <h2>Before you finish</h2>
+  <ul class="guide-checklist">
+    <li>Company identity, slug, parent, and destination container are correct.</li>
+    <li>All expected stores, products, stock balances, movements, sales, and audit history are present.</li>
+    <li>Company members and store assignments are correct; no duplicate destination memberships remain.</li>
+    <li>Cross-company data policies and product ownership have been reviewed explicitly.</li>
+    <li>Subscription, invoice, backup, and retention responsibilities for the archived/source container are assigned.</li>
+    <li>The transfer reason and generated audit trail meet the customer's change-control requirements.</li>
+  </ul>
+</section>
+{% endblock %}
