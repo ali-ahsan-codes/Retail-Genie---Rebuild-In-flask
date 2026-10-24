@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Retail Genie guide to companies, roles, inventory, users, tenant containers, and safe company transfers.">
+  <title>Companies &amp; Containers — Retail Genie Guide</title>
+  <style>
+    :root { color-scheme: light; --ink:#182a29; --muted:#5d6c68; --line:#dce5df; --paper:#f4f7f3; --card:#fff; --green:#153c37; --lime:#d7ed8c; --warn:#fff5dd; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { padding:42px max(22px,calc((100% - 1080px)/2)); background:var(--green); color:white; }
+    header p { margin:0 0 7px; color:var(--lime); font-size:.78rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { max-width:850px; margin:0; font-size:clamp(2rem,5vw,3.2rem); line-height:1.1; }
+    header .intro { max-width:760px; margin:15px 0 0; color:#e0ebe6; }
+    main { width:min(1080px,calc(100% - 36px)); margin:28px auto 60px; }
+    nav,.panel,figure { border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:0 8px 24px rgba(22,48,40,.05); }
+    nav { display:flex; flex-wrap:wrap; gap:8px 18px; padding:16px 20px; margin-bottom:20px; }
+    nav a { color:var(--green); font-weight:650; }
+    section.panel { padding:24px clamp(18px,4vw,34px); margin:18px 0; }
+    h2 { margin:0 0 12px; font-size:1.55rem; }
+    h3 { margin:0 0 8px; font-size:1.08rem; }
+    p { margin:9px 0; }
+    .muted { color:var(--muted); }
+    .roles,.screens { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .role { padding:17px; border:1px solid var(--line); border-radius:12px; background:#fbfdfb; }
+    .role strong { color:var(--green); }
+    .screens figure { overflow:hidden; margin:0; }
+    .screens img { display:block; width:100%; height:auto; background:#e7eee9; }
+    figcaption { padding:12px 14px; color:var(--muted); font-size:.9rem; }
+    .callout { padding:14px 17px; border-inline-start:4px solid #87a838; border-radius:8px; background:#f1f7e4; }
+    .warning { background:var(--warn); border-inline-start-color:#c48926; }
+    li { margin:7px 0; padding-inline-start:3px; }
+    footer { padding:22px; color:var(--muted); text-align:center; font-size:.88rem; }
+    @media print { body { background:white; } header { padding:20px; print-color-adjust:exact; } main { width:100%; margin:12px auto; } nav { display:none; } .panel,figure { box-shadow:none; break-inside:avoid; } a { color:inherit; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p>Retail Genie · Administration guide</p>
+    <h1>Companies, people, inventory &amp; tenant containers</h1>
+    <p class="intro">A practical guide to company onboarding, role boundaries, store and inventory setup, user access, and safe company-container operations. This file can be opened directly or printed to PDF.</p>
+  </header>
+  <main>
+    <nav aria-label="Guide contents">
+      <a href="#model">Company &amp; container</a>
+      <a href="#roles">Admin roles</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#company">Add a company</a>
+      <a href="#inventory">Stores &amp; inventory</a>
+      <a href="#users">Users &amp; access</a>
+      <a href="#transfer">Company transfer</a>
+      <a href="#checklist">Checklist</a>
+    </nav>
+
+    <section id="model" class="panel">
+      <h2>Company vs. tenant container</h2>
+      <p><strong>Company</strong> is the operating business. It has its own stores, team memberships, products and inventory, sales, customers, settings, and operating history.</p>
+      <p><strong>Tenant container</strong> is the SaaS isolation and billing boundary that holds one or more distinct companies. Companies can share a container without becoming one company. Data sharing between sibling companies follows the container's data policies; company-level isolation is the safe default.</p>
+      <div class="callout"><strong>Example:</strong> Company A and Company B can reside in Container 1 while retaining distinct company identities, users, stores, and records. A container move changes the boundary, not the identity of either company.</div>
+    </section>
+
+    <section id="roles" class="panel">
+      <h2>Main Admin, Company Admin, and Admin</h2>
+      <div class="roles">
+        <article class="role">
+          <h3>Main Admin / Super Admin</h3>
+          <p><strong>Scope:</strong> platform-wide company onboarding, container and policy administration, subscription oversight, and guarded cross-container transfers.</p>
+          <p><strong>Boundary:</strong> confirm the selected tenant/workspace before company-specific actions. Transfers require a clear preflight; do not manually edit tenant IDs.</p>
+        </article>
+        <article class="role">
+          <h3>Company Admin / Sub Admin</h3>
+          <p><strong>Scope:</strong> day-to-day administration of the assigned company, including users, stores, inventory, and permitted settings.</p>
+          <p><strong>Boundary:</strong> cannot create or transfer companies, administer another company's container, or archive a tenant container.</p>
+        </article>
+        <article class="role">
+          <h3>Admin (legacy account label)</h3>
+          <p><strong>Scope:</strong> existing company-level administrator access for the account's active membership.</p>
+          <p><strong>Boundary:</strong> this is not a Main Admin. Create new administrators with the current Company Admin / Sub Admin role.</p>
+        </article>
+      </div>
+      <p class="muted">Give staff roles only the permissions and store assignments required for their duties. Review access when responsibilities change or an employee leaves.</p>
+    </section>
+
+    <section id="screenshots" class="panel">
+      <h2>Role and workflow screenshots</h2>
+      <p class="muted">These images are reference screenshots from synthetic preview data; they do not contain live customer records. Images are stored alongside this HTML guide in the <code>preview/</code> folder.</p>
+      <div class="screens">
+        <figure><img src="preview/role-verification/dashboards/super-admin.png" alt="Main Admin dashboard preview" loading="lazy"><figcaption><strong>Main Admin:</strong> platform tools and company/container entry points.</figcaption></figure>
+        <figure><img src="preview/role-verification/dashboards/company-admin.png" alt="Company Admin dashboard preview" loading="lazy"><figcaption><strong>Company Admin:</strong> company-scoped operations and tools.</figcaption></figure>
+        <figure><img src="preview/role-verification/dashboards/admin.png" alt="Legacy Admin dashboard preview" loading="lazy"><figcaption><strong>Admin (legacy):</strong> company-level account access.</figcaption></figure>
+        <figure><img src="preview/full-app/accounts.png" alt="Accounts and user management preview" loading="lazy"><figcaption><strong>Accounts:</strong> add users and grant role-appropriate access.</figcaption></figure>
+        <figure><img src="preview/full-app/catalog.png" alt="Product catalog and inventory preview" loading="lazy"><figcaption><strong>Products &amp; inventory:</strong> catalog and store-level stock operations.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="company" class="panel">
+      <h2>Add a company</h2>
+      <ol>
+        <li>Sign in as a Main Admin / Super Admin and open <strong>Companies</strong>.</li>
+        <li>For a new customer boundary, create the company and enter its name/code, timezone, first store, and initial Company Admin account. The app provisions the tenant container, company, store, and membership together.</li>
+        <li>To add a sibling company to an existing container, use the related-company workflow. The new company remains a separate entity under that container.</li>
+        <li>Verify the company and store appear in the directory. Deliver temporary credentials through an approved secure channel and require the new administrator to change the password.</li>
+      </ol>
+      <div class="callout warning"><strong>Before adding a sibling:</strong> review the container's data-sharing policies. Do not enable broader sharing unless the customer has approved its scope.</div>
+    </section>
+
+    <section id="inventory" class="panel">
+      <h2>Set up stores and inventory</h2>
+      <ol>
+        <li>Add each branch as a store under the correct company, using a distinct store code.</li>
+        <li>Set up the approved product catalog, including SKU/barcode, unit, category, and applicable tax details.</li>
+        <li>Record opening quantities through the approved receiving or opening-stock workflow against the correct store. Use a dated reference; do not silently overwrite balances.</li>
+        <li>Reconcile stock-on-hand with movement history. Confirm product ownership and sharing policies before recording stock across related companies.</li>
+      </ol>
+    </section>
+
+    <section id="users" class="panel">
+      <h2>Add users and grant least-privilege access</h2>
+      <ol>
+        <li>Create a unique account and assign the correct company membership and role.</li>
+        <li>Grant only the permissions needed for the person's job.</li>
+        <li>Assign store-scoped staff to only the stores they use. Avoid granting access across sibling companies by default.</li>
+        <li>Deliver credentials securely, require a password change if prompted, and verify the account sees only its expected company and stores.</li>
+        <li>When responsibilities change or a staff member leaves, revoke unneeded permissions, store assignments, or membership promptly.</li>
+      </ol>
+      <p class="callout">A user account is a global identity. Membership, role, permissions, and store assignments determine tenant access; a company transfer does not create a duplicate user identity.</p>
+    </section>
+
+    <section id="transfer" class="panel">
+      <h2>Move a company without merging it</h2>
+      <ol>
+        <li>Only a Main Admin / Super Admin should initiate an approved company-container transfer.</li>
+        <li>Choose an active destination container. Selecting Company A as the parent places Company B alongside A while preserving B as a separate company.</li>
+        <li>Run the read-only preflight and review the stores, memberships, row counts, and dependency blockers. Nothing moves during preflight.</li>
+        <li>Resolve blockers and reconcile container-scoped subscription, billing, backup, and policy ownership separately. Never bypass foreign-key checks or edit tenant IDs manually.</li>
+        <li>Enter the approved business reason and exact confirmation. Verify the destination company, stores, inventory, historical records, memberships, and reports afterward.</li>
+        <li>If the source container becomes empty, archive it rather than deleting it. Archival retains its billing and audit history.</li>
+      </ol>
+      <div class="callout warning"><strong>Approval boundary:</strong> this guide does not authorize a production or staging transfer. Do not run a real transfer, pilot, import, backup/restore, or cutover without explicit approval and an approved recovery plan.</div>
+    </section>
+
+    <section id="checklist" class="panel">
+      <h2>Before you finish</h2>
+      <ul>
+        <li>Company identity, destination container, and any parent-company relationship are correct.</li>
+        <li>Expected stores, products, stock movements, and historical records are accounted for.</li>
+        <li>Company memberships and store assignments are correct; no unnecessary access remains.</li>
+        <li>Data-sharing policies, subscription, invoice, backup, and retention responsibilities are reviewed.</li>
+        <li>Required customer approval, change-control record, and audit trail are complete.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>Retail Genie · Company and tenant-container administration guide</footer>
+</body>
+</html>
