@@ -4,7 +4,10 @@ Retail Genie is a standalone Flask application for retail operations, backed by 
 
 ## Start here
 
+- **Company, role, inventory, and container guide (standalone HTML):** [`COMPANY_CONTAINER_GUIDE.html`](COMPANY_CONTAINER_GUIDE.html). Open it in a browser; its screenshot assets are in `preview/`.
 - **Install and configure the app:** [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md)
+
+The in-app HTML guide is also available at `/admin/company-container-guide` to authorized Company Admin and Main Admin users. Its Jinja template is `retail_genie/templates/admin/company_container_guide.html`; the standalone HTML above is easier to locate and open outside the app.
 - **Understand app architecture and functions:** [`APPLICATION_BLUEPRINT.md`](APPLICATION_BLUEPRINT.md)
 - **Configure a fresh local install:** run `install.ps1`; it creates the isolated `.env.retail-genie` settings file and provisions the new `retail_genie` database. Do not copy credentials from an unrelated `.env`.
 - **Initial database structure:** [`database-schema.sql`](database-schema.sql) is for a new, empty `retail_genie` database; the installer applies it during setup.
