@@ -850,3 +850,18 @@ body::before {
   .container-company-list > li { align-items: flex-start; flex-direction: column; }
 }
 .transfer-policy-ack { margin: 3px 0 10px; }
+.role-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 15px 0 20px; }
+.role-guide-card { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfa; }
+.role-guide-card h3 { color: var(--blue-dark); }
+.role-guide-card p { margin-bottom: 10px; font-size: 12px; }
+.role-guide-card p:last-child { margin-bottom: 0; }
+.guide-screenshot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 16px; }
+.guide-screenshot-grid figure { min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfa; }
+.guide-screenshot-grid a { display: block; overflow: hidden; border-radius: 9px; background: #edf2ec; }
+.guide-screenshot-grid img { display: block; width: 100%; height: auto; transition: transform .2s ease; }
+.guide-screenshot-grid a:hover img { transform: scale(1.015); }
+.guide-screenshot-grid figcaption { padding: 10px 3px 1px; color: #46566b; font-size: 12px; line-height: 1.55; }
+@media (max-width: 850px) {
+  .role-guide-grid { grid-template-columns: 1fr; }
+  .guide-screenshot-grid { grid-template-columns: 1fr; }
+}

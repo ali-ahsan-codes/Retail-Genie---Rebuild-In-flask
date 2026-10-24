@@ -13,6 +13,8 @@
 <nav class="guide-toc card" aria-label="Guide contents">
   <strong>On this page</strong>
   <a href="#model">Company vs. container</a>
+  <a href="#roles">Main Admin, Company Admin &amp; Admin</a>
+  <a href="#screenshots">Screenshots</a>
   <a href="#new-company">Add a company</a>
   <a href="#inventory">Set up stores &amp; inventory</a>
   <a href="#users">Add users &amp; access</a>
@@ -27,6 +29,70 @@
   <p><strong>Company</strong> is the operating/legal business. It has its own stores, team memberships, inventory, sales, customers, settings, and business history.</p>
   <p><strong>Tenant container</strong> is the SaaS isolation and billing boundary that holds one or more separate companies. Companies can share a container without becoming one company. Data sharing between sibling companies is controlled by the container's data policies; the default is company-level isolation.</p>
   <div class="guide-callout"><strong>Example:</strong> Company A and Company B can both reside in Container 1, while their company IDs, users, stores, and records remain distinct. A container move changes the container boundary, not the company's identity.</div>
+</section>
+
+<section id="roles" class="card guide-section">
+  <p class="eyebrow">WHO DOES WHAT</p>
+  <h2>Main Admin, Company Admin and Admin</h2>
+  <div class="role-guide-grid">
+    <article class="role-guide-card">
+      <h3>Main Admin / Super Admin</h3>
+      <p>Platform-wide operator. Creates new companies and related companies, manages tenant containers and data policies, reviews SaaS plans, and runs guarded company transfers or empty-container archiving.</p>
+      <p><strong>Use for:</strong> customer onboarding, approved cross-container changes, subscription oversight, and platform controls.</p>
+      <p><strong>Boundary:</strong> confirm the selected tenant/workspace before company-specific work. Never bypass the transfer preflight or manually edit tenant IDs.</p>
+    </article>
+    <article class="role-guide-card">
+      <h3>Company Admin / Sub Admin</h3>
+      <p>Company-scoped administrator. Manages users and their permissions, store assignments, stores, and the operational setup available to that company. Can use the products/inventory and settings workspaces granted to the role.</p>
+      <p><strong>Use for:</strong> day-to-day administration of one company, onboarding its staff, and checking its stores and inventory.</p>
+      <p><strong>Boundary:</strong> cannot create or transfer companies, manage another company's container, or archive a tenant container.</p>
+    </article>
+    <article class="role-guide-card">
+      <h3>Admin (legacy account label)</h3>
+      <p>The existing <code>admin</code> role is displayed as “Company Admin (legacy)”. It retains company-level administrative access for its active membership. New accounts should use the current <strong>Company Admin / Sub Admin</strong> role instead.</p>
+      <p><strong>Use for:</strong> supporting existing legacy accounts while an administrator reviews and, if appropriate, transitions them to the current role.</p>
+      <p><strong>Boundary:</strong> it is not a Main Admin. Company/container creation and cross-container transfer remain Super Admin only.</p>
+    </article>
+  </div>
+  <p class="muted">Staff roles (Manager, Salesperson, Storekeeper, Cashier, Logistics, Auditor, Display and Express) should receive only the access needed for their duties and assigned stores.</p>
+</section>
+
+<section id="screenshots" class="card guide-section">
+  <p class="eyebrow">VISUAL WALKTHROUGH</p>
+  <h2>Role and workflow screenshots</h2>
+  <p class="muted">These reference screenshots come from the isolated synthetic-data preview; names and records are illustrative, not customer data. Your menus vary with role, permissions and enabled modules.</p>
+  <div class="guide-screenshot-grid">
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='main-admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='main-admin') }}" alt="Main Admin dashboard with platform tools and companies navigation" loading="lazy">
+      </a>
+      <figcaption><strong>Main Admin:</strong> platform controls and company/container entry points.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='company-admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='company-admin') }}" alt="Company Admin dashboard and company operations menu" loading="lazy">
+      </a>
+      <figcaption><strong>Company Admin:</strong> company-level accounts, stores and operational tools.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='admin') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='admin') }}" alt="Legacy Admin dashboard and company-scoped menu" loading="lazy">
+      </a>
+      <figcaption><strong>Admin (legacy):</strong> existing company-scoped administrator access.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='accounts') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='accounts') }}" alt="Accounts screen showing new team member form and role permissions" loading="lazy">
+      </a>
+      <figcaption><strong>Accounts:</strong> create team accounts, choose roles and grant limited permissions.</figcaption>
+    </figure>
+    <figure>
+      <a href="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='inventory') }}" target="_blank" rel="noopener">
+        <img src="{{ url_for('tenancy_admin.company_container_guide_screenshot', screenshot_key='inventory') }}" alt="Products and inventory screen showing product catalog, stock and adjustments" loading="lazy">
+      </a>
+      <figcaption><strong>Products &amp; inventory:</strong> manage the catalog and store-level stock with recorded adjustments.</figcaption>
+    </figure>
+  </div>
 </section>
 
 <section id="new-company" class="card guide-section">

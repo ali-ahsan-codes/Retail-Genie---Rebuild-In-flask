@@ -109,9 +109,11 @@ def _scope_conditions(
     file_ids: list[str],
     conversation_ids: list[str],
     message_ids: list[str],
+    physical_table_name: str | None = None,
 ) -> list[Any]:
     """Return ownership/link predicates for rows that follow the company."""
     columns = table.c
+    table_name = physical_table_name or table.name
     conditions: list[Any] = []
     if "company_id" in columns:
         conditions.append(columns.company_id == company_id)
@@ -120,13 +122,13 @@ def _scope_conditions(
     if "store_id" in columns and store_ids:
         conditions.append(columns.store_id.in_(store_ids))
 
-    if table.name == _CLOUD_FILES and user_ids:
+    if table_name == _CLOUD_FILES and user_ids:
         conditions.append(and_(columns.owner_company_id.is_(None), columns.owner_user_id.in_(user_ids)))
-    elif table.name == _CLOUD_SHARES and file_ids:
+    elif table_name == _CLOUD_SHARES and file_ids:
         conditions.append(columns.file_id.in_(file_ids))
-    elif table.name == _MESSAGES and conversation_ids:
+    elif table_name == _MESSAGES and conversation_ids:
         conditions.append(columns.conversation_id.in_(conversation_ids))
-    elif table.name in {_MESSAGE_RECIPIENTS, _MESSAGE_ATTACHMENTS} and message_ids:
+    elif table_name in {_MESSAGE_RECIPIENTS, _MESSAGE_ATTACHMENTS} and message_ids:
         conditions.append(columns.message_id.in_(message_ids))
     return conditions
 
@@ -385,6 +387,95 @@ def _build_plan(
                     blockers.append(
                         f"{table.name}.{local_column.name} points to a different company for {external} moved row(s)."
                     )
+
+    # A row can be swept into the move through an indirect parent link (for
+    # example, a file share by file_id) even when its company_id belongs to a
+    # different company. Reject those cross-company FK pairs up front.
+    for table in _metadata_tables():
+        if table.name not in scopes:
+            continue
+        for constraint in table.foreign_key_constraints:
+            for element in constraint.elements:
+                if element.column.table.name != "companies" or element.column.name != "id":
+                    continue
+                local_column = table.c[element.parent.name]
+                mismatches = db.session.execute(
+                    select(func.count()).select_from(table).where(
+                        scopes[table.name],
+                        local_column.is_not(None),
+                        local_column != company.id,
+                    )
+                ).scalar_one()
+                if mismatches:
+                    blockers.append(
+                        f"{table.name}.{local_column.name} references another company in {mismatches} moved row(s)."
+                    )
+
+    # Find dependent rows left behind in the source that reference any selected
+    # parent row. This metadata-driven pass supplements domain-specific checks,
+    # so newly mapped foreign-key relationships fail closed by default.
+    scope_args = {
+        "company_id": company.id,
+        "store_ids": store_ids,
+        "user_ids": user_ids,
+        "file_ids": file_ids,
+        "conversation_ids": conversation_ids,
+        "message_ids": message_ids,
+    }
+    moving_parent_tables = {table.name: table for table in _metadata_tables() if table.name in scopes}
+    moving_parent_tables["companies"] = Company.__table__
+    for child_table in _metadata_tables():
+        child_scope = _row_scope(
+            child_table,
+            tenant_container_id=source.id,
+            **scope_args,
+        )
+        child_outside_scope = ~child_scope if child_scope is not None else True
+        for constraint in child_table.foreign_key_constraints:
+            parent_name = constraint.elements[0].column.table.name
+            parent_table = moving_parent_tables.get(parent_name)
+            if parent_table is None:
+                continue
+            parent_alias = parent_table.alias(f"move_ref_{child_table.name}_{parent_name}")
+            parent_conditions = _scope_conditions(
+                parent_alias,
+                **scope_args,
+                physical_table_name=parent_name,
+            )
+            if parent_name == "companies":
+                parent_scope = and_(
+                    parent_alias.c.tenant_container_id == source.id,
+                    parent_alias.c.id == company.id,
+                )
+            elif parent_conditions:
+                parent_scope = and_(
+                    parent_alias.c.tenant_container_id == source.id,
+                    or_(*parent_conditions),
+                )
+            else:
+                continue
+            join_conditions = and_(
+                *(
+                    child_table.c[element.parent.name] == parent_alias.c[element.column.name]
+                    for element in constraint.elements
+                )
+            )
+            local_values_present = and_(
+                *(child_table.c[element.parent.name].is_not(None) for element in constraint.elements)
+            )
+            parent_exists = select(1).select_from(parent_alias).where(parent_scope, join_conditions).exists()
+            external_dependents = db.session.execute(
+                select(func.count()).select_from(child_table).where(
+                    child_table.c.tenant_container_id == source.id,
+                    child_outside_scope,
+                    local_values_present,
+                    parent_exists,
+                )
+            ).scalar_one()
+            if external_dependents:
+                blockers.append(
+                    f"{child_table.name} has {external_dependents} source row(s) outside the move that reference moving data in {parent_name}."
+                )
 
     moved_user_set = set(user_ids)
     for conversation in db.session.execute(

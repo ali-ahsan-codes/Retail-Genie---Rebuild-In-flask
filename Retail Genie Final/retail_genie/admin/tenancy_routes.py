@@ -1,6 +1,8 @@
 """Tenant and store administration, scoped server-side to the signed-in actor."""
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from pathlib import Path
+
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -18,6 +20,14 @@ from .tenancy_forms import AssignmentForm, BillingSettingsForm, CreateCompanyFor
 tenancy_admin_bp = Blueprint("tenancy_admin", __name__, url_prefix="/admin")
 
 _ASSIGNABLE_STAFF_ROLES = {"manager", "salesperson", "cashier", "storekeeper", "logistics", "auditor", "display", "express"}
+_GUIDE_SCREENSHOT_DIRECTORY = Path(__file__).resolve().parents[2] / "preview"
+_GUIDE_SCREENSHOTS = {
+    "main-admin": "account-roles/super-admin.png",
+    "company-admin": "account-roles/company-admin.png",
+    "admin": "account-roles/admin.png",
+    "accounts": "full-app/accounts.png",
+    "inventory": "full-app/catalog.png",
+}
 
 
 def _company_or_404(company_id: str) -> Company:
@@ -984,3 +994,16 @@ def archive_empty_container(tenant_container_id: str):
 @company_admin_required
 def company_container_guide():
     return render_template("admin/company_container_guide.html")
+
+
+@tenancy_admin_bp.get("/company-container-guide/screenshots/<string:screenshot_key>")
+@company_admin_required
+def company_container_guide_screenshot(screenshot_key: str):
+    """Serve only the curated, synthetic screenshots embedded in the guide."""
+    relative_path = _GUIDE_SCREENSHOTS.get(screenshot_key)
+    if relative_path is None:
+        abort(404)
+    image_path = _GUIDE_SCREENSHOT_DIRECTORY / relative_path
+    if not image_path.is_file():
+        abort(404)
+    return send_file(image_path, mimetype="image/png", conditional=True, max_age=3600)

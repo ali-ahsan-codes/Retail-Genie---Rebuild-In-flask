@@ -6,6 +6,8 @@ from sqlalchemy import select, text
 from retail_genie.extensions import db
 from retail_genie.models import (
     AuditEvent,
+    CloudFile,
+    CloudFileShare,
     CatalogProduct,
     Company,
     ContainerMembership,
@@ -340,6 +342,49 @@ def test_last_company_move_requires_source_subscription_to_be_stopped(app):
         assert any("cancel or suspend" in item for item in preview.blockers)
 
 
+def test_cross_company_file_share_dependency_blocks_transfer(app):
+    with app.app_context():
+        actor = _platform_actor()
+        source, company, _, member = _source_company(actor.id)
+        other_company = Company(
+            id="company-a-in-source",
+            tenant_container_id=source.id,
+            name="Company A in Source",
+            slug="company-a-in-source",
+        )
+        db.session.add(other_company)
+        db.session.flush()
+        company_file = CloudFile(
+            id="file-b-private",
+            tenant_container_id=source.id,
+            owner_user_id=member.id,
+            owner_company_id=company.id,
+            file_path="private/company-b/report.pdf",
+            original_name="report.pdf",
+            mime_type="application/pdf",
+            size_bytes=12,
+            share_scope="user",
+            is_shared=True,
+        )
+        db.session.add(company_file)
+        db.session.flush()
+        db.session.add(
+            CloudFileShare(
+                id="share-b-to-a",
+                tenant_container_id=source.id,
+                company_id=other_company.id,
+                file_id=company_file.id,
+                shared_with_user_id=member.id,
+                created_by_id=actor.id,
+            )
+        )
+        db.session.commit()
+
+        plan = preview_company_transfer(company.id, "test-container")
+        assert not plan.can_move
+        assert any("cloud_file_shares.company_id references another company" in item for item in plan.blockers)
+
+
 def test_company_with_children_is_not_moved_as_a_partial_subtree(app):
     with app.app_context():
         actor = _platform_actor()
@@ -381,13 +426,23 @@ def test_super_admin_container_and_guide_pages_render(client, app):
 
     containers_response = client.get("/admin/containers")
     guide_response = client.get("/admin/company-container-guide")
-    transfer_response = client.get(
-        "/admin/companies/company-b/move?destination_container_id=test-container&destination_parent_company_id=test-company"
-    )
     assert containers_response.status_code == 200
     assert b"Tenant containers" in containers_response.data
     assert guide_response.status_code == 200
     assert b"Move a company without merging it" in guide_response.data
+    assert b"Main Admin / Super Admin" in guide_response.data
+    assert b"Company Admin / Sub Admin" in guide_response.data
+    assert b"Admin (legacy account label)" in guide_response.data
+    assert b"guide-screenshot-grid" in guide_response.data
+    for screenshot_key in ("main-admin", "company-admin", "admin", "accounts", "inventory"):
+        screenshot_response = client.get(f"/admin/company-container-guide/screenshots/{screenshot_key}")
+        assert screenshot_response.status_code == 200
+        assert screenshot_response.mimetype == "image/png"
+        assert screenshot_response.data.startswith(b"\x89PNG\r\n\x1a\n")
+    assert client.get("/admin/company-container-guide/screenshots/../../README.md").status_code == 404
+    transfer_response = client.get(
+        "/admin/companies/company-b/move?destination_container_id=test-container&destination_parent_company_id=test-company"
+    )
     assert transfer_response.status_code == 200
     assert b"READ-ONLY IMPACT REPORT" in transfer_response.data
 
