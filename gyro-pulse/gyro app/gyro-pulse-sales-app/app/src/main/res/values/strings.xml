@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Gyro Pulse</string>
+    <string name="login_title">Welcome to Gyro Pulse</string>
+    <string name="login_subtitle">Please log in to continue</string>
+    <string name="product_search_hint">Search products by name or barcode</string>
+    <string name="customer_search_hint">Search customers by name or phone</string>
+    <string name="cart_title">Shopping Cart</string>
+    <string name="order_title">New Order</string>
+    <string name="submit_order">Place Order</string>
+    <string name="add_to_cart">Add to Cart</string>
+    <string name="remove">Remove</string>
+    <string name="total">Total</string>
+    <string name="payment_terms">Payment Terms</string>
+    <string name="special_instructions">Special Instructions</string>
+    <string name="shipping_address">Shipping Address</string>
+    <string name="amount_paid">Amount Paid</string>
+</resources>

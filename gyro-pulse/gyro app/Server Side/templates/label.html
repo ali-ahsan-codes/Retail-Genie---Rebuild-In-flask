@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Package Label #{{ order.id }}</title>
+    <!-- Manrope Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: #f4f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            color: #1e293b;
+        }
+        .label {
+            max-width: 420px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            padding: 28px 24px;
+            border: 1px solid #e9edf2;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px dashed #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: #0052FF;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .brand-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+        .brand-text span { color: #0052FF; }
+        .label-sub {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: auto;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-item .label-txt {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+        }
+        .info-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 2px;
+            word-break: break-word;
+        }
+        .info-item .value.small { font-size: 14px; }
+        .code-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .code-box {
+            text-align: center;
+        }
+        .code-box .code {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #0f172a;
+            word-break: break-all;
+            background: white;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e1;
+            display: inline-block;
+        }
+        .code-box .code-label {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+            display: block;
+        }
+        .qr-image {
+            max-width: 100px;
+            max-height: 100px;
+            display: inline-block;
+            background: white;
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .items-section {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 16px;
+            margin-top: 4px;
+        }
+        .items-section h4 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .items-table th {
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 6px 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .items-table td {
+            padding: 6px 4px;
+            border-bottom: 1px dotted #e9edf2;
+            color: #1e293b;
+        }
+        .items-table td:last-child,
+        .items-table th:last-child { text-align: right; }
+        .items-table tr:last-child td { border-bottom: none; }
+        .total-row {
+            font-weight: 700;
+            font-size: 15px;
+            border-top: 2px solid #e2e8f0 !important;
+        }
+        .total-row td {
+            padding-top: 10px;
+            border-bottom: none !important;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 14px;
+            border-top: 2px dashed #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .footer .status {
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #0052FF;
+            background: #eff6ff;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 10px;
+        }
+        .print-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background: #0052FF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .print-btn:hover {
+            background: #0041cc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+        }
+        @media print {
+            body { background: white; padding: 0; margin: 0; display: block; }
+            .label {
+                max-width: 100%;
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+                padding: 16px;
+                margin: 0 auto;
+            }
+            .print-btn { display: none !important; }
+            .code-section { background: #fafafa; border: 1px solid #ddd; }
+            .code-box .code { border: 1px solid #ccc; background: white; }
+            .info-item .value { color: black; }
+            .brand-text span { color: #0052FF; }
+            .footer .status { background: #f0f0f0; color: #0052FF; }
+            .items-table td { border-bottom: 1px solid #ddd; }
+            .total-row { border-top: 2px solid #333 !important; }
+        }
+        @media (max-width: 480px) {
+            .label { padding: 20px 16px; }
+            .info-grid { grid-template-columns: 1fr; gap: 4px; }
+            .code-section { grid-template-columns: 1fr; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="label">
+        <!-- Header -->
+        <div class="header">
+            <div class="brand-icon">
+                <span class="material-symbols-outlined">inventory_2</span>
+            </div>
+            <div class="brand-text">Gyro <span>Pulse</span></div>
+            <div class="label-sub">Package Label</div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label-txt">Order #</span>
+                <span class="value">{{ order.id }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label-txt">Customer</span>
+                <span class="value">{{ order.customer_name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label-txt">Date</span>
+                <span class="value small">{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label-txt">Status</span>
+                <span class="value small" style="text-transform:uppercase; color:#0052FF;">{{ order.status }}</span>
+            </div>
+        </div>
+
+        <!-- Barcode & QR -->
+        <div class="code-section">
+            <div class="code-box">
+                <div class="code">{{ order.package_barcode }}</div>
+                <span class="code-label">Package Barcode</span>
+            </div>
+            <div class="code-box">
+                <!-- Render QR as base64 image -->
+                {% if order.package_qr %}
+                    <img src="data:image/png;base64,{{ order.package_qr }}" alt="QR Code" class="qr-image" />
+                {% else %}
+                    <div class="code">N/A</div>
+                {% endif %}
+                <span class="code-label">QR Code</span>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="items-section">
+            <h4>Order Items</h4>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th style="text-align:right;">Qty</th>
+                        <th style="text-align:right;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td style="text-align:right;">{{ item.ordered_qty }}</td>
+                        <td style="text-align:right;">${{ "%.2f"|format(item.unit_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="2" style="text-align:right; font-weight:700;">Total</td>
+                        <td style="text-align:right; font-weight:700;">${{ "%.2f"|format(order.net_total) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span>Packed: {{ order.packed_at.strftime('%Y-%m-%d %H:%M') if order.packed_at else 'N/A' }}</span>
+            <span class="status">{{ order.status }}</span>
+        </div>
+
+        <!-- Print Button -->
+        <button class="print-btn" onclick="window.print()">
+            <span class="material-symbols-outlined">print</span> Print Label
+        </button>
+    </div>
+
+    <!-- Auto‑print if query param present -->
+    {% if request.args.get('print') == 'true' %}
+    <script>
+        window.onload = function() { window.print(); };
+    </script>
+    {% endif %}
+</body>
+</html>

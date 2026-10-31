@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gyro Pulse – Storekeeper</title>
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <!-- Manrope Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --brand-primary: #0052FF;
+            --brand-surface: #f7f9fb;
+            --brand-text: #1e293b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--brand-surface);
+            color: var(--brand-text);
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.925rem;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-link-custom:hover, .nav-link-custom.active {
+            background: #f1f5f9;
+            color: var(--brand-primary);
+        }
+
+        .nav-link-custom.active .material-symbols-outlined {
+            color: var(--brand-primary);
+        }
+
+        .nav-link-custom .material-symbols-outlined {
+            flex-shrink: 0;
+            font-size: 1.25rem;
+            margin-right: 12px;
+        }
+
+        .data-table-container {
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .data-table-container table {
+            table-layout: fixed;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .data-table-container th,
+        .data-table-container td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .data-table-container td.product-name,
+        .data-table-container td.barcode,
+        .data-table-container td.address {
+            white-space: normal;
+            word-break: break-word;
+            max-width: 150px;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table tbody td {
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+        }
+
+        .table-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+        .table-loading-overlay.active {
+            display: flex;
+        }
+        .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-width: 0.25rem;
+            color: var(--brand-primary);
+        }
+
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-brand:hover {
+            background-color: #0041cc;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-approved { background: #dbeafe; color: #2563eb; }
+        .badge-picked { background: #fce7f3; color: #db2777; }
+        .badge-packed { background: #d1fae5; color: #059669; }
+        .badge-ready { background: #d1fae5; color: #059669; }
+        .badge-dispatched { background: #cffafe; color: #0891b2; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-in_transit { background: #cffafe; color: #0891b2; }
+        .badge-delivered { background: #ede9fe; color: #7c3aed; }
+        .badge-closed { background: #f1f5f9; color: #475569; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .badge-request-pending { background: #fef3c7; color: #d97706; }
+        .badge-request-approved { background: #d1fae5; color: #059669; }
+        .badge-request-rejected { background: #fee2e2; color: #dc2626; }
+        .badge-transfer-pending-admin { background: #fef3c7; color: #d97706; }
+        .badge-transfer-pending-sender { background: #fef3c7; color: #d97706; }
+        .badge-transfer-dispatched { background: #cffafe; color: #0891b2; }
+        .badge-transfer-received { background: #d1fae5; color: #059669; }
+
+        .scan-input {
+            max-width: 300px;
+            display: inline-block;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .summary-card .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .file-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 4px;
+        }
+        .badge-brand { background: #e0e7ff; color: var(--brand-primary); }
+        .view-only-badge {
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Full-page Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--brand-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-weight: 600;
+            color: var(--brand-text);
+            font-size: 1.1rem;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Mobile Overlay Backdrop -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+    <div class="p-6">
+        <div class="flex items-center justify-between gap-3 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-[#0052FF] rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined" style="margin-right:0;">inventory_2</span>
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-800">Gyro Pulse</h1>
+            </div>
+            <button class="lg:hidden text-slate-500 hover:text-slate-700" onclick="toggleMobileSidebar()">
+                <span class="material-symbols-outlined" style="margin-right:0;">close</span>
+            </button>
+        </div>
+        <nav class="space-y-1">
+            <!-- Dashboard -->
+            <a class="nav-link-custom active" data-tab-trigger="dashboard" href="#dashboard">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <!-- Search Inventory -->
+            <a class="nav-link-custom" data-tab-trigger="inventory_search" href="#inventory_search">
+                <span class="material-symbols-outlined">search</span> Search Inventory
+            </a>
+            <!-- Transfers -->
+            <a class="nav-link-custom" data-tab-trigger="transfers" href="#transfers">
+                <span class="material-symbols-outlined">swap_horiz</span> Transfers
+            </a>
+            <!-- Picking -->
+            <a class="nav-link-custom" data-tab-trigger="picking" href="#picking">
+                <span class="material-symbols-outlined">checklist</span> Picking
+            </a>
+            <!-- Packing -->
+            <a class="nav-link-custom" data-tab-trigger="packing" href="#packing">
+                <span class="material-symbols-outlined">package</span> Packing
+            </a>
+            <!-- Dispatch -->
+            <a class="nav-link-custom" data-tab-trigger="dispatch" href="#dispatch">
+                <span class="material-symbols-outlined">local_shipping</span> Dispatch
+            </a>
+            <!-- Returns -->
+            <a class="nav-link-custom" data-tab-trigger="returns" href="#returns">
+                <span class="material-symbols-outlined">undo</span> Returns
+            </a>
+            <!-- Request Stock -->
+            <a class="nav-link-custom" data-tab-trigger="requeststock" href="#requeststock">
+                <span class="material-symbols-outlined">add_box</span> Request Stock
+            </a>
+            <!-- Delivery Tracking -->
+            <a class="nav-link-custom" data-tab-trigger="deliveries" href="#deliveries">
+                <span class="material-symbols-outlined">local_shipping</span> Delivery Tracking
+            </a>
+            <!-- NEW: Device Management (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="devices" href="#devices">
+                <span class="material-symbols-outlined">devices</span> Device Keys
+            </a>
+            <!-- NEW: Token Pool (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="tokens" href="#tokens">
+                <span class="material-symbols-outlined">token</span> Token Pool
+            </a>
+            <!-- NEW: GPC Management (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="gpc" href="#gpc">
+                <span class="material-symbols-outlined">file_open</span> GPC Files
+            </a>
+            <div class="pt-4 pb-2 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Settings</div>
+            <a class="nav-link-custom" data-tab-trigger="settings" href="#settings">
+                <span class="material-symbols-outlined">settings</span> Settings
+            </a>
+        </nav>
+    </div>
+</aside>
+
+<!-- Main Content Area -->
+<main class="main-content">
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-slate-200 bg-white sticky top-0 z-50 flex items-center justify-between px-4 md:px-8">
+        <div class="flex items-center gap-3">
+            <button class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg border border-slate-200 flex items-center justify-center" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">
+                <span class="material-symbols-outlined" style="margin-right:0;">menu</span>
+            </button>
+            <div class="flex items-center gap-2 md:gap-4 flex-wrap">
+                <span class="text-slate-500 font-medium text-sm md:text-base">Hello,</span>
+                <span class="font-bold text-slate-800 text-sm md:text-base">{{ current_user.username }}</span>
+                {% if current_user.city_id %}
+                    <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold uppercase tracking-tight">{{ current_user.city.name }}</span>
+                {% endif %}
+                <span class="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs font-bold">Storekeeper</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="relative text-slate-500 hover:text-slate-700">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <a class="flex items-center gap-2 text-slate-600 font-semibold hover:text-[#0052FF]" href="{{ url_for('auth.logout') }}">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="p-8">
+        <!-- Tab Contents -->
+        <div id="tab-container">
+
+            <!-- ============================================================ -->
+            <!-- DASHBOARD TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item block" id="dashboard">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Storekeeper Dashboard</h2>
+                        <p class="text-slate-500">Overview of your warehouse statistics.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-semibold text-slate-600">Warehouse:</label>
+                        <select id="dashWarehouseSelect" class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" onchange="fetchStorekeeperDashboard()">
+                            <option value="">Select Warehouse</option>
+                        </select>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchStorekeeperDashboard()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="dashStats">
+                    <div class="glass-card p-6 bg-white border-l-4 border-blue-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Total Stock</p>
+                        <h2 class="text-3xl font-bold text-blue-600" id="dashTotalStock">-</h2>
+                    </div>
+                    <div class="glass-card p-6 bg-white border-l-4 border-orange-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Pending Approvals</p>
+                        <h2 class="text-3xl font-bold text-orange-600" id="dashPendingApprovals">-</h2>
+                    </div>
+                    <div class="glass-card p-6 bg-white border-l-4 border-green-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Issued Today</p>
+                        <h2 class="text-3xl font-bold text-green-600" id="dashIssuedToday">-</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SEARCH INVENTORY TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="inventory_search">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Inventory Search</h2>
+                        <p class="text-slate-500">Search products in your warehouse by name, SKU, or barcode.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-semibold text-slate-600">Warehouse:</label>
+                        <select id="searchWarehouseSelect" class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]">
+                            <option value="">Select Warehouse</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="glass-card bg-white p-6 mb-8">
+                    <div class="flex flex-wrap gap-4">
+                        <input type="text" id="searchQuery" class="form-control rounded-lg flex-1 min-w-[200px]" placeholder="Product name, SKU, or barcode...">
+                        <button class="btn-brand flex items-center gap-2" onclick="searchInventory()">
+                            <span class="material-symbols-outlined text-lg">search</span> Search
+                        </button>
+                        <button class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold hover:bg-slate-200" onclick="document.getElementById('searchQuery').value=''; searchInventory();">Clear</button>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card" id="searchTableContainer">
+                    <div class="table-loading-overlay" id="searchLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="searchResultsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:10%;">Product ID</th>
+                                <th style="width:25%;">Name</th>
+                                <th style="width:15%;">SKU</th>
+                                <th style="width:20%;">Barcode</th>
+                                <th style="width:15%;">Quantity in Hand</th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchResultsBody">
+                            <tr><td class="text-center py-8" colspan="5">Enter a search term above.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TRANSFERS TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="transfers">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Inter‑Store Transfers</h2>
+                        <p class="text-slate-500">Request stock from other warehouses, dispatch, and scan to receive.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-brand flex items-center gap-2" data-bs-target="#requestTransferModal" data-bs-toggle="modal">
+                            <span class="material-symbols-outlined">add</span> Request Transfer
+                        </button>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchTransfers()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card" id="transfersTableContainer">
+                    <div class="table-loading-overlay" id="transfersLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="transfersTable">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">ID</th>
+                                <th style="width:12%;">Sender</th>
+                                <th style="width:12%;">Receiver</th>
+                                <th style="width:15%;">Barcode</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:15%;">Items</th>
+                                <th style="width:20%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfersBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading transfers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-8 glass-card bg-white p-6">
+                    <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#0052FF]">qr_code_scanner</span> Scan Barcode to Receive
+                    </h4>
+                    <div class="flex flex-wrap gap-4">
+                        <input type="text" id="scanBarcodeInput" class="form-control rounded-lg flex-1 min-w-[200px]" placeholder="Paste or type barcode (e.g., TRF-XXXX)">
+                        <select id="scanReceiveWarehouseSelect" class="form-select rounded-lg w-48">
+                            <option value="">Your Warehouse</option>
+                        </select>
+                        <button class="btn-brand flex items-center gap-2" onclick="scanReceive()">
+                            <span class="material-symbols-outlined">verified</span> Receive Stock
+                        </button>
+                    </div>
+                    <div id="scanResult" class="mt-4" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PICKING TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="picking">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Picking Queue</h2>
+                        <p class="text-slate-500">Approved orders ready to be picked from warehouse.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" id="pickWarehouseFilter" onchange="fetchPickOrders()">
+                            <option value="">All Warehouses</option>
+                        </select>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchPickOrders()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card" id="pickTableContainer">
+                    <div class="table-loading-overlay" id="pickLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="pickOrdersTable">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">Order ID</th>
+                                <th style="width:18%;">Customer</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:15%;">Warehouse</th>
+                                <th style="width:8%;">Items</th>
+                                <th style="width:20%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pickOrdersBody">
+                            <tr><td class="text-center py-8" colspan="6">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-8 glass-card bg-white p-6" id="pickDetail" style="display:none;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-800">Picking Order #<span id="pickOrderId"></span></h4>
+                        <span class="text-sm text-slate-500">Warehouse: <span id="pickWarehouseName" class="font-semibold text-slate-700"></span></span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="scanBarcode" class="form-control rounded-lg flex-grow scan-input" placeholder="Scan or enter barcode">
+                            <button class="btn-brand" onclick="scanPick()">Pick Item</button>
+                        </div>
+                        <div class="flex items-center justify-end gap-2">
+                            <button class="bg-green-100 text-green-700 px-4 py-2 rounded-lg font-bold hover:bg-green-200" onclick="completePicking()">✅ Complete Picking</button>
+                            <button class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold hover:bg-slate-200" onclick="closePickDetail()">Close</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="table table-striped mb-0" id="pickItemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Barcode</th>
+                                    <th>Ordered</th>
+                                    <th>Picked</th>
+                                    <th>Remaining</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pickItemsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PACKING TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="packing">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Packing Station</h2>
+                        <p class="text-slate-500">Picked orders ready to be packed and labeled.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" id="packWarehouseFilter" onchange="fetchPackOrders()">
+                            <option value="">All Warehouses</option>
+                        </select>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchPackOrders()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card" id="packTableContainer">
+                    <div class="table-loading-overlay" id="packLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="packOrdersTable">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">Order ID</th>
+                                <th style="width:18%;">Customer</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:15%;">Warehouse</th>
+                                <th style="width:8%;">Items</th>
+                                <th style="width:20%;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packOrdersBody">
+                            <tr><td class="text-center py-8" colspan="6">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-8 glass-card bg-white p-6" id="packDetail" style="display:none;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-800">Packing Order #<span id="packOrderId"></span></h4>
+                        <span class="text-sm text-slate-500">Warehouse: <span id="packWarehouseName" class="font-semibold text-slate-700"></span></span>
+                    </div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <button class="btn-brand" onclick="packOrder()">📦 Pack &amp; Generate Barcode</button>
+                        <button class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold hover:bg-slate-200" onclick="closePackDetail()">Close</button>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4" id="packResult" style="display:none;">
+                        <p><span class="font-bold">Barcode:</span> <code id="packBarcode" class="bg-white px-2 py-1 rounded border border-green-200"></code></p>
+                        <p><span class="font-bold">QR Code:</span> <span id="packQR" class="text-sm break-all"></span></p>
+                        <button class="mt-3 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold hover:bg-blue-200" onclick="printLabel()">🖨️ Print Label</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DISPATCH TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="dispatch">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Dispatch Zone</h2>
+                        <p class="text-slate-500">Dual‑scan handover: Storekeeper + Delivery person verification.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchDispatchOrders()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="data-table-container glass-card" id="dispatchTableContainer">
+                    <div class="table-loading-overlay" id="dispatchLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="dispatchTable">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">Order ID</th>
+                                <th style="width:18%;">Customer</th>
+                                <th style="width:15%;">Barcode</th>
+                                <th style="width:12%;">Warehouse</th>
+                                <th style="width:8%;">Items</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:15%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dispatchBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading dispatch queue...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-6 flex flex-wrap items-center gap-3">
+                    <button class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold flex items-center gap-2" onclick="dispatchScan('storekeeper')">
+                        <span class="material-symbols-outlined text-lg">qr_code_scanner</span> Scan as Storekeeper
+                    </button>
+                    <button class="bg-green-100 text-green-700 px-4 py-2 rounded-lg font-bold flex items-center gap-2" onclick="dispatchScan('delivery')">
+                        <span class="material-symbols-outlined text-lg">qr_code_scanner</span> Scan as Delivery
+                    </button>
+                    <span class="text-sm text-slate-400">(Enter Order ID in the prompt)</span>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- RETURNS TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="returns">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Returns Management</h2>
+                        <p class="text-slate-500">Process customer returns and inventory adjustments.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchReturns()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="data-table-container glass-card" id="returnsTableContainer">
+                    <div class="table-loading-overlay" id="returnsLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="returnsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:5%;">ID</th>
+                                <th style="width:8%;">Order</th>
+                                <th style="width:10%;">Product</th>
+                                <th style="width:10%;">Type</th>
+                                <th style="width:5%;">Qty</th>
+                                <th style="width:15%;">Reason</th>
+                                <th style="width:10%;">Status</th>
+                                <th style="width:15%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnsBody">
+                            <tr><td class="text-center py-8" colspan="8">Loading returns...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- REQUEST STOCK TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="requeststock">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Request Stock Addition</h2>
+                        <p class="text-slate-500">Submit a request to add stock to a warehouse. Admin approval required.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchStockRequests()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh History
+                    </button>
+                </div>
+                <div class="glass-card bg-white p-6 mb-8">
+                    <form id="requestStockForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Product</label>
+                                <select class="form-select rounded-lg" id="requestProduct" required>
+                                    <option value="">Select Product</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Warehouse</label>
+                                <select class="form-select rounded-lg" id="requestWarehouse" required>
+                                    <option value="">Select Warehouse</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Requested Quantity</label>
+                                <input type="number" class="form-control rounded-lg" id="requestQuantity" min="1" required placeholder="Enter quantity">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">PO Number (optional)</label>
+                                <input type="text" class="form-control rounded-lg" id="requestPoNumber" placeholder="PO-12345">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">PO Date (optional)</label>
+                                <input type="date" class="form-control rounded-lg" id="requestPoDate">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Ordered Qty from PO (optional)</label>
+                                <input type="number" class="form-control rounded-lg" id="requestOrderedQty" min="0" placeholder="Qty as per PO">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Upload PO Slip (image)</label>
+                                <input type="file" class="form-control rounded-lg" id="requestPoFile" accept="image/*">
+                                <div id="poPreview" class="mt-2" style="display:none;">
+                                    <img id="poPreviewImage" class="file-preview" alt="Preview"/>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removePoFile()">Remove</button>
+                                </div>
+                                <input type="hidden" id="requestAttachmentUrl" value="">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Notes (optional)</label>
+                            <textarea class="form-control rounded-lg" id="requestNotes" rows="2" placeholder="Any additional information"></textarea>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button type="submit" class="btn-brand px-8">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-4">My Requests</h4>
+                <div class="data-table-container glass-card" id="stockRequestsContainer">
+                    <div class="table-loading-overlay" id="stockRequestsLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="stockRequestsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:4%;">ID</th>
+                                <th style="width:10%;">Product</th>
+                                <th style="width:10%;">Warehouse</th>
+                                <th style="width:6%;">Req Qty</th>
+                                <th style="width:8%;">PO #</th>
+                                <th style="width:8%;">PO Date</th>
+                                <th style="width:6%;">Ordered Qty</th>
+                                <th style="width:8%;">Attachment</th>
+                                <th style="width:6%;">Before</th>
+                                <th style="width:6%;">After</th>
+                                <th style="width:10%;">Status</th>
+                                <th style="width:12%;">Notes</th>
+                                <th style="width:12%;">Requested At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockRequestsBody">
+                            <tr><td class="text-center py-8" colspan="13">No requests yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DELIVERY TRACKING TAB -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="deliveries">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Delivery Tracking</h2>
+                        <p class="text-slate-500">Real‑time status of all shipments from your city.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchDeliveriesStatus()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="deliverySummary">
+                    <div class="summary-card border-l-4 border-yellow-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Pending</p>
+                        <p class="number text-yellow-600" id="deliveryPending">0</p>
+                    </div>
+                    <div class="summary-card border-l-4 border-blue-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">In Transit</p>
+                        <p class="number text-blue-600" id="deliveryInTransit">0</p>
+                    </div>
+                    <div class="summary-card border-l-4 border-green-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Delivered</p>
+                        <p class="number text-green-600" id="deliveryDelivered">0</p>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card" id="deliveriesTableContainer">
+                    <div class="table-loading-overlay" id="deliveriesLoadingOverlay">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <table class="table mb-0" id="deliveriesStatusTable">
+                        <thead>
+                            <tr>
+                                <th style="width:10%;">Order ID</th>
+                                <th style="width:18%;">Customer</th>
+                                <th style="width:15%;">Assigned To</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:15%;">Scheduled</th>
+                                <th style="width:18%;">Actual Delivery</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveriesStatusBody">
+                            <tr><td class="text-center py-8" colspan="6">Loading deliveries...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: DEVICE MANAGEMENT (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="devices">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Device API Keys</h2>
+                        <p class="text-slate-500">View hardware-bound API keys for mobile devices. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="apiKeysTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Device UUID</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Expires</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiKeysBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading API keys...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: TOKEN POOL (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="tokens">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Token Pool Viewer</h2>
+                        <p class="text-slate-500">View one-time cipher tokens assigned to each user. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="flex items-center gap-3 mb-6">
+                    <label class="text-sm font-semibold text-slate-600">User:</label>
+                    <select id="tokenUserSelect" class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" onchange="fetchTokenPool()">
+                        <option value="">Select User</option>
+                    </select>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchTokenPool()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="tokenStats">
+                    <div class="glass-card p-4 bg-white border-l-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                        <h3 class="text-2xl font-bold text-blue-600" id="tokenTotal">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Unused</p>
+                        <h3 class="text-2xl font-bold text-green-600" id="tokenUnused">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Used</p>
+                        <h3 class="text-2xl font-bold text-orange-600" id="tokenUsed">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-red-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Expired</p>
+                        <h3 class="text-2xl font-bold text-red-600" id="tokenExpired">-</h3>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="tokenTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Session ID</th>
+                                <th>Cipher Token (masked)</th>
+                                <th>Status</th>
+                                <th>Expiry</th>
+                                <th>Created</th>
+                                <th>Used At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenBody">
+                            <tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: GPC FILES (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="gpc">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">GPC File Management</h2>
+                        <p class="text-slate-500">View encrypted login files (.gpc) and upload export files. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Generate Login File (Read-only) -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">download</span> Generate Login File
+                        </h4>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">User</label>
+                            <select class="form-select rounded-lg bg-slate-50" id="gpcUserSelect" disabled>
+                                <option value="">Select User</option>
+                            </select>
+                            <p class="text-xs text-slate-400 mt-1">Contact admin to generate .gpc files</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Expiry Days</label>
+                            <input type="number" class="form-control rounded-lg bg-slate-50" id="gpcExpiryDays" value="7" disabled>
+                        </div>
+                        <div class="mb-3 form-check flex items-center gap-2">
+                            <input type="checkbox" class="form-check-input h-5 w-5" id="gpcShowStock" checked disabled>
+                            <label class="form-check-label text-sm font-medium text-slate-700">Show Stock Quantities</label>
+                        </div>
+                        <button type="button" class="btn-brand w-100 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <span class="material-symbols-outlined">file_download</span> Generate .gpc
+                        </button>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Only administrators can generate GPC files</p>
+                    </div>
+                    <!-- Upload Export File (Read-only) -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">upload</span> Upload Export File
+                        </h4>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select .gpc file</label>
+                            <input type="file" class="form-control rounded-lg bg-slate-50" disabled>
+                            <p class="text-xs text-slate-400 mt-1">Only administrators can upload GPC files</p>
+                        </div>
+                        <button type="button" class="btn-brand w-100 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <span class="material-symbols-outlined">cloud_upload</span> Upload & Process
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SETTINGS TAB (View Only, extended with token config) -->
+            <!-- ============================================================ -->
+            <div class="tab-content-item hidden" id="settings">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">System Preferences</h2>
+                    <p class="text-slate-500">View global parameters and localization settings.</p>
+                </div>
+                <div class="glass-card p-8 bg-white max-w-4xl">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Currency Symbol</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="currencyInput" readonly type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Global Tax Rate (%)</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="taxRateInput" readonly step="0.01" type="number"/>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Tax Identifier Label</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="taxLabelInput" readonly type="text"/>
+                        </div>
+                        <!-- Auto-approve settings – read-only for storekeeper -->
+                        <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                            <h5 class="font-bold text-slate-800 mb-4">Auto‑Approval Settings (Read‑Only)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" class="form-check-input h-5 w-5" id="autoApproveEnabled" disabled>
+                                    <label class="text-sm font-bold text-slate-700">Enable Auto‑Approval</label>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Threshold (max quantity per request)</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveThreshold" value="10" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Time Window (days)</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveTimeWindow" value="1" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Max Total per Window</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveMaxTotal" value="20" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW Token Configuration (Read-only) -->
+                        <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                            <h5 class="font-bold text-slate-800 mb-4">Cipher Token Configuration (Read‑Only)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Max Token Cap</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="maxTokenCap" value="15" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Renewal Threshold</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="tokenRenewalThreshold" value="2" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Default Expiry Days</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="defaultExpiryDays" value="7" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-slate-100 flex justify-end">
+                        <span class="text-sm text-slate-400">Read‑only</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /tab-container -->
+    </div>
+</main>
+
+<!-- ========== MODALS ========== -->
+
+<!-- Request Transfer Modal -->
+<div class="modal fade" id="requestTransferModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Request Inter‑Store Transfer</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="requestTransferForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Sender Warehouse</label>
+                            <select class="form-select rounded-lg" id="transferSenderWarehouse" required>
+                                <option value="">Select Sender</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Receiver Warehouse (Yours)</label>
+                            <select class="form-select rounded-lg" id="transferReceiverWarehouse" required>
+                                <option value="">Select Receiver</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <h6 class="font-bold text-slate-700">Items</h6>
+                    <div id="transferItemsContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control rounded-lg" placeholder="Quantity" name="transferQty" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addTransferItemRow()">+ Add Item</button>
+                    <hr class="my-4">
+                    <button type="submit" class="btn-brand w-100">Submit Transfer Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== SCRIPTS ========== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================================
+    // SIDEBAR & TAB SYSTEM
+    // ============================================================
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+    }
+
+    document.querySelectorAll('[data-tab-trigger]').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = trigger.getAttribute('data-tab-trigger');
+            
+            document.querySelectorAll('.nav-link-custom').forEach(l => l.classList.remove('active'));
+            trigger.classList.add('active');
+            
+            document.querySelectorAll('.tab-content-item').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('block');
+            });
+            const content = document.getElementById(target);
+            content.classList.remove('hidden');
+            content.classList.add('block');
+
+            // Close mobile sidebar on selection
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            // Load data when tab is opened
+            if (target === 'dashboard') {
+                populateWarehouseDropdowns();
+                fetchStorekeeperDashboard();
+            } else if (target === 'inventory_search') {
+                populateWarehouseDropdowns();
+            } else if (target === 'transfers') {
+                populateWarehouseDropdowns();
+                fetchTransfers();
+            } else if (target === 'picking') {
+                fetchPickOrders();
+            } else if (target === 'packing') {
+                fetchPackOrders();
+            } else if (target === 'dispatch') {
+                fetchDispatchOrders();
+            } else if (target === 'returns') {
+                fetchReturns();
+            } else if (target === 'requeststock') {
+                loadRequestProducts();
+                fetchStockRequests();
+            } else if (target === 'deliveries') {
+                fetchDeliveriesStatus();
+            }
+            if (target === 'devices') fetchApiKeys();
+            if (target === 'tokens') populateTokenUserDropdown();
+        });
+    });
+
+    // ============================================================
+    // ROBUST API HELPER (with detailed error extraction)
+    // ============================================================
+    function apiFetch(url, options = {}) {
+        options.credentials = 'same-origin';
+        if (!options.headers) options.headers = {};
+        if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(options.body);
+        }
+        return fetch(url, options)
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return Promise.reject(new Error('Unauthorized'));
+                }
+                if (response.status === 403) {
+                    return Promise.reject(new Error('Forbidden'));
+                }
+                return response.json().catch(() => {
+                    return response.text().then(text => {
+                        throw new Error(text || `HTTP ${response.status}`);
+                    });
+                }).then(data => {
+                    if (!response.ok) {
+                        const errorMsg = data.error || data.message || JSON.stringify(data) || 'Unknown error';
+                        throw new Error(errorMsg);
+                    }
+                    return data;
+                });
+            });
+    }
+
+    // ============================================================
+    // WAREHOUSE DROPDOWNS (shared) with auto-select and error handling
+    // ============================================================
+    function populateWarehouseDropdowns() {
+        const dashSel = document.getElementById('dashWarehouseSelect');
+        dashSel.innerHTML = '<option value="">Loading...</option>';
+        
+        fetch('/api/warehouses', { credentials: 'same-origin' })
+            .then(r => {
+                if (!r.ok) throw new Error('Failed to fetch warehouses');
+                return r.json();
+            })
+            .then(data => {
+                const warehouses = data.warehouses || [];
+                const optionHtml = '<option value="">Select Warehouse</option>' +
+                    warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+                
+                document.getElementById('dashWarehouseSelect').innerHTML = optionHtml;
+                document.getElementById('searchWarehouseSelect').innerHTML = optionHtml;
+                document.getElementById('transferSenderWarehouse').innerHTML = optionHtml;
+                document.getElementById('transferReceiverWarehouse').innerHTML = optionHtml;
+                document.getElementById('scanReceiveWarehouseSelect').innerHTML = optionHtml;
+                document.getElementById('pickWarehouseFilter').innerHTML = '<option value="">All Warehouses</option>' +
+                    warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+                document.getElementById('packWarehouseFilter').innerHTML = '<option value="">All Warehouses</option>' +
+                    warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+                document.getElementById('requestWarehouse').innerHTML = optionHtml;
+
+                if (warehouses.length > 0) {
+                    dashSel.value = warehouses[0].id;
+                    fetchStorekeeperDashboard();
+                } else {
+                    document.getElementById('dashTotalStock').textContent = 'No warehouse';
+                    document.getElementById('dashPendingApprovals').textContent = '—';
+                    document.getElementById('dashIssuedToday').textContent = '—';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading warehouses:', err);
+                document.getElementById('dashWarehouseSelect').innerHTML = `<option value="">Error loading warehouses</option>`;
+                document.getElementById('dashTotalStock').textContent = 'Error';
+                document.getElementById('dashPendingApprovals').textContent = 'Error';
+                document.getElementById('dashIssuedToday').textContent = 'Error';
+            });
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    function fetchStorekeeperDashboard() {
+        let warehouseId = document.getElementById('dashWarehouseSelect').value;
+        if (!warehouseId) {
+            const select = document.getElementById('dashWarehouseSelect');
+            if (select.options.length > 1) {
+                warehouseId = select.options[1].value;
+                if (warehouseId) {
+                    select.value = warehouseId;
+                } else {
+                    document.getElementById('dashTotalStock').textContent = 'No warehouse';
+                    document.getElementById('dashPendingApprovals').textContent = '—';
+                    document.getElementById('dashIssuedToday').textContent = '—';
+                    return;
+                }
+            } else {
+                document.getElementById('dashTotalStock').textContent = 'No warehouse';
+                document.getElementById('dashPendingApprovals').textContent = '—';
+                document.getElementById('dashIssuedToday').textContent = '—';
+                return;
+            }
+        }
+
+        const totalEl = document.getElementById('dashTotalStock');
+        const pendingEl = document.getElementById('dashPendingApprovals');
+        const issuedEl = document.getElementById('dashIssuedToday');
+        totalEl.textContent = 'Loading...';
+        pendingEl.textContent = 'Loading...';
+        issuedEl.textContent = 'Loading...';
+
+        apiFetch(`/api/storekeeper/dashboard?warehouse_id=${warehouseId}`)
+            .then(data => {
+                totalEl.textContent = data.total_stock_count;
+                pendingEl.textContent = data.pending_approvals_count;
+                issuedEl.textContent = data.today_issued_stock_count;
+            })
+            .catch(err => {
+                console.error('Dashboard API error:', err);
+                const errorMsg = err.message || 'Error';
+                totalEl.textContent = errorMsg;
+                pendingEl.textContent = errorMsg;
+                issuedEl.textContent = errorMsg;
+            });
+    }
+
+    // ============================================================
+    // SEARCH INVENTORY
+    // ============================================================
+    function searchInventory() {
+        const warehouseId = document.getElementById('searchWarehouseSelect').value;
+        const query = document.getElementById('searchQuery').value.trim();
+        if (!warehouseId) {
+            alert('Please select a warehouse.');
+            return;
+        }
+        const overlay = document.getElementById('searchLoadingOverlay');
+        const tbody = document.getElementById('searchResultsBody');
+        overlay.classList.add('active');
+
+        let url = `/api/storekeeper/inventory/search?warehouse_id=${warehouseId}`;
+        if (query) url += `&q=${encodeURIComponent(query)}`;
+
+        fetch(url, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="5">No products found.</td></tr>';
+                } else {
+                    let html = '';
+                    data.items.forEach(item => {
+                        html += `<tr>
+                            <td>${item.product_id}</td>
+                            <td class="font-bold">${item.product_name}</td>
+                            <td>${item.sku || '-'}</td>
+                            <td>${item.barcode || '-'}</td>
+                            <td>${item.quantity_in_hand}</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                }
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                tbody.innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="5">Failed to search inventory.</td></tr>';
+            })
+            .finally(() => overlay.classList.remove('active'));
+    }
+
+    // ============================================================
+    // TRANSFERS – List & Actions
+    // ============================================================
+    function fetchTransfers() {
+        const overlay = document.getElementById('transfersLoadingOverlay');
+        const tbody = document.getElementById('transfersBody');
+        overlay.classList.add('active');
+
+        fetch('/api/stock-transfers', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.transfers.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No transfers found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.transfers.forEach(t => {
+                    const statusBadge = getTransferStatusBadge(t.status);
+                    const barcodeDisplay = t.transfer_barcode || '—';
+                    const itemsSummary = t.items.map(i => `${i.product_name} (${i.requested_qty})`).join(', ');
+                    html += `<tr>
+                        <td>#${t.id}</td>
+                        <td>${t.sender_warehouse_name || 'N/A'}</td>
+                        <td>${t.receiver_warehouse_name || 'N/A'}</td>
+                        <td class="font-mono text-sm">${barcodeDisplay}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-xs truncate max-w-[150px]">${itemsSummary}</td>
+                        <td>
+                            ${t.status === 'APPROVED_BY_ADMIN' || t.status === 'PENDING_SENDER' ? `<button class="btn btn-sm btn-primary" onclick="dispatchTransfer(${t.id})">Dispatch</button>` : ''}
+                            ${t.status === 'DISPATCHED' ? `<span class="text-green-600 text-sm">Awaiting scan</span>` : ''}
+                            ${t.status === 'RECEIVED' ? `<span class="text-green-600 text-sm">✅ Received</span>` : ''}
+                        </td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Transfers error:', err);
+                tbody.innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load transfers.</td></tr>';
+            })
+            .finally(() => overlay.classList.remove('active'));
+    }
+
+    function getTransferStatusBadge(status) {
+        const map = {
+            'PENDING_ADMIN': '<span class="badge-transfer-pending-admin px-2 py-1 rounded text-[10px] font-extrabold uppercase">Pending Admin</span>',
+            'PENDING_SENDER': '<span class="badge-transfer-pending-sender px-2 py-1 rounded text-[10px] font-extrabold uppercase">Pending Sender</span>',
+            'APPROVED_BY_ADMIN': '<span class="badge-request-approved px-2 py-1 rounded text-[10px] font-extrabold uppercase">Approved</span>',
+            'DISPATCHED': '<span class="badge-transfer-dispatched px-2 py-1 rounded text-[10px] font-extrabold uppercase">Dispatched</span>',
+            'RECEIVED': '<span class="badge-transfer-received px-2 py-1 rounded text-[10px] font-extrabold uppercase">Received</span>',
+            'REJECTED': '<span class="badge-request-rejected px-2 py-1 rounded text-[10px] font-extrabold uppercase">Rejected</span>'
+        };
+        return map[status] || status;
+    }
+
+    // ============================================================
+    // REQUEST TRANSFER
+    // ============================================================
+    document.getElementById('requestTransferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const sender = document.getElementById('transferSenderWarehouse').value;
+        const receiver = document.getElementById('transferReceiverWarehouse').value;
+        if (!sender || !receiver) {
+            alert('Please select both sender and receiver warehouses.');
+            return;
+        }
+        if (sender === receiver) {
+            alert('Sender and receiver must be different.');
+            return;
+        }
+
+        const items = [];
+        const rows = document.querySelectorAll('#transferItemsContainer .row');
+        rows.forEach(row => {
+            const productId = row.querySelector('[name="transferProductId"]').value;
+            const qty = row.querySelector('[name="transferQty"]').value;
+            if (productId && qty > 0) {
+                items.push({ product_id: parseInt(productId), quantity: parseInt(qty) });
+            }
+        });
+        if (items.length === 0) {
+            alert('Add at least one product.');
+            return;
+        }
+
+        const payload = {
+            sender_warehouse_id: parseInt(sender),
+            receiver_warehouse_id: parseInt(receiver),
+            items: items
+        };
+
+        apiFetch('/api/storekeeper/transfers/request', { method: 'POST', body: payload })
+            .then(res => {
+                alert(res.message || 'Transfer request sent.');
+                bootstrap.Modal.getInstance(document.getElementById('requestTransferModal')).hide();
+                fetchTransfers();
+                this.reset();
+                document.getElementById('transferItemsContainer').innerHTML = `
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId" required>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control rounded-lg" placeholder="Quantity" name="transferQty" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    function addTransferItemRow() {
+        const container = document.getElementById('transferItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2';
+        row.innerHTML = `
+            <div class="col-md-6">
+                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId" required>
+            </div>
+            <div class="col-md-4">
+                <input type="number" class="form-control rounded-lg" placeholder="Quantity" name="transferQty" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    // ============================================================
+    // DISPATCH TRANSFER
+    // ============================================================
+    function dispatchTransfer(transferId) {
+        if (!confirm(`Dispatch transfer #${transferId}? This will generate a barcode for physical tagging.`)) return;
+        apiFetch(`/api/storekeeper/transfers/${transferId}/dispatch`, { method: 'POST' })
+            .then(res => {
+                alert(res.message + '\nBarcode: ' + res.transfer_barcode);
+                fetchTransfers();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // SCAN RECEIVE
+    // ============================================================
+    function scanReceive() {
+        const barcode = document.getElementById('scanBarcodeInput').value.trim();
+        const warehouseId = document.getElementById('scanReceiveWarehouseSelect').value;
+        if (!barcode) {
+            alert('Please enter or scan a barcode.');
+            return;
+        }
+        if (!warehouseId) {
+            alert('Please select your warehouse.');
+            return;
+        }
+
+        const payload = {
+            barcode: barcode,
+            receiver_warehouse_id: parseInt(warehouseId)
+        };
+
+        apiFetch('/api/storekeeper/transfers/scan-receive', { method: 'POST', body: payload })
+            .then(res => {
+                document.getElementById('scanResult').style.display = 'block';
+                document.getElementById('scanResult').innerHTML = `<div class="bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl">${res.message}</div>`;
+                fetchTransfers();
+                document.getElementById('scanBarcodeInput').value = '';
+            })
+            .catch(err => {
+                document.getElementById('scanResult').style.display = 'block';
+                document.getElementById('scanResult').innerHTML = `<div class="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl">Error: ${err}</div>`;
+            });
+    }
+
+    // ============================================================
+    // PICKING, PACKING, DISPATCH, RETURNS, REQUEST STOCK, DELIVERY TRACKING
+    // ============================================================
+    // ----- PICKING -----
+    let currentPickOrderId = null;
+
+    function fetchPickOrders() {
+        const warehouseFilter = document.getElementById('pickWarehouseFilter').value;
+        let url = '/dashboard/api/orders/approved';
+        if (warehouseFilter) url += `?warehouse_id=${warehouseFilter}`;
+
+        const fetchFn = () => fetch(url, { credentials: 'same-origin' }).then(r => {
+            if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+            return r.json();
+        }).then(data => {
+            let rows = '';
+            if (data.orders.length === 0) {
+                rows = '<tr><td class="text-center py-8" colspan="6">No orders ready for picking.</td></tr>';
+            } else {
+                data.orders.forEach(o => {
+                    const statusBadge = getStatusBadge(o.status);
+                    const warehouseName = o.warehouse_name || (o.warehouse_id ? '#'+o.warehouse_id : 'Not assigned');
+                    rows += `
+                        <tr>
+                            <td class="font-bold text-slate-400">#${o.id}</td>
+                            <td class="font-bold product-name">${o.customer_name}</td>
+                            <td>${statusBadge}</td>
+                            <td class="address">${warehouseName}</td>
+                            <td>${o.items_count}</td>
+                            <td><button class="btn-brand !py-1 text-sm" onclick="startPicking(${o.id})">Pick</button></td>
+                        </tr>
+                    `;
+                });
+            }
+            return rows;
+        });
+
+        updateTableWithOverlay('pickOrdersBody', 'pickLoadingOverlay', fetchFn, 'No orders ready for picking.');
+    }
+
+    function getStatusBadge(status) {
+        const map = {
+            'approved': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-approved">Approved</span>',
+            'picked': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-picked">Picked</span>',
+            'packed': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-packed">Packed</span>',
+            'ready': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-ready">Ready</span>',
+            'dispatched': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-dispatched">Dispatched</span>',
+            'pending': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-pending">Pending</span>',
+            'in_transit': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-in_transit">In Transit</span>',
+            'delivered': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-delivered">Delivered</span>',
+            'closed': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-closed">Closed</span>',
+            'rejected': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-rejected">Rejected</span>'
+        };
+        return map[status] || status;
+    }
+
+    function startPicking(orderId) {
+        currentPickOrderId = orderId;
+        document.getElementById('pickOrderId').textContent = orderId;
+        fetch(`/api/orders/${orderId}`, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(order => {
+                document.getElementById('pickWarehouseName').textContent = order.warehouse_name || 'Not assigned';
+            })
+            .catch(err => console.error('Error loading warehouse:', err));
+        document.getElementById('pickDetail').style.display = 'block';
+        document.getElementById('scanBarcode').value = '';
+        apiFetch(`/api/orders/${orderId}/pick-list`)
+            .then(data => {
+                const tbody = document.getElementById('pickItemsBody');
+                let rows = '';
+                data.items.forEach(item => {
+                    rows += `
+                        <tr>
+                            <td class="product-name">${item.product_name}</td>
+                            <td class="barcode">${item.barcode || '-'}</td>
+                            <td>${item.ordered_qty}</td>
+                            <td>${item.picked_qty}</td>
+                            <td>${item.remaining}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = rows;
+            })
+            .catch(err => alert('Error loading pick list: ' + err));
+    }
+
+    function scanPick() {
+        const barcode = document.getElementById('scanBarcode').value.trim();
+        if (!barcode) {
+            alert('Please scan or enter a barcode.');
+            return;
+        }
+        apiFetch(`/api/products/search?barcode=${barcode}`)
+            .then(data => {
+                if (!data.products || data.products.length === 0) {
+                    alert('Product not found.');
+                    return;
+                }
+                const product = data.products[0];
+                return apiFetch(`/api/orders/${currentPickOrderId}/pick-item`, {
+                    method: 'POST',
+                    body: { product_id: product.id, scanned_qty: 1 }
+                });
+            })
+            .then(res => {
+                if (res && res.status === 'success') {
+                    alert(res.message);
+                    startPicking(currentPickOrderId);
+                    fetchPickOrders();
+                } else if (res && res.error) {
+                    alert('Error: ' + res.error);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        document.getElementById('scanBarcode').value = '';
+    }
+
+    function completePicking() {
+        apiFetch(`/api/orders/${currentPickOrderId}/pick-list`)
+            .then(data => {
+                let remaining = data.items.reduce((sum, i) => sum + i.remaining, 0);
+                if (remaining === 0) {
+                    alert('✅ All items picked! You can now pack this order.');
+                } else {
+                    alert(`⚠️ Still ${remaining} items remaining.`);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function closePickDetail() {
+        document.getElementById('pickDetail').style.display = 'none';
+        currentPickOrderId = null;
+    }
+
+    // ----- PACKING -----
+    let currentPackOrderId = null;
+
+    function fetchPackOrders() {
+        const warehouseFilter = document.getElementById('packWarehouseFilter').value;
+        let url = '/dashboard/api/orders/picked';
+        if (warehouseFilter) url += `?warehouse_id=${warehouseFilter}`;
+
+        const fetchFn = () => fetch(url, { credentials: 'same-origin' }).then(r => {
+            if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+            return r.json();
+        }).then(data => {
+            let rows = '';
+            if (data.orders.length === 0) {
+                rows = '<tr><td class="text-center py-8" colspan="6">No orders ready for packing.</td></tr>';
+            } else {
+                data.orders.forEach(o => {
+                    const warehouseName = o.warehouse_name || (o.warehouse_id ? '#'+o.warehouse_id : 'Not assigned');
+                    rows += `
+                        <tr>
+                            <td class="font-bold text-slate-400">#${o.id}</td>
+                            <td class="font-bold product-name">${o.customer_name}</td>
+                            <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-picked">Picked</span></td>
+                            <td class="address">${warehouseName}</td>
+                            <td>${o.items.length}</td>
+                            <td><button class="btn-brand !py-1 text-sm" onclick="startPacking(${o.id})">Pack</button></td>
+                        </tr>
+                    `;
+                });
+            }
+            return rows;
+        });
+
+        updateTableWithOverlay('packOrdersBody', 'packLoadingOverlay', fetchFn, 'No orders ready for packing.');
+    }
+
+    function startPacking(orderId) {
+        currentPackOrderId = orderId;
+        document.getElementById('packOrderId').textContent = orderId;
+        fetch(`/api/orders/${orderId}`, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(order => {
+                document.getElementById('packWarehouseName').textContent = order.warehouse_name || 'Not assigned';
+            })
+            .catch(err => console.error('Error loading warehouse:', err));
+        document.getElementById('packDetail').style.display = 'block';
+        document.getElementById('packResult').style.display = 'none';
+    }
+
+    function packOrder() {
+        if (!currentPackOrderId) return;
+        apiFetch(`/api/orders/${currentPackOrderId}/pack`, { method: 'POST' })
+            .then(res => {
+                if (res.status === 'success') {
+                    document.getElementById('packBarcode').textContent = res.package_barcode;
+                    document.getElementById('packQR').textContent = res.package_qr;
+                    document.getElementById('packResult').style.display = 'block';
+                    alert('✅ Order packed successfully!');
+                    fetchPackOrders();
+                    fetchPickOrders();
+                } else {
+                    alert('Error: ' + (res.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function printLabel() {
+        const orderId = currentPackOrderId;
+        window.open(`/dashboard/order/${orderId}/label`, '_blank');
+    }
+
+    function closePackDetail() {
+        document.getElementById('packDetail').style.display = 'none';
+        currentPackOrderId = null;
+    }
+
+    // ----- DISPATCH -----
+    function fetchDispatchOrders() {
+        const fetchFn = () => fetch('/api/dispatch/pending', { credentials: 'same-origin' }).then(r => {
+            if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+            return r.json();
+        }).then(data => {
+            let rows = '';
+            if (data.orders.length === 0) {
+                rows = '<tr><td class="text-center py-8" colspan="7">No orders ready for dispatch.</td></tr>';
+            } else {
+                data.orders.forEach(o => {
+                    const warehouseName = o.warehouse_name || (o.warehouse_id ? '#'+o.warehouse_id : 'Not assigned');
+                    rows += `
+                        <tr>
+                            <td class="font-bold text-slate-400">#${o.id}</td>
+                            <td class="font-bold product-name">${o.customer_name}</td>
+                            <td class="barcode">${o.package_barcode || 'N/A'}</td>
+                            <td class="address">${warehouseName}</td>
+                            <td>${o.items_count}</td>
+                            <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-ready">Ready</span></td>
+                            <td>
+                                <button class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold" onclick="dispatchSingleScan(${o.id}, 'storekeeper')">Storekeeper</button>
+                                <button class="px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold" onclick="dispatchSingleScan(${o.id}, 'delivery')">Delivery</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            return rows;
+        });
+
+        updateTableWithOverlay('dispatchBody', 'dispatchLoadingOverlay', fetchFn, 'No orders ready for dispatch.');
+    }
+
+    function dispatchSingleScan(orderId, scanType) {
+        if (!confirm(`Perform ${scanType} scan for order #${orderId}?`)) return;
+        apiFetch('/api/dispatch/scan', {
+            method: 'POST',
+            body: { order_id: orderId, scan_type: scanType }
+        })
+        .then(res => {
+            alert(res.message);
+            fetchDispatchOrders();
+        })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    function dispatchScan(scanType) {
+        const orderId = prompt(`Enter Order ID for ${scanType} scan:`);
+        if (!orderId) return;
+        dispatchSingleScan(parseInt(orderId), scanType);
+    }
+
+    // ----- RETURNS -----
+    function fetchReturns() {
+        const fetchFn = () => fetch('/dashboard/api/returns', { credentials: 'same-origin' })
+            .then(r => {
+                if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+                if (r.status === 403) return { returns: [] };
+                return r.json();
+            })
+            .then(data => {
+                let rows = '';
+                if (!data.returns || data.returns.length === 0) {
+                    rows = '<tr><td class="text-center py-8" colspan="8">No returns found.</td></tr>';
+                } else {
+                    data.returns.forEach(r => {
+                        const statusBadge = r.status === 'pending' ? '<span class="badge-pending px-2 py-1 rounded text-[10px] font-extrabold uppercase">Pending</span>' :
+                                        r.status === 'approved' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-extrabold uppercase">Approved</span>' :
+                                        '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-extrabold uppercase">Rejected</span>';
+                        rows += `
+                            <tr>
+                                <td>#${r.id}</td>
+                                <td>${r.order_id ? '#'+r.order_id : 'N/A'}</td>
+                                <td>${r.product_id}</td>
+                                <td>${r.return_type}</td>
+                                <td>${r.quantity}</td>
+                                <td class="product-name">${r.reason || '-'}</td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    ${r.status === 'pending' ? `
+                                        <button class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold" onclick="approveReturn(${r.id})">Approve</button>
+                                        <button class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold" onclick="rejectReturn(${r.id})">Reject</button>
+                                    ` : '-'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                return rows;
+            });
+
+        updateTableWithOverlay('returnsBody', 'returnsLoadingOverlay', fetchFn, 'No returns found.');
+    }
+
+    function approveReturn(returnId) {
+        if (!confirm(`Approve return #${returnId}?`)) return;
+        apiFetch(`/api/returns/${returnId}/approve`, { method: 'PUT' })
+            .then(res => {
+                alert(res.message);
+                fetchReturns();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function rejectReturn(returnId) {
+        const reason = prompt('Enter rejection reason:');
+        if (reason === null) return;
+        apiFetch(`/api/returns/${returnId}/reject`, {
+            method: 'PUT',
+            body: { reason: reason || 'No reason provided' }
+        })
+        .then(res => {
+            alert(res.message);
+            fetchReturns();
+        })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    // ----- REQUEST STOCK -----
+    let selectedFile = null;
+
+    document.getElementById('requestPoFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('poPreviewImage').src = ev.target.result;
+                document.getElementById('poPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            removePoFile();
+        }
+    });
+
+    function removePoFile() {
+        document.getElementById('requestPoFile').value = '';
+        document.getElementById('poPreview').style.display = 'none';
+        document.getElementById('poPreviewImage').src = '';
+        selectedFile = null;
+        document.getElementById('requestAttachmentUrl').value = '';
+    }
+
+    function loadRequestProducts() {
+        fetch('/api/products/search?limit=500', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                const select = document.getElementById('requestProduct');
+                select.innerHTML = '<option value="">Select Product</option>';
+                data.products.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.name} (${p.sku || 'N/A'})</option>`;
+                });
+            })
+            .catch(err => console.error('Error loading products:', err));
+    }
+
+    document.getElementById('requestStockForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const productId = document.getElementById('requestProduct').value;
+        const warehouseId = document.getElementById('requestWarehouse').value;
+        const quantity = parseInt(document.getElementById('requestQuantity').value);
+        const notes = document.getElementById('requestNotes').value;
+        const poNumber = document.getElementById('requestPoNumber').value.trim();
+        const poDate = document.getElementById('requestPoDate').value;
+        const orderedQty = document.getElementById('requestOrderedQty').value;
+
+        if (!productId || !warehouseId || !quantity || quantity < 1) {
+            alert('Please fill all required fields with valid values.');
+            return;
+        }
+
+        function submitStockRequest() {
+            const payload = {
+                product_id: parseInt(productId),
+                warehouse_id: parseInt(warehouseId),
+                quantity: quantity,
+                notes: notes,
+                po_number: poNumber || null,
+                po_date: poDate || null,
+                ordered_qty: orderedQty ? parseInt(orderedQty) : null,
+                attachment_url: document.getElementById('requestAttachmentUrl').value || null
+            };
+
+            apiFetch('/api/inventory/request-add', {
+                method: 'POST',
+                body: payload
+            })
+            .then(res => {
+                if (res.error) {
+                    alert('Error: ' + res.error);
+                    return;
+                }
+                if (res.status === 'success' || res.auto_approved !== undefined) {
+                    alert(res.message);
+                    if (res.auto_approved) {
+                        alert('✅ Request was auto‑approved and stock has been added.');
+                    } else {
+                        alert('⏳ Request submitted. Waiting for admin approval.');
+                    }
+                    document.getElementById('requestStockForm').reset();
+                    removePoFile();
+                    document.getElementById('requestAttachmentUrl').value = '';
+                    fetchStockRequests();
+                } else {
+                    alert('Error: ' + (res.error || 'Unknown error occurred'));
+                }
+            })
+            .catch(err => {
+                console.error('Stock request error:', err);
+                alert('Error: ' + err.message);
+            });
+        }
+
+        if (selectedFile) {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            fetch('/api/inventory/upload-po', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('requestAttachmentUrl').value = data.url;
+                    submitStockRequest();
+                } else {
+                    alert('Failed to upload PO slip: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('Error uploading file: ' + (err.message || err));
+            });
+        } else {
+            submitStockRequest();
+        }
+    });
+
+    function fetchStockRequests() {
+        const fetchFn = () => fetch('/api/inventory-transactions?limit=50', { credentials: 'same-origin' })
+            .then(r => {
+                if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+                if (r.status === 403) return { transactions: [] };
+                return r.json();
+            })
+            .then(data => {
+                let rows = '';
+                if (!data.transactions || data.transactions.length === 0) {
+                    rows = '<tr><td class="text-center py-8" colspan="13">No requests found.</td></tr>';
+                } else {
+                    data.transactions.forEach(t => {
+                        let statusBadge = '';
+                        if (t.status === 'pending') statusBadge = '<span class="badge-request-pending px-2 py-1 rounded text-[10px] font-extrabold uppercase">Pending</span>';
+                        else if (t.status === 'approved') statusBadge = '<span class="badge-request-approved px-2 py-1 rounded text-[10px] font-extrabold uppercase">Approved</span>';
+                        else if (t.status === 'rejected') statusBadge = '<span class="badge-request-rejected px-2 py-1 rounded text-[10px] font-extrabold uppercase">Rejected</span>';
+                        else statusBadge = t.status;
+
+                        let attachmentHtml = '-';
+                        if (t.attachment_url) {
+                            attachmentHtml = `<a href="${t.attachment_url}" target="_blank" class="text-blue-600 underline">View</a>`;
+                        }
+
+                        rows += `
+                            <tr>
+                                <td>#${t.id}</td>
+                                <td>${t.product_name}</td>
+                                <td>${t.warehouse_name}</td>
+                                <td>${t.quantity}</td>
+                                <td>${t.po_number || '-'}</td>
+                                <td>${t.po_date ? new Date(t.po_date).toLocaleDateString() : '-'}</td>
+                                <td>${t.ordered_qty || '-'}</td>
+                                <td>${attachmentHtml}</td>
+                                <td>${t.before_qty !== null && t.before_qty !== undefined ? t.before_qty : '-'}</td>
+                                <td>${t.after_qty !== null && t.after_qty !== undefined ? t.after_qty : '-'}</td>
+                                <td>${statusBadge}</td>
+                                <td class="text-xs">${t.notes || '-'}</td>
+                                <td class="text-xs">${new Date(t.created_at).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                return rows;
+            });
+
+        updateTableWithOverlay('stockRequestsBody', 'stockRequestsLoadingOverlay', fetchFn, 'No requests found.');
+    }
+
+    // ----- DELIVERY TRACKING -----
+    function fetchDeliveriesStatus() {
+        const fetchFn = () => fetch('/dashboard/api/deliveries', { credentials: 'same-origin' }).then(r => {
+            if (r.status === 401) { window.location.href = '/login'; return Promise.reject('Unauthorized'); }
+            return r.json();
+        }).then(data => {
+            let pending = 0, inTransit = 0, delivered = 0;
+            data.deliveries.forEach(d => {
+                if (d.status === 'pending') pending++;
+                else if (d.status === 'in_transit') inTransit++;
+                else if (d.status === 'delivered') delivered++;
+            });
+            document.getElementById('deliveryPending').textContent = pending;
+            document.getElementById('deliveryInTransit').textContent = inTransit;
+            document.getElementById('deliveryDelivered').textContent = delivered;
+
+            let rows = '';
+            if (data.deliveries.length === 0) {
+                rows = '<tr><td class="text-center py-8" colspan="6">No deliveries found.</td></tr>';
+            } else {
+                data.deliveries.forEach(d => {
+                    const statusBadge = getStatusBadge(d.status);
+                    rows += `
+                        <tr>
+                            <td class="font-bold text-slate-400">#${d.order_id}</td>
+                            <td class="font-bold product-name">${d.customer_name || 'N/A'}</td>
+                            <td>${d.assigned_to || 'Unknown'}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-slate-500">${d.scheduled_date ? new Date(d.scheduled_date).toLocaleDateString() : 'N/A'}</td>
+                            <td class="text-slate-500">${d.actual_delivery_date ? new Date(d.actual_delivery_date).toLocaleString() : 'Not yet'}</td>
+                        </tr>
+                    `;
+                });
+            }
+            return rows;
+        });
+
+        updateTableWithOverlay('deliveriesStatusBody', 'deliveriesLoadingOverlay', fetchFn, 'No deliveries found.');
+    }
+
+    // ----- Helper for tables with loading overlay -----
+    function updateTableWithOverlay(tbodyId, overlayId, fetchFn, emptyMessage) {
+        const overlay = document.getElementById(overlayId);
+        const tbody = document.getElementById(tbodyId);
+        if (!overlay || !tbody) return;
+
+        overlay.classList.add('active');
+        fetchFn()
+            .then(rowsHtml => {
+                tbody.innerHTML = rowsHtml || `<tr><td class="text-center py-8" colspan="10">${emptyMessage || 'No data found.'}</td></tr>`;
+            })
+            .catch(err => {
+                console.error('Error updating table:', err);
+                tbody.innerHTML = `<tr><td class="text-center py-8 text-red-500" colspan="10">Failed to load data.</td></tr>`;
+            })
+            .finally(() => {
+                overlay.classList.remove('active');
+            });
+    }
+
+    // ============================================================
+    // NEW: DEVICE MANAGEMENT (View Only)
+    // ============================================================
+    function fetchApiKeys() {
+        apiFetch('/dashboard/api/admin/api-keys')
+            .then(data => {
+                const tbody = document.getElementById('apiKeysBody');
+                if (!data.api_keys || data.api_keys.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No API keys found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.api_keys.forEach(k => {
+                    const statusBadge = k.status === 'ACTIVE' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>' :
+                                       k.status === 'REVOKED' ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Revoked</span>' :
+                                       '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Expired</span>';
+                    html += `
+                        <tr>
+                            <td>${k.id}</td>
+                            <td class="font-mono text-sm">${k.device_uuid}</td>
+                            <td>${k.username || 'Unknown'}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-xs">${new Date(k.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : '-'}</td>
+                            <td class="text-xs">${k.expires_at ? new Date(k.expires_at).toLocaleDateString() : 'Never'}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching API keys:', err);
+                document.getElementById('apiKeysBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load API keys.</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // NEW: TOKEN POOL VIEWER (View Only)
+    // ============================================================
+    function populateTokenUserDropdown() {
+        apiFetch('/dashboard/api/users')
+            .then(data => {
+                const users = data.data || [];
+                const select = document.getElementById('tokenUserSelect');
+                const options = '<option value="">Select User</option>' +
+                    users.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
+                select.innerHTML = options;
+            })
+            .catch(err => console.error('Error loading users:', err));
+    }
+
+    function fetchTokenPool() {
+        const userId = document.getElementById('tokenUserSelect').value;
+        if (!userId) {
+            document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>';
+            document.getElementById('tokenTotal').textContent = '-';
+            document.getElementById('tokenUnused').textContent = '-';
+            document.getElementById('tokenUsed').textContent = '-';
+            document.getElementById('tokenExpired').textContent = '-';
+            return;
+        }
+        apiFetch(`/dashboard/api/admin/tokens/${userId}`)
+            .then(data => {
+                document.getElementById('tokenTotal').textContent = data.stats.total || 0;
+                document.getElementById('tokenUnused').textContent = data.stats.unused || 0;
+                document.getElementById('tokenUsed').textContent = data.stats.used || 0;
+                document.getElementById('tokenExpired').textContent = data.stats.expired || 0;
+
+                const tbody = document.getElementById('tokenBody');
+                if (!data.tokens || data.tokens.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No tokens found for this user.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.tokens.forEach(t => {
+                    const statusBadge = t.token_status === 'UNUSED' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Unused</span>' :
+                                       t.token_status === 'USED' ? '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Used</span>' :
+                                       '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Expired</span>';
+                    html += `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td class="font-mono text-sm">${t.session_id}</td>
+                            <td class="font-mono text-sm">${t.cipher_token}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-xs">${new Date(t.expiry_timestamp).toLocaleDateString()}</td>
+                            <td class="text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${t.used_at ? new Date(t.used_at).toLocaleDateString() : '-'}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching token pool:', err);
+                document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load tokens.</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // HIDE LOADING OVERLAY
+    // ============================================================
+    let loadingCompleted = 0;
+    const totalLoadingSteps = 1;
+
+    function checkLoadingComplete() {
+        loadingCompleted++;
+        if (loadingCompleted >= totalLoadingSteps) {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+    }
+    setTimeout(function() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.classList.add('hidden');
+    }, 3000);
+
+    // ============================================================
+    // SETTINGS (View Only)
+    // ============================================================
+    window.currency = '$';
+
+    function fetchSettings() {
+        fetch('/dashboard/api/settings', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                window.currency = data.currency || '$';
+                document.getElementById('currencyInput').value = window.currency;
+                document.getElementById('taxRateInput').value = data.tax_rate || 0;
+                document.getElementById('taxLabelInput').value = data.tax_label || 'Tax';
+                document.getElementById('autoApproveEnabled').checked = data.auto_approve_enabled || false;
+                document.getElementById('autoApproveThreshold').value = data.auto_approve_threshold || 10;
+                document.getElementById('autoApproveTimeWindow').value = data.auto_approve_time_window || 1;
+                document.getElementById('autoApproveMaxTotal').value = data.auto_approve_max_total || 20;
+                // NEW token settings (read-only)
+                document.getElementById('maxTokenCap').value = data.max_token_cap || 15;
+                document.getElementById('tokenRenewalThreshold').value = data.token_renewal_threshold || 2;
+                document.getElementById('defaultExpiryDays').value = data.default_expiry_days || 7;
+            })
+            .catch(() => {});
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    window.onload = function() {
+        populateWarehouseDropdowns();
+        fetchSettings();
+        // NEW: populate dropdowns for token pool
+        populateTokenUserDropdown();
+        // If devices tab is active, load keys
+        if (window.location.hash === '#devices') fetchApiKeys();
+        // If tokens tab, populate dropdown
+        if (window.location.hash === '#tokens') populateTokenUserDropdown();
+        checkLoadingComplete();
+    };
+</script>
+</body>
+</html>

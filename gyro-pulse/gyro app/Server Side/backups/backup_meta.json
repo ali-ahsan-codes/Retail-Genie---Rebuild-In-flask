@@ -1,0 +1,706 @@
+{
+  "version": 2,
+  "next_id": 126,
+  "backups": [
+    {
+      "id": 26,
+      "timestamp": "2026-08-17T14:21:20.598402",
+      "sql_file": "./backups\\backup_0026\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 27,
+      "timestamp": "2026-08-17T14:22:52.973872",
+      "sql_file": "./backups\\backup_0027\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 28,
+      "timestamp": "2026-08-17T14:26:20.597567",
+      "sql_file": "./backups\\backup_0028\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 29,
+      "timestamp": "2026-08-17T14:27:52.980323",
+      "sql_file": "./backups\\backup_0029\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 30,
+      "timestamp": "2026-08-17T14:31:20.599597",
+      "sql_file": "./backups\\backup_0030\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 31,
+      "timestamp": "2026-08-17T14:32:52.979088",
+      "sql_file": "./backups\\backup_0031\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 32,
+      "timestamp": "2026-08-17T14:41:20.608993",
+      "sql_file": "./backups\\backup_0032\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 33,
+      "timestamp": "2026-08-17T14:46:20.600835",
+      "sql_file": "./backups\\backup_0033\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 34,
+      "timestamp": "2026-08-17T14:50:26.981281",
+      "sql_file": "./backups\\backup_0034\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 35,
+      "timestamp": "2026-08-17T14:51:20.608252",
+      "sql_file": "./backups\\backup_0035\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 36,
+      "timestamp": "2026-08-17T14:56:20.593239",
+      "sql_file": "./backups\\backup_0036\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 37,
+      "timestamp": "2026-08-17T14:58:20.394871",
+      "sql_file": "./backups\\backup_0037\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 38,
+      "timestamp": "2026-08-17T15:01:20.601835",
+      "sql_file": "./backups\\backup_0038\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 39,
+      "timestamp": "2026-08-17T15:03:20.398531",
+      "sql_file": "./backups\\backup_0039\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 40,
+      "timestamp": "2026-08-17T15:06:20.594962",
+      "sql_file": "./backups\\backup_0040\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 41,
+      "timestamp": "2026-08-17T15:08:20.394842",
+      "sql_file": "./backups\\backup_0041\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 42,
+      "timestamp": "2026-08-17T16:36:20.601522",
+      "sql_file": "./backups\\backup_0042\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 43,
+      "timestamp": "2026-08-17T16:38:20.391635",
+      "sql_file": "./backups\\backup_0043\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 44,
+      "timestamp": "2026-08-17T16:41:20.597170",
+      "sql_file": "./backups\\backup_0044\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 45,
+      "timestamp": "2026-08-17T16:43:20.389302",
+      "sql_file": "./backups\\backup_0045\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 46,
+      "timestamp": "2026-08-17T16:46:20.948730",
+      "sql_file": "./backups\\backup_0046\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 47,
+      "timestamp": "2026-08-17T16:48:20.389489",
+      "sql_file": "./backups\\backup_0047\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 48,
+      "timestamp": "2026-08-17T16:51:20.604540",
+      "sql_file": "./backups\\backup_0048\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 49,
+      "timestamp": "2026-08-17T16:53:20.389813",
+      "sql_file": "./backups\\backup_0049\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 50,
+      "timestamp": "2026-08-17T17:01:12.487537",
+      "sql_file": "./backups\\backup_0050\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 51,
+      "timestamp": "2026-08-17T17:01:14.264048",
+      "sql_file": "./backups\\backup_0051\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 52,
+      "timestamp": "2026-08-17T17:06:12.145648",
+      "sql_file": "./backups\\backup_0052\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 53,
+      "timestamp": "2026-08-17T17:06:14.255179",
+      "sql_file": "./backups\\backup_0053\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 54,
+      "timestamp": "2026-08-17T17:11:12.141563",
+      "sql_file": "./backups\\backup_0054\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 55,
+      "timestamp": "2026-08-17T17:11:14.248544",
+      "sql_file": "./backups\\backup_0055\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 56,
+      "timestamp": "2026-08-23T10:02:14.467682",
+      "sql_file": "./backups\\backup_0056\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 57,
+      "timestamp": "2026-08-23T10:07:14.128266",
+      "sql_file": "./backups\\backup_0057\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 58,
+      "timestamp": "2026-08-23T10:12:14.117456",
+      "sql_file": "./backups\\backup_0058\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 59,
+      "timestamp": "2026-08-23T11:37:44.273037",
+      "sql_file": "./backups\\backup_0059\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 60,
+      "timestamp": "2026-08-23T11:37:46.032796",
+      "sql_file": "./backups\\backup_0060\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 61,
+      "timestamp": "2026-08-23T11:42:43.893045",
+      "sql_file": "./backups\\backup_0061\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 62,
+      "timestamp": "2026-08-23T11:42:46.032060",
+      "sql_file": "./backups\\backup_0062\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 63,
+      "timestamp": "2026-08-23T12:20:27.348949",
+      "sql_file": "./backups\\backup_0063\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 64,
+      "timestamp": "2026-08-23T12:20:29.043592",
+      "sql_file": "./backups\\backup_0064\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 65,
+      "timestamp": "2026-08-23T12:25:27.321888",
+      "sql_file": "./backups\\backup_0065\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 66,
+      "timestamp": "2026-08-23T12:25:29.025576",
+      "sql_file": "./backups\\backup_0066\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 67,
+      "timestamp": "2026-08-23T12:30:26.987611",
+      "sql_file": "./backups\\backup_0067\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 68,
+      "timestamp": "2026-08-23T12:30:29.034684",
+      "sql_file": "./backups\\backup_0068\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 69,
+      "timestamp": "2026-08-23T12:48:43.262039",
+      "sql_file": "./backups\\backup_0069\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 70,
+      "timestamp": "2026-08-23T12:48:44.945650",
+      "sql_file": "./backups\\backup_0070\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 71,
+      "timestamp": "2026-08-23T12:53:42.878227",
+      "sql_file": "./backups\\backup_0071\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 72,
+      "timestamp": "2026-08-23T12:53:44.938152",
+      "sql_file": "./backups\\backup_0072\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 73,
+      "timestamp": "2026-08-23T12:58:42.887676",
+      "sql_file": "./backups\\backup_0073\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 74,
+      "timestamp": "2026-08-23T12:58:44.944611",
+      "sql_file": "./backups\\backup_0074\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 75,
+      "timestamp": "2026-08-23T13:03:42.884564",
+      "sql_file": "./backups\\backup_0075\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 76,
+      "timestamp": "2026-08-23T13:03:44.951947",
+      "sql_file": "./backups\\backup_0076\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 77,
+      "timestamp": "2026-08-23T13:08:42.883324",
+      "sql_file": "./backups\\backup_0077\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 78,
+      "timestamp": "2026-08-23T13:08:44.954013",
+      "sql_file": "./backups\\backup_0078\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 79,
+      "timestamp": "2026-08-23T13:13:42.880267",
+      "sql_file": "./backups\\backup_0079\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 80,
+      "timestamp": "2026-08-23T13:13:44.940626",
+      "sql_file": "./backups\\backup_0080\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 81,
+      "timestamp": "2026-08-23T13:18:42.881193",
+      "sql_file": "./backups\\backup_0081\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 82,
+      "timestamp": "2026-08-23T13:18:44.942414",
+      "sql_file": "./backups\\backup_0082\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 83,
+      "timestamp": "2026-08-23T13:23:42.883010",
+      "sql_file": "./backups\\backup_0083\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 84,
+      "timestamp": "2026-08-23T13:23:44.946267",
+      "sql_file": "./backups\\backup_0084\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 85,
+      "timestamp": "2026-08-24T12:54:47.772140",
+      "sql_file": "./backups\\backup_0085\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 86,
+      "timestamp": "2026-08-24T12:54:49.944412",
+      "sql_file": "./backups\\backup_0086\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 87,
+      "timestamp": "2026-08-24T13:03:43.386954",
+      "sql_file": "./backups\\backup_0087\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 88,
+      "timestamp": "2026-08-24T13:03:43.994617",
+      "sql_file": "./backups\\backup_0088\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 89,
+      "timestamp": "2026-08-24T13:08:43.059009",
+      "sql_file": "./backups\\backup_0089\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 90,
+      "timestamp": "2026-08-24T13:13:43.058706",
+      "sql_file": "./backups\\backup_0090\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 91,
+      "timestamp": "2026-08-24T13:13:43.995139",
+      "sql_file": "./backups\\backup_0091\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 92,
+      "timestamp": "2026-08-24T13:18:43.406170",
+      "sql_file": "./backups\\backup_0092\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 93,
+      "timestamp": "2026-08-24T13:18:43.984283",
+      "sql_file": "./backups\\backup_0093\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 94,
+      "timestamp": "2026-08-24T13:23:43.411760",
+      "sql_file": "./backups\\backup_0094\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 95,
+      "timestamp": "2026-08-24T13:31:56.077734",
+      "sql_file": "./backups\\backup_0095\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 96,
+      "timestamp": "2026-08-24T13:31:58.087518",
+      "sql_file": "./backups\\backup_0096\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 97,
+      "timestamp": "2026-08-24T13:41:50.525362",
+      "sql_file": "./backups\\backup_0097\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 98,
+      "timestamp": "2026-08-24T13:41:52.972755",
+      "sql_file": "./backups\\backup_0098\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 99,
+      "timestamp": "2026-08-24T13:46:50.511808",
+      "sql_file": "./backups\\backup_0099\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 100,
+      "timestamp": "2026-08-24T13:46:52.974579",
+      "sql_file": "./backups\\backup_0100\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 101,
+      "timestamp": "2026-08-24T13:51:50.507863",
+      "sql_file": "./backups\\backup_0101\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 102,
+      "timestamp": "2026-08-24T13:55:35.258031",
+      "sql_file": "./backups\\backup_0102\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 103,
+      "timestamp": "2026-08-24T13:56:50.503078",
+      "sql_file": "./backups\\backup_0103\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 104,
+      "timestamp": "2026-08-24T14:00:35.260062",
+      "sql_file": "./backups\\backup_0104\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 105,
+      "timestamp": "2026-08-24T14:01:50.507339",
+      "sql_file": "./backups\\backup_0105\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 106,
+      "timestamp": "2026-08-24T14:05:35.258834",
+      "sql_file": "./backups\\backup_0106\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 107,
+      "timestamp": "2026-08-24T14:06:50.505619",
+      "sql_file": "./backups\\backup_0107\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 108,
+      "timestamp": "2026-08-24T14:10:35.259828",
+      "sql_file": "./backups\\backup_0108\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 109,
+      "timestamp": "2026-08-24T14:11:50.505198",
+      "sql_file": "./backups\\backup_0109\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 110,
+      "timestamp": "2026-08-24T14:15:35.259136",
+      "sql_file": "./backups\\backup_0110\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 111,
+      "timestamp": "2026-08-24T14:16:50.516844",
+      "sql_file": "./backups\\backup_0111\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 112,
+      "timestamp": "2026-08-24T14:20:35.265111",
+      "sql_file": "./backups\\backup_0112\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 113,
+      "timestamp": "2026-08-24T14:21:50.508125",
+      "sql_file": "./backups\\backup_0113\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 114,
+      "timestamp": "2026-08-24T14:25:35.256617",
+      "sql_file": "./backups\\backup_0114\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 115,
+      "timestamp": "2026-08-24T14:26:50.515225",
+      "sql_file": "./backups\\backup_0115\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 116,
+      "timestamp": "2026-08-24T14:30:35.264225",
+      "sql_file": "./backups\\backup_0116\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 117,
+      "timestamp": "2026-08-24T14:31:50.516622",
+      "sql_file": "./backups\\backup_0117\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 118,
+      "timestamp": "2026-08-24T14:35:35.261726",
+      "sql_file": "./backups\\backup_0118\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 119,
+      "timestamp": "2026-08-24T14:36:50.508392",
+      "sql_file": "./backups\\backup_0119\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 120,
+      "timestamp": "2026-08-24T14:40:35.266301",
+      "sql_file": "./backups\\backup_0120\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 121,
+      "timestamp": "2026-08-24T14:41:50.508542",
+      "sql_file": "./backups\\backup_0121\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 122,
+      "timestamp": "2026-08-24T14:45:35.260431",
+      "sql_file": "./backups\\backup_0122\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 123,
+      "timestamp": "2026-08-24T14:46:50.509437",
+      "sql_file": "./backups\\backup_0123\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 124,
+      "timestamp": "2026-08-24T14:50:35.255184",
+      "sql_file": "./backups\\backup_0124\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    },
+    {
+      "id": 125,
+      "timestamp": "2026-08-24T14:51:50.519409",
+      "sql_file": "./backups\\backup_0125\\dump.sql",
+      "zip_file": null,
+      "status": "completed"
+    }
+  ]
+}

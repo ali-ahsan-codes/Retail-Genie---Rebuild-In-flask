@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyro Pulse – Windows Setup Guide</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #f4f7fb;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 2rem 1rem;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 2.5rem 2rem;
+        }
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.25rem;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .subtitle {
+            color: #475569;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 0.75rem;
+        }
+        .step {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 5px solid #f38020;
+        }
+        .step h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .step h2 .badge {
+            background: #0f172a;
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        .step ul, .step ol {
+            padding-left: 1.5rem;
+            line-height: 1.7;
+        }
+        .step li {
+            margin-bottom: 0.5rem;
+        }
+        code, .cmd {
+            background: #eef2f6;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+            font-size: 0.9rem;
+            color: #0b3b5c;
+        }
+        .cmd-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0.5rem 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .cmd-block .prompt {
+            color: #94a3b8;
+        }
+        .note {
+            background: #fef9e7;
+            border-left: 4px solid #facc15;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            margin: 0.8rem 0;
+        }
+        .note strong {
+            color: #b45309;
+        }
+        .success {
+            background: #e6f7e6;
+            border-left: 4px solid #22c55e;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+        }
+        .btn-copy {
+            background: #f38020;
+            border: none;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .btn-copy:hover {
+            background: #d96d1a;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 2rem 0;
+        }
+        .footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 2rem;
+        }
+        .troubleshoot {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            margin-top: 2rem;
+        }
+        .troubleshoot h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @media (max-width: 640px) {
+            .container { padding: 1.5rem 1rem; }
+            .step { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Gyro Pulse – Windows Setup</h1>
+        <div class="subtitle">Complete installation &amp; run guide for a new Windows computer</div>
+
+        <!-- Step 1 -->
+        <div class="step">
+            <h2>1. Install Prerequisites <span class="badge">one‑time</span></h2>
+            <ul>
+                <li><strong>Python 3.8+</strong> – <a href="https://www.python.org/downloads/windows/" target="_blank">Download</a><br>
+                    <span style="font-size:0.9rem; color:#475569;">✔ During installation, <strong>check</strong> “Add Python to PATH”.</span>
+                </li>
+                <li><strong>MySQL Community Server 8.0</strong> – <a href="https://dev.mysql.com/downloads/mysql/" target="_blank">Download</a><br>
+                    <span style="font-size:0.9rem; color:#475569;">✔ Choose the <strong>MSI</strong> installer. Remember the <strong>root password</strong> you set.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step">
+            <h2>2. Get the Project Files</h2>
+            <ul>
+                <li>Copy the entire project folder (containing <code>app.py</code>, <code>config.json</code>, <code>templates/</code> etc.) to your computer, e.g., <code>C:\gyropulse</code>.</li>
+                <li>If you received a ZIP archive, extract it to any location.</li>
+            </ul>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step">
+            <h2>3. Create Virtual Environment</h2>
+            <p>Open <strong>Command Prompt as Administrator</strong> and navigate to the project folder.</p>
+            <div class="cmd-block">
+                <span class="prompt">python -m venv .venv</span>
+                <span class="prompt">.venv\Scripts\activate</span>
+            </div>
+            <div class="note">
+                <strong>💡 Tip:</strong> You’ll see <code>(.venv)</code> at the start of the prompt – that means the environment is active.
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step">
+            <h2>4. Install Python Dependencies</h2>
+            <p>Make sure the virtual environment is active, then run:</p>
+            <div class="cmd-block">
+                <span class="prompt">pip install -r requirements.txt</span>
+                <span class="prompt">pip install cryptography</span>   <span style="color:#94a3b8;"># (if you get an auth error)</span>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step">
+            <h2>5. Set Up MySQL Database</h2>
+            <ol>
+                <li>Start the MySQL service:<br>
+                    <div class="cmd-block"><span class="prompt">net start MySQL80</span></div>
+                    (if your version is different, use <code>MySQL</code> or check Services).
+                </li>
+                <li>Log in as root:
+                    <div class="cmd-block"><span class="prompt">mysql -u root -p</span></div>
+                    Enter the root password you set during installation.
+                </li>
+                <li>Run these SQL commands to create the database and user:
+                    <div class="cmd-block" style="color:#d1d5db;">
+CREATE DATABASE gyropulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'aliahsan_admin'@'localhost' IDENTIFIED BY 'Ahsan01_@li';
+GRANT ALL PRIVILEGES ON gyropulse.* TO 'aliahsan_admin'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+                    </div>
+                    <div class="note">
+                        <strong>🔑 Password note:</strong> The password contains <code>@</code>. In the connection URL (step 6) you <strong>must</strong> replace <code>@</code> with <code>%40</code>.
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step">
+            <h2>6. Create the <code>.env</code> File</h2>
+            <p>In the project root, create a file named <strong><code>.env</code></strong> with this content:</p>
+            <div class="cmd-block" style="color:#d1d5db;">
+DATABASE_URL=mysql+pymysql://aliahsan_admin:Ahsan01_%40li@localhost:3306/gyropulse
+SECRET_KEY=your-secret-key-change-this
+UPLOAD_DIR=./uploads
+            </div>
+            <div class="note">
+                <strong>⚠️ Important:</strong> The password in the URL uses <code>%40</code> instead of <code>@</code>. If you changed the password, update it here (and encode any special characters).
+            </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step">
+            <h2>7. Run the Application</h2>
+            <p>With the virtual environment active, execute:</p>
+            <div class="cmd-block">
+                <span class="prompt">python app.py</span>
+            </div>
+            <p>You’ll see output like:</p>
+            <div class="cmd-block" style="color:#b0c4de;">
+ * Serving Flask app 'app'
+ * Debug mode: on
+ * Running on http://localhost:5000
+            </div>
+            <div class="success">
+                ✅ On the first run, the tables and default admin account ( <strong>admin</strong> / <strong>admin123</strong> ) are created automatically.
+            </div>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="step">
+            <h2>8. Access the Portal</h2>
+            <p>Open your browser and go to <a href="http://localhost:5000" target="_blank">http://localhost:5000</a>.</p>
+            <p>Log in with:</p>
+            <ul>
+                <li><strong>Username:</strong> <code>admin</code></li>
+                <li><strong>Password:</strong> <code>admin123</code></li>
+            </ul>
+            <p>You’ll see the dashboard with stats, messages, and user management.</p>
+        </div>
+
+        <hr>
+
+        <!-- ======================== -->
+        <!-- NEW TROUBLESHOOTING SECTION -->
+        <!-- ======================== -->
+        <div class="troubleshoot">
+            <h3>⚠️ Fix: "Unknown column 'users.city_id'" Error</h3>
+            <p>If you see this error when starting the app, it means your database is missing the <code>city_id</code> column introduced in the latest update.</p>
+            <p><strong>Fix it quickly</strong> with these SQL commands (run in MySQL):</p>
+            <ol style="padding-left:1.5rem; line-height:1.8;">
+                <li>Open MySQL: <code>mysql -u root -p</code> (enter your password).</li>
+                <li>Select the database: <code>USE gyropulse;</code></li>
+                <li>Copy and paste the entire block below into the MySQL prompt:</li>
+            </ol>
+            <div class="cmd-block" style="color:#d1d5db; white-space:pre-wrap;">
+-- Create cities table
+CREATE TABLE IF NOT EXISTS cities (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL UNIQUE,
+    created_at  DATETIME DEFAULT NOW()
+);
+
+-- Add city_id to users
+ALTER TABLE users ADD COLUMN city_id INT NULL;
+ALTER TABLE users ADD CONSTRAINT fk_users_city 
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE SET NULL;
+
+-- Add city_id to products
+ALTER TABLE products ADD COLUMN city_id INT NOT NULL DEFAULT 1;
+ALTER TABLE products ADD CONSTRAINT fk_products_city 
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE;
+
+-- Add city_id to customers
+ALTER TABLE customers ADD COLUMN city_id INT NOT NULL DEFAULT 1;
+ALTER TABLE customers ADD CONSTRAINT fk_customers_city 
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE;
+
+-- Add city_id to orders
+ALTER TABLE orders ADD COLUMN city_id INT NOT NULL DEFAULT 1;
+ALTER TABLE orders ADD CONSTRAINT fk_orders_city 
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE;
+
+-- Insert a default city
+INSERT IGNORE INTO cities (name) VALUES ('Default City');
+            </div>
+            <p>After running these, type <code>EXIT;</code> and restart the Flask app – the error will be gone.</p>
+        </div>
+
+        <!-- Step 9 (existing troubleshooting) -->
+        <div class="troubleshoot">
+            <h3>⚠️ General Troubleshooting Tips</h3>
+            <ul style="padding-left:1.5rem; line-height:1.8;">
+                <li><strong>“cryptography is required”</strong> → run <code>pip install cryptography</code> and restart.</li>
+                <li><strong>“Access denied”</strong> → double‑check the password and that you ran <code>FLUSH PRIVILEGES</code>.</li>
+                <li><strong>“Can’t connect to MySQL”</strong> → ensure the MySQL service is running (<code>net start MySQL80</code>).</li>
+                <li><strong>Port 5000 already in use</strong> → change <code>port</code> in <code>config.json</code>.</li>
+                <li><strong>“No database selected”</strong> → type <code>USE gyropulse;</code> at the MySQL prompt before running SELECT queries, or connect with <code>mysql -u ... -p gyropulse</code>.</li>
+                <li><strong>Tables not found</strong> → the app creates them on first run. Make sure you started the app at least once.</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            Gyro Pulse – setup guide v1.2 &bull; Generated for Windows
+        </div>
+    </div>
+
+    <!-- Copy buttons for cmd-blocks -->
+    <script>
+        document.querySelectorAll('.cmd-block').forEach(block => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-copy';
+            btn.textContent = '📋 Copy';
+            btn.style.float = 'right';
+            btn.style.marginTop = '-2px';
+            btn.onclick = () => {
+                const text = block.innerText.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => {
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => btn.textContent = '📋 Copy', 1500);
+                });
+            };
+            block.style.position = 'relative';
+            block.appendChild(btn);
+        });
+    </script>
+</body>
+</html>

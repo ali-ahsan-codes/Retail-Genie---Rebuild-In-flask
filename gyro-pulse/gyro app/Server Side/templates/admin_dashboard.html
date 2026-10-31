@@ -1,0 +1,3235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gyro Pulse – Admin Dashboard</title>
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Leaflet CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <!-- Manrope Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <!-- Socket.IO client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        :root {
+            --brand-primary: #0052FF;
+            --brand-surface: #f7f9fb;
+            --brand-text: #1e293b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--brand-surface);
+            color: var(--brand-text);
+            overflow-x: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .nav-link-custom:hover, .nav-link-custom.active {
+            background: #f1f5f9;
+            color: var(--brand-primary);
+        }
+        .nav-link-custom.active .material-symbols-outlined { color: var(--brand-primary); }
+        .map-container {
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .data-table-container {
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px;
+        }
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+        }
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-brand:hover {
+            background-color: #0041cc;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .media-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .tab-content-item { display: none; }
+        .tab-content-item.active-tab { display: block; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #d1fae5; color: #059669; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .file-preview { max-width: 80px; max-height: 80px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--brand-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-weight: 600;
+            color: var(--brand-text);
+            font-size: 1.1rem;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media (max-width: 768px) {
+            .sidebar { left: -260px; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading dashboard…</div>
+</div>
+
+<aside class="sidebar">
+    <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-[#0052FF] rounded-lg flex items-center justify-center text-white">
+                <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <h1 class="text-xl font-extrabold tracking-tight text-slate-800">Gyro Pulse</h1>
+        </div>
+        <nav class="space-y-1">
+            <a class="nav-link-custom active" data-tab-trigger="dashboard" href="#dashboard">
+                <span class="material-symbols-outlined mr-3">dashboard</span> Dashboard
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="stockrequests" href="#stockrequests">
+                <span class="material-symbols-outlined mr-3">inventory</span> Stock Requests
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="deliveries" href="#deliveries">
+                <span class="material-symbols-outlined mr-3">local_shipping</span> Deliveries
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="payments" href="#payments">
+                <span class="material-symbols-outlined mr-3">payments</span> Payments
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="settlements" href="#settlements">
+                <span class="material-symbols-outlined mr-3">receipt_long</span> Settlements
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="transfers" href="#transfers">
+                <span class="material-symbols-outlined mr-3">sync_alt</span> Transfers
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="finance" href="#finance">
+                <span class="material-symbols-outlined mr-3">account_balance</span> Finance
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="reports" href="#reports">
+                <span class="material-symbols-outlined mr-3">bar_chart</span> Reports
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="warehouse" href="#warehouse">
+                <span class="material-symbols-outlined mr-3">warehouse</span> Warehouses
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="products" href="#products">
+                <span class="material-symbols-outlined mr-3">inventory_2</span> Products
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="devices" href="#devices">
+                <span class="material-symbols-outlined mr-3">key</span> Account Keys
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="tokens" href="#tokens">
+                <span class="material-symbols-outlined mr-3">token</span> Token Pool
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="gpc" href="#gpc">
+                <span class="material-symbols-outlined mr-3">file_open</span> GPC Files
+            </a>
+            <div class="pt-4 pb-2 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Administration</div>
+            <a class="nav-link-custom" data-tab-trigger="users" href="#users">
+                <span class="material-symbols-outlined mr-3">group</span> Users
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="cities" href="#cities">
+                <span class="material-symbols-outlined mr-3">place</span> Cities
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="audit" href="#audit">
+                <span class="material-symbols-outlined mr-3">rule</span> Audit Logs
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="pricelist" href="#pricelist">
+                <span class="material-symbols-outlined mr-3">sell</span> Price Lists
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="credit" href="#credit">
+                <span class="material-symbols-outlined mr-3">credit_card</span> Credit Limits
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="settings" href="#settings">
+                <span class="material-symbols-outlined mr-3">settings</span> Settings
+            </a>
+        </nav>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="h-16 border-b border-slate-200 bg-white sticky top-0 z-50 flex items-center justify-between px-8">
+        <div class="flex items-center gap-4">
+            <span class="text-slate-500 font-medium">Hello,</span>
+            <span class="font-bold text-slate-800">{{ current_user.username }}</span>
+            {% if current_user.city_id %}
+                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold uppercase tracking-tight">{{ current_user.city.name }}</span>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="relative text-slate-500 hover:text-slate-700">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <a class="flex items-center gap-2 text-slate-600 font-semibold hover:text-[#0052FF]" href="{{ url_for('auth.logout') }}">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="p-8">
+        <div class="toast-container position-fixed bottom-0 end-0 p-3 z-[1060]">
+            <div aria-atomic="true" aria-live="assertive" class="toast glass-card !border-slate-200 shadow-xl" id="orderToast" role="alert">
+                <div class="toast-header bg-transparent border-b border-slate-100">
+                    <span class="material-symbols-outlined text-green-500 mr-2">shopping_bag</span>
+                    <strong class="me-auto text-slate-800">New Order</strong>
+                    <small class="text-slate-500">just now</small>
+                    <button class="btn-close" data-bs-dismiss="toast" type="button"></button>
+                </div>
+                <div class="toast-body text-slate-600 font-medium" id="toastBody">Order received!</div>
+            </div>
+        </div>
+
+        <div id="tab-container">
+            <!-- DASHBOARD TAB -->
+            <div class="tab-content-item active-tab" id="dashboard">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">System Overview</h2>
+                        <p class="text-slate-500">Real-time data synchronization and logistics tracking.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-slate-600 font-medium flex items-center gap-2 hover:bg-slate-50">
+                            <span class="material-symbols-outlined text-lg">calendar_today</span> Today
+                        </button>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchStats()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8" id="statsRow">
+                    <div class="glass-card p-6 bg-white">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon bg-blue-50 text-blue-600"><span class="material-symbols-outlined">database</span></div>
+                            <div><p class="text-slate-500 text-sm font-medium">Total Items</p><h3 class="text-2xl font-bold" id="totalCount">-</h3></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon bg-indigo-50 text-indigo-600"><span class="material-symbols-outlined">description</span></div>
+                            <div><p class="text-slate-500 text-sm font-medium">Data Records</p><h3 class="text-2xl font-bold" id="textCount">-</h3></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon bg-purple-50 text-purple-600"><span class="material-symbols-outlined">image</span></div>
+                            <div><p class="text-slate-500 text-sm font-medium">Media Files</p><h3 class="text-2xl font-bold" id="mediaCount">-</h3></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon bg-orange-50 text-orange-600"><span class="material-symbols-outlined">location_on</span></div>
+                            <div><p class="text-slate-500 text-sm font-medium">Locations</p><h3 class="text-2xl font-bold" id="locationCount">-</h3></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <div class="flex items-center gap-4">
+                            <div class="stat-icon bg-green-50 text-green-600"><span class="material-symbols-outlined">today</span></div>
+                            <div><p class="text-slate-500 text-sm font-medium">Today</p><h3 class="text-2xl font-bold" id="todayCount">-</h3></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="glass-card p-6 bg-white">
+                        <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">trending_up</span> Activity Trends
+                        </h4>
+                        <div class="h-[300px]"><canvas id="dailyChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-orange-500">map</span> Field Operations
+                        </h4>
+                        <div class="map-container" id="map"></div>
+                    </div>
+                </div>
+                <div class="glass-card bg-white overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                        <h4 class="font-bold text-slate-800">Recent Activity Log</h4>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <select class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" id="typeFilter">
+                                <option value="">All Types</option>
+                                <option value="video">Video</option>
+                                <option value="audio">Audio</option>
+                                <option value="picture">Picture</option>
+                                <option value="location">Location</option>
+                                <option value="data">Data</option>
+                            </select>
+                            <input class="form-control rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" id="fromDate" type="date"/>
+                            <input class="form-control rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" id="toDate" type="date"/>
+                            <button class="btn-brand !py-2 text-sm" onclick="applyFilters()">Filter</button>
+                            <button class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200" onclick="resetFilters()">Reset</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0" id="messagesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Content / Media</th>
+                                    <th>Location</th>
+                                    <th>User</th>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="p-6 border-t border-slate-100">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm justify-content-center mb-0" id="pagination"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STOCK REQUESTS TAB -->
+            <div class="tab-content-item" id="stockrequests">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Stock Requests</h2>
+                        <p class="text-slate-500">Review and approve/reject stock addition requests from storekeepers.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchStockRequests()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <div class="table-responsive">
+                        <table class="table mb-0" id="stockRequestsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:4%;">ID</th>
+                                    <th style="width:10%;">Product</th>
+                                    <th style="width:10%;">Warehouse</th>
+                                    <th style="width:5%;">Qty</th>
+                                    <th style="width:8%;">PO #</th>
+                                    <th style="width:8%;">PO Date</th>
+                                    <th style="width:6%;">Ordered Qty</th>
+                                    <th style="width:6%;">Attachment</th>
+                                    <th style="width:5%;">Before</th>
+                                    <th style="width:5%;">After</th>
+                                    <th style="width:8%;">Status</th>
+                                    <th style="width:10%;">Notes</th>
+                                    <th style="width:12%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockRequestsBody">
+                                <tr><td class="text-center py-8" colspan="13">Loading requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DELIVERIES TAB -->
+            <div class="tab-content-item" id="deliveries">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Delivery Fleet</h2>
+                        <p class="text-slate-500">Track shipments and coordinate with drivers.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#assignDeliveryModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">add</span> Assign Delivery
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="deliveriesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Scheduled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveriesBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading shipment data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAYMENTS TAB -->
+            <div class="tab-content-item" id="payments">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Financial Transactions</h2>
+                    <p class="text-slate-500">View all incoming revenue and collection history.</p>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Order</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Collected By</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsBody">
+                            <tr><td class="text-center py-8" colspan="8">Processing transactions...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SETTLEMENTS TAB -->
+            <div class="tab-content-item" id="settlements">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Cash Settlements</h2>
+                        <p class="text-slate-500">Validate field collections and balance accounts.</p>
+                    </div>
+                    <button class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-slate-600 font-medium flex items-center gap-2 hover:bg-slate-50" onclick="fetchSettlements()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="settlementsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Cashier</th>
+                                <th>Finance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settlementsBody">
+                            <tr><td class="text-center py-8" colspan="7">No settlements pending.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- STOCK TRANSFERS TAB -->
+            <div class="tab-content-item" id="transfers">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Inventory Transfers</h2>
+                        <p class="text-slate-500">Internal stock movement between personnel and warehouses.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#createTransferModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">swap_horiz</span> Create Transfer
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="transfersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Status</th>
+                                <th>Meeting Point</th>
+                                <th>Scheduled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfersBody">
+                            <tr><td class="text-center py-8" colspan="7">Syncing inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FINANCE TAB -->
+            <div class="tab-content-item" id="finance">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Finance Hub</h2>
+                    <p class="text-slate-500">Monitor cash flow and outstanding balances.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div class="glass-card p-8 bg-white border-l-4 border-green-500">
+                        <p class="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1">Today's Collections</p>
+                        <h2 class="text-4xl font-extrabold text-green-600 tracking-tight" id="financeToday">$0.00</h2>
+                    </div>
+                    <div class="glass-card p-8 bg-white border-l-4 border-blue-500">
+                        <p class="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1">Total Outstanding</p>
+                        <h2 class="text-4xl font-extrabold text-blue-600 tracking-tight" id="financeOutstanding">$0.00</h2>
+                    </div>
+                    <div class="glass-card p-8 bg-white border-l-4 border-orange-500">
+                        <p class="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1">Pending Settlements</p>
+                        <h2 class="text-4xl font-extrabold text-orange-600 tracking-tight" id="financePendingSettlements">0</h2>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <div class="p-6 border-b border-slate-100"><h4 class="font-bold text-slate-800">Global Ledger</h4></div>
+                    <table class="table mb-0" id="financeTransactionsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Reference</th>
+                                <th>Customer</th>
+                                <th>User</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financeTransactionsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AUDIT LOGS -->
+            <div class="tab-content-item" id="audit">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Security &amp; Audit</h2>
+                    <p class="text-slate-500">Complete trail of system changes and data integrity.</p>
+                </div>
+                <div class="glass-card bg-white p-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input class="form-control rounded-lg" id="auditAction" placeholder="Action" type="text"/>
+                        <input class="form-control rounded-lg" id="auditFrom" type="date"/>
+                        <input class="form-control rounded-lg" id="auditTo" type="date"/>
+                        <div class="flex gap-2">
+                            <button class="btn-brand flex-grow" onclick="fetchAuditLogs()">Search</button>
+                            <button class="bg-slate-100 px-4 rounded-lg text-slate-600 font-bold" onclick="resetAuditFilters()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="auditTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Table</th>
+                                <th>Record ID</th>
+                                <th>Change Details</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- REPORTS TAB -->
+            <div class="tab-content-item" id="reports">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Business Intelligence</h2>
+                    <p class="text-slate-500">Visualize sales performance and operational efficiency.</p>
+                </div>
+                <div class="glass-card p-6 bg-white mb-8">
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">From</label><input class="form-control rounded-lg" id="reportFrom" type="date"/></div>
+                        <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">To</label><input class="form-control rounded-lg" id="reportTo" type="date"/></div>
+                        <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Group By</label>
+                            <select class="form-select rounded-lg" id="reportGroupBy">
+                                <option value="day">Day</option>
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                            </select>
+                        </div>
+                        <button class="btn-brand" onclick="fetchSalesReport()">Generate Report</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="glass-card p-8 bg-white">
+                        <h4 class="font-bold mb-6 text-slate-800">Revenue Growth</h4>
+                        <div class="h-[300px]"><canvas id="salesChart"></canvas></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="glass-card p-8 bg-white">
+                            <h4 class="font-bold mb-6 text-slate-800">Stock Availability</h4>
+                            <div class="h-[250px]"><canvas id="inventoryChart"></canvas></div>
+                        </div>
+                        <div class="glass-card p-8 bg-white">
+                            <h4 class="font-bold mb-6 text-slate-800">Fulfillment Success Rate</h4>
+                            <div class="h-[250px]"><canvas id="deliveryPerformanceChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRICE LISTS TAB -->
+            <div class="tab-content-item" id="pricelist">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Dynamic Pricing</h2>
+                        <p class="text-slate-500">Manage region-specific rates and promotional discounts.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#createPriceListModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">add_tags</span> New Price List
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="priceListsContainer">
+                    <!-- Content loaded by JS -->
+                </div>
+            </div>
+
+            <!-- CREDIT LIMITS TAB -->
+            <div class="tab-content-item" id="credit">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Credit Risk Management</h2>
+                    <p class="text-slate-500">Monitor customer outstanding balances vs limits.</p>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="creditTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Outstanding</th>
+                                <th>Limit</th>
+                                <th>Available</th>
+                                <th>Risk Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="creditBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- WAREHOUSE TAB -->
+            <div class="tab-content-item" id="warehouse">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Hub Management</h2>
+                        <p class="text-slate-500">Control warehouse nodes and real-time inventory counts.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#createWarehouseModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">home_work</span> Register Warehouse
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="data-table-container glass-card">
+                        <table class="table mb-0" id="warehouseTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>City</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="warehouseBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="glass-card bg-white p-8">
+                        <h4 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">inventory_2</span> SKU Explorer
+                        </h4>
+                        <div class="row g-3 items-end mb-6">
+                            <div class="col-md-5">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select Product SKU</label>
+                                <select class="form-select rounded-lg" id="inventoryProductSelect" onchange="loadProductInventory()">
+                                    <option value="">-- Choose Product --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn-brand w-100" onclick="loadProductInventory()">Search</button>
+                            </div>
+                        </div>
+                        <div class="mt-4" id="inventoryDisplay" style="display:none;">
+                            <div class="bg-slate-50 rounded-xl p-4 mb-4 flex justify-between items-center border border-slate-100">
+                                <h6 class="font-bold mb-0">Inventory for <span class="text-[#0052FF]" id="inventoryProductName"></span></h6>
+                            </div>
+                            <table class="table border rounded-lg">
+                                <thead>
+                                    <tr class="!bg-white">
+                                        <th>Warehouse</th>
+                                        <th>Current</th>
+                                        <th>Reserved</th>
+                                        <th>Available</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white" id="inventoryBody"></tbody>
+                            </table>
+                            <div class="glass-card p-6 mt-6 bg-slate-50 border-slate-200">
+                                <h6 class="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Adjustment Tool</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-2">
+                                        <input class="form-control rounded-lg" id="inventoryQty" placeholder="Value" type="number"/>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select rounded-lg" id="inventoryOperation">
+                                            <option value="set">Set To</option>
+                                            <option value="add">Add (+)</option>
+                                            <option value="subtract">Subtract (-)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select rounded-lg" id="inventoryWarehouseSelect">
+                                            <option value="">-- Select Warehouse --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn-brand w-100" onclick="updateInventory()">Update Stock</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRODUCTS TAB -->
+            <div class="tab-content-item" id="products">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Product Management</h2>
+                    <p class="text-slate-500">Create, edit, and manage products in the system.</p>
+                </div>
+                <div class="glass-card bg-white p-6 max-w-4xl mb-8">
+                    <h4 class="font-bold text-slate-800 mb-4">Add New Product</h4>
+                    <form id="createProductForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Product Name *</label>
+                                <input type="text" class="form-control rounded-lg" id="prodName" required placeholder="e.g. Premium Widget">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">SKU</label>
+                                <input type="text" class="form-control rounded-lg" id="prodSku" placeholder="e.g. WID-001">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Barcode</label>
+                                <input type="text" class="form-control rounded-lg" id="prodBarcode" placeholder="e.g. 1234567890">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Unit Price *</label>
+                                <input type="number" step="0.01" class="form-control rounded-lg" id="prodPrice" required placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Tax Rate (%)</label>
+                                <input type="number" step="0.01" class="form-control rounded-lg" id="prodTax" value="0" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City *</label>
+                                <select class="form-select rounded-lg" id="prodCity" required>
+                                    <option value="">Select City</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Category</label>
+                                <input type="text" class="form-control rounded-lg" id="prodCategory" placeholder="e.g. Electronics">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Description</label>
+                                <textarea class="form-control rounded-lg" id="prodDescription" rows="3" placeholder="Product description..."></textarea>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Image URL</label>
+                                <input type="text" class="form-control rounded-lg" id="prodImage" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="col-span-2 form-check flex items-center gap-2 mt-2">
+                                <input type="checkbox" class="form-check-input h-5 w-5" id="prodActive" checked>
+                                <label class="form-check-label text-sm font-medium text-slate-700">Active</label>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button type="submit" class="btn-brand px-8 flex items-center gap-2">
+                                <span class="material-symbols-outlined">add</span> Create Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-4">Product Inventory</h4>
+                <div class="glass-card bg-white p-6">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <input type="text" id="productSearch" class="form-control rounded-lg w-48" placeholder="Search by name, SKU, barcode">
+                        <select id="productCityFilter" class="form-select rounded-lg w-40">
+                            <option value="">All Cities</option>
+                        </select>
+                        <select id="productStatusFilter" class="form-select rounded-lg w-32">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                            <option value="">All</option>
+                        </select>
+                        <button class="btn-brand !py-2" onclick="fetchProductList()">Search</button>
+                        <button class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200" onclick="resetProductFilters()">Reset</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0" id="productTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Barcode</th>
+                                    <th>Price</th>
+                                    <th>City</th>
+                                    <th>Qty</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productBody">
+                                <tr><td colspan="9" class="text-center py-8">Loading products...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                        <span id="productPaginationInfo" class="text-sm text-slate-500"></span>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="productPagination"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEVICES TAB -->
+            <div class="tab-content-item" id="devices">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Account-Type API Keys</h2>
+                        <p class="text-slate-500">One shared API key is available for each account type. Rotating a key replaces it for every account of that type.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#generateApiKeyModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">add</span> Generate Key
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="apiKeysTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Account Type</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Rotated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiKeysBody">
+                            <tr><td class="text-center py-8" colspan="6">Loading API keys...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOKENS TAB -->
+            <div class="tab-content-item" id="tokens">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Token Pool Viewer</h2>
+                        <p class="text-slate-500">View one-time cipher tokens assigned to each user. Tokens are masked for security.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm font-semibold text-slate-600">User:</label>
+                        <select id="tokenUserSelect" class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" onchange="fetchTokenPool()">
+                            <option value="">Select User</option>
+                        </select>
+                        <button class="btn-brand flex items-center gap-2" onclick="fetchTokenPool()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="tokenStats">
+                    <div class="glass-card p-4 bg-white border-l-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                        <h3 class="text-2xl font-bold text-blue-600" id="tokenTotal">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Unused</p>
+                        <h3 class="text-2xl font-bold text-green-600" id="tokenUnused">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Used</p>
+                        <h3 class="text-2xl font-bold text-orange-600" id="tokenUsed">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-red-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Expired</p>
+                        <h3 class="text-2xl font-bold text-red-600" id="tokenExpired">-</h3>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="tokenTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Session ID</th>
+                                <th>Cipher Token (masked)</th>
+                                <th>Status</th>
+                                <th>Expiry</th>
+                                <th>Created</th>
+                                <th>Used At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenBody">
+                            <tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GPC FILES TAB -->
+            <div class="tab-content-item" id="gpc">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">GPC File Management</h2>
+                        <p class="text-slate-500">Generate encrypted login files (.gpc) for remote users, and import export files (.gpc) from mobile devices.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Generate Login File -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">download</span> Generate Login File
+                        </h4>
+                        <form id="generateGpcForm">
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">User</label>
+                                <select class="form-select rounded-lg" id="gpcUserSelect" required>
+                                    <option value="">Select User</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Expiry Days</label>
+                                <input type="number" class="form-control rounded-lg" id="gpcExpiryDays" value="7" min="1" max="365">
+                            </div>
+                            <div class="mb-3 form-check flex items-center gap-2">
+                                <input type="checkbox" class="form-check-input h-5 w-5" id="gpcShowStock" checked>
+                                <label class="form-check-label text-sm font-medium text-slate-700">Show Stock Quantities</label>
+                            </div>
+                            <button type="submit" class="btn-brand w-100 flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">file_download</span> Generate .gpc
+                            </button>
+                        </form>
+                        <div id="gpcGenerateResult" class="mt-4" style="display:none;"></div>
+                    </div>
+                    <!-- Upload Export File -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">upload</span> Upload Export File
+                        </h4>
+                        <form id="uploadGpcForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select .gpc file</label>
+                                <input type="file" class="form-control rounded-lg" id="gpcFileInput" accept=".gpc" required>
+                            </div>
+                            <button type="submit" class="btn-brand w-100 flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">cloud_upload</span> Upload & Process
+                            </button>
+                        </form>
+                        <div id="gpcUploadResult" class="mt-4" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS TAB -->
+            <div class="tab-content-item" id="users">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Team Access</h2>
+                        <p class="text-slate-500">Manage administrative and field personnel permissions.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#createUserModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">person_add</span> Create Account
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr><th>ID</th><th>Username</th><th>Role</th><th>City</th><th>Joined</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CITIES TAB -->
+            <div class="tab-content-item" id="cities">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">City Management</h2>
+                        <p class="text-slate-500">Add new cities or toggle active/inactive status.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-brand flex items-center gap-2" data-bs-target="#addCityModal" data-bs-toggle="modal">
+                            <span class="material-symbols-outlined">add_location</span> Add City
+                        </button>
+                        <button class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-slate-600 font-medium flex items-center gap-2 hover:bg-slate-50" onclick="fetchCities()">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="citiesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>City Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citiesBody">
+                            <tr><td class="text-center py-8" colspan="4">Loading cities...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div class="tab-content-item" id="settings">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">System Preferences</h2>
+                    <p class="text-slate-500">Configure global parameters and localization settings.</p>
+                </div>
+                <div class="glass-card p-8 bg-white max-w-4xl">
+                    <form id="settingsForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Currency Symbol</label>
+                                <input class="form-control rounded-lg" id="currencyInput" placeholder="$" type="text"/>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Global Tax Rate (%)</label>
+                                <input class="form-control rounded-lg" id="taxRateInput" placeholder="0.00" step="0.01" type="number"/>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Tax Identifier Label</label>
+                                <input class="form-control rounded-lg" id="taxLabelInput" placeholder="VAT / GST" type="text"/>
+                            </div>
+                            <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                                <h5 class="font-bold text-slate-800 mb-4">Auto‑Approval Settings for Stock Requests</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" class="form-check-input h-5 w-5" id="autoApproveEnabled">
+                                        <label class="text-sm font-bold text-slate-700">Enable Auto‑Approval</label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Threshold (max quantity per request)</label>
+                                        <input type="number" class="form-control rounded-lg" id="autoApproveThreshold" value="10" min="1"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Time Window (days)</label>
+                                        <input type="number" class="form-control rounded-lg" id="autoApproveTimeWindow" value="1" min="1"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Max Total per Window</label>
+                                        <input type="number" class="form-control rounded-lg" id="autoApproveMaxTotal" value="20" min="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Token Configuration -->
+                            <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                                <h5 class="font-bold text-slate-800 mb-4">Cipher Token Configuration</h5>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Max Token Cap</label>
+                                        <input type="number" class="form-control rounded-lg" id="maxTokenCap" value="15" min="1"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Renewal Threshold</label>
+                                        <input type="number" class="form-control rounded-lg" id="tokenRenewalThreshold" value="2" min="1"/>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Default Expiry Days</label>
+                                        <input type="number" class="form-control rounded-lg" id="defaultExpiryDays" value="7" min="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-6 border-t border-slate-100 flex justify-end">
+                            <button class="btn-brand px-8" type="submit">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ========== MODALS ========== -->
+
+<!-- Assign Delivery Modal -->
+<div class="modal fade" id="assignDeliveryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Assign New Dispatch</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form class="space-y-4" id="assignDeliveryForm">
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Order #</label><input class="form-control rounded-lg" id="assignOrderId" required="" type="number"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">User ID (Personnel)</label><input class="form-control rounded-lg" id="assignToUser" required="" type="number"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Schedule</label><input class="form-control rounded-lg" id="assignScheduledDate" type="datetime-local"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Dispatcher Notes</label><textarea class="form-control rounded-lg" id="assignNotes" rows="3"></textarea></div>
+                    <button class="btn-brand w-100 mt-4 py-3" type="submit">Finalize Assignment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Transfer Modal -->
+<div class="modal fade" id="createTransferModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Create Stock Transfer</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="createTransferForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">From User ID</label>
+                            <input type="number" class="form-control rounded-lg" id="transferFromUser" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">To User ID</label>
+                            <input type="number" class="form-control rounded-lg" id="transferToUser" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Meeting Location</label>
+                            <input type="text" class="form-control rounded-lg" id="transferMeetingLocation">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Scheduled Time</label>
+                            <input type="datetime-local" class="form-control rounded-lg" id="transferScheduledTime">
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <h6 class="font-bold text-slate-700">Products</h6>
+                    <div id="transferItemsContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addTransferItemRow()">+ Add Item</button>
+                    <hr class="my-4">
+                    <button type="submit" class="btn-brand w-100">Create Transfer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Price List Modal -->
+<div class="modal fade" id="createPriceListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">New Price List</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="createPriceListForm">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Name</label>
+                        <input type="text" class="form-control rounded-lg" id="plName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City (optional)</label>
+                        <select class="form-select rounded-lg" id="plCity"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Effective From</label>
+                        <input type="datetime-local" class="form-control rounded-lg" id="plFrom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Effective To</label>
+                        <input type="datetime-local" class="form-control rounded-lg" id="plTo">
+                    </div>
+                    <hr class="my-4">
+                    <h6 class="font-bold text-slate-700">Products &amp; Prices</h6>
+                    <div id="plItemsContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="plProductId">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control rounded-lg" placeholder="Price" name="plPrice" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control rounded-lg" placeholder="Discount %" name="plDiscount" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addPLItemRow()">+ Add Product</button>
+                    <hr class="my-4">
+                    <button type="submit" class="btn-brand w-100">Save Price List</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Warehouse Modal -->
+<div class="modal fade" id="createWarehouseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Register Warehouse</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="createWarehouseForm">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Name</label>
+                        <input type="text" class="form-control rounded-lg" id="whName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Code</label>
+                        <input type="text" class="form-control rounded-lg" id="whCode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City</label>
+                        <select class="form-select rounded-lg" id="whCity" required>
+                            <option value="">-- Select City --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Address</label>
+                        <textarea class="form-control rounded-lg" id="whAddress" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Create Warehouse</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Warehouse Modal -->
+<div class="modal fade" id="editWarehouseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Edit Warehouse</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="editWarehouseForm">
+                    <input type="hidden" id="editWhId">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Name</label>
+                        <input type="text" class="form-control rounded-lg" id="editWhName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Code</label>
+                        <input type="text" class="form-control rounded-lg" id="editWhCode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City</label>
+                        <select class="form-select rounded-lg" id="editWhCity" required>
+                            <option value="">-- Select City --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Address</label>
+                        <textarea class="form-control rounded-lg" id="editWhAddress" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editWhActive">
+                        <label class="form-check-label text-sm font-medium text-slate-700">Active</label>
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Update Warehouse</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Create User Account</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="createUserForm">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Username</label>
+                        <input type="text" class="form-control rounded-lg" id="newUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
+                        <input type="password" class="form-control rounded-lg" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Role</label>
+                        <select class="form-select rounded-lg" id="newRole" required>
+                            <option value="admin">Admin</option>
+                            <option value="subadmin">Sub-Admin</option>
+                            <option value="captain">Captain</option>
+                            <option value="storekeeper">Storekeeper</option>
+                            <option value="sales">Sales</option>
+                            <option value="van">Van</option>
+                            <option value="finance">Finance</option>
+                            <option value="cashier">Cashier</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City</label>
+                        <select class="form-select rounded-lg" id="newCity"></select>
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Create User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Credit Limit Modal -->
+<div class="modal fade" id="editCreditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Update Credit Limit</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="editCreditForm">
+                    <input type="hidden" id="editCreditCustomerId">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Customer</label>
+                        <span id="editCreditCustomerName" class="text-slate-800 font-semibold"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">New Credit Limit</label>
+                        <input type="number" class="form-control rounded-lg" id="editCreditLimit" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Update Limit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add City Modal -->
+<div class="modal fade" id="addCityModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Add New City</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="addCityForm">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City Name</label>
+                        <input type="text" class="form-control rounded-lg" id="newCityName" required placeholder="e.g., Lahore">
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Add City</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Edit Product</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="editProductForm">
+                    <input type="hidden" id="editProductId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Product Name *</label>
+                            <input type="text" class="form-control rounded-lg" id="editProdName" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">SKU</label>
+                            <input type="text" class="form-control rounded-lg" id="editProdSku">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Barcode</label>
+                            <input type="text" class="form-control rounded-lg" id="editProdBarcode">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Unit Price *</label>
+                            <input type="number" step="0.01" class="form-control rounded-lg" id="editProdPrice" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Tax Rate (%)</label>
+                            <input type="number" step="0.01" class="form-control rounded-lg" id="editProdTax" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">City *</label>
+                            <select class="form-select rounded-lg" id="editProdCity" required></select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Category</label>
+                            <input type="text" class="form-control rounded-lg" id="editProdCategory">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Description</label>
+                            <textarea class="form-control rounded-lg" id="editProdDescription" rows="3"></textarea>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Image URL</label>
+                            <input type="text" class="form-control rounded-lg" id="editProdImage">
+                        </div>
+                        <div class="col-span-2 form-check flex items-center gap-2 mt-2">
+                            <input type="checkbox" class="form-check-input h-5 w-5" id="editProdActive">
+                            <label class="form-check-label text-sm font-medium text-slate-700">Active</label>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button type="button" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-brand px-8">Update Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card border-none overflow-hidden">
+            <div class="modal-header !bg-[#0052FF] text-white">
+                <h5 class="font-bold mb-0">Record Details</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-8" id="detailBody">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Detail Modal -->
+<div class="modal fade" id="transferDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Transfer #<span id="transferDetailId"></span></h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">From</span><p id="transferDetailFrom" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">To</span><p id="transferDetailTo" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">Status</span><p id="transferDetailStatus" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">Scheduled</span><p id="transferDetailScheduled" class="font-semibold">-</p></div>
+                </div>
+                <h6 class="font-bold text-slate-700 mb-3">Items</h6>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Requested</th><th>Transferred</th></tr></thead>
+                        <tbody id="transferDetailItemsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate API Key Modal -->
+<div class="modal fade" id="generateApiKeyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Generate Account-Type API Key</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="generateApiKeyForm">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Account Type</label>
+                        <select class="form-select rounded-lg" id="apiKeyRoleSelect" required>
+                            <option value="">Select account type</option>
+                            <option value="sales">Sales</option>
+                            <option value="captain">Captain</option>
+                            <option value="storekeeper">Storekeeper</option>
+                            <option value="van">Van</option>
+                            <option value="finance">Finance</option>
+                            <option value="cashier">Cashier</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-brand w-100">Generate Key</button>
+                </form>
+                <div id="apiKeyResult" class="mt-4" style="display:none;">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <p><strong>Raw API Key (copy now):</strong></p>
+                        <code id="apiKeyRaw" class="bg-white px-2 py-1 rounded border border-green-200 break-all"></code>
+                        <p class="text-xs text-red-500 mt-2">⚠️ This key will not be shown again. Store it securely.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== SCRIPTS ========== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================================
+    // HIDE LOADING OVERLAY
+    // ============================================================
+    let loadingCompleted = 0;
+    const totalLoadingSteps = 2;
+
+    function checkLoadingComplete() {
+        loadingCompleted++;
+        if (loadingCompleted >= totalLoadingSteps) {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+    }
+    setTimeout(function() {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }, 5000);
+
+    // ============================================================
+    // TAB SYSTEM
+    // ============================================================
+    (function() {
+        const navLinks = document.querySelectorAll('.nav-link-custom[data-tab-trigger]');
+        const tabPanels = document.querySelectorAll('.tab-content-item');
+
+        function switchTab(tabId) {
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-tab-trigger') === tabId) {
+                    link.classList.add('active');
+                }
+            });
+            tabPanels.forEach(panel => {
+                panel.classList.remove('active-tab');
+                if (panel.id === tabId) {
+                    panel.classList.add('active-tab');
+                }
+            });
+            if (history.pushState) {
+                history.pushState(null, '', '#' + tabId);
+            }
+            if (tabId === 'dashboard') fetchStats();
+            if (tabId === 'stockrequests') fetchStockRequests();
+            if (tabId === 'cities') fetchCities();
+            if (tabId === 'products') {
+                populateProductCityDropdown();
+                fetchProductList();
+            }
+            if (tabId === 'devices') fetchApiKeys();
+            if (tabId === 'tokens') populateTokenUserDropdown();
+            if (tabId === 'gpc') populateGpcUserDropdowns();
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const tabId = this.getAttribute('data-tab-trigger');
+                if (tabId) switchTab(tabId);
+            });
+        });
+
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                const targetPanel = document.getElementById(hash);
+                if (targetPanel) switchTab(hash);
+            }
+        });
+
+        window.addEventListener('load', function() {
+            let hash = window.location.hash.replace('#', '');
+            if (!hash) hash = 'dashboard';
+            const targetPanel = document.getElementById(hash);
+            if (targetPanel) {
+                switchTab(hash);
+            } else {
+                switchTab('dashboard');
+            }
+        });
+    })();
+
+    // ============================================================
+    // API HELPER
+    // ============================================================
+    function apiFetch(url, options = {}) {
+        options.credentials = 'same-origin';
+        if (!options.headers) options.headers = {};
+        if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(options.body);
+        }
+        return fetch(url, options)
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    return Promise.reject('Unauthorized');
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+                    });
+                }
+            });
+    }
+
+    // ============================================================
+    // STOCK REQUESTS
+    // ============================================================
+    function fetchStockRequests() {
+        apiFetch('/dashboard/api/inventory-transactions?status=pending')
+            .then(data => {
+                const tbody = document.getElementById('stockRequestsBody');
+                if (data.transactions.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="13">No pending stock requests.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                data.transactions.forEach(t => {
+                    let attachmentHtml = '-';
+                    if (t.attachment_url) {
+                        attachmentHtml = `<a href="${t.attachment_url}" target="_blank" class="text-blue-600 underline">View</a>`;
+                    }
+                    const statusBadge = t.status === 'pending' ? '<span class="badge-pending px-2 py-1 rounded text-[10px] font-extrabold uppercase">Pending</span>' :
+                                      t.status === 'approved' ? '<span class="badge-approved px-2 py-1 rounded text-[10px] font-extrabold uppercase">Approved</span>' :
+                                      '<span class="badge-rejected px-2 py-1 rounded text-[10px] font-extrabold uppercase">Rejected</span>';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>#${t.id}</td>
+                        <td>${t.product_name}</td>
+                        <td>${t.warehouse_name}</td>
+                        <td>${t.quantity}</td>
+                        <td>${t.po_number || '-'}</td>
+                        <td>${t.po_date ? new Date(t.po_date).toLocaleDateString() : '-'}</td>
+                        <td>${t.ordered_qty || '-'}</td>
+                        <td>${attachmentHtml}</td>
+                        <td>${t.before_qty !== null && t.before_qty !== undefined ? t.before_qty : '-'}</td>
+                        <td>${t.after_qty !== null && t.after_qty !== undefined ? t.after_qty : '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-xs">${t.notes || '-'}</td>
+                        <td>
+                            ${t.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success me-1" onclick="approveStockRequest(${t.id})">Approve</button>
+                                <button class="btn btn-sm btn-danger" onclick="rejectStockRequest(${t.id})">Reject</button>
+                            ` : '-'}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching stock requests:', err);
+                document.getElementById('stockRequestsBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="13">Failed to load requests.</td></tr>';
+            });
+    }
+
+    function approveStockRequest(txnId) {
+        if (!confirm(`Approve stock request #${txnId}?`)) return;
+        apiFetch(`/api/inventory-transactions/${txnId}/approve`, { method: 'PUT' })
+            .then(res => {
+                alert(res.message);
+                fetchStockRequests();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function rejectStockRequest(txnId) {
+        const reason = prompt('Enter rejection reason:');
+        if (reason === null) return;
+        apiFetch(`/api/inventory-transactions/${txnId}/reject`, {
+            method: 'PUT',
+            body: { reason: reason || 'No reason provided' }
+        })
+        .then(res => {
+            alert(res.message);
+            fetchStockRequests();
+        })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    let currentPage = 0;
+    const pageSize = 15;
+    let totalMessages = 0;
+    let map;
+
+    function initMap() {
+        map = L.map('map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+    }
+
+    function fetchStats() {
+        apiFetch('/dashboard/api/stats')
+            .then(data => {
+                document.getElementById('totalCount').textContent = data.total.toLocaleString();
+                document.getElementById('textCount').textContent = data.text.toLocaleString();
+                document.getElementById('mediaCount').textContent = data.media.toLocaleString();
+                document.getElementById('locationCount').textContent = data.location.toLocaleString();
+                document.getElementById('todayCount').textContent = data.today.toLocaleString();
+                updateChart(data.daily);
+                checkLoadingComplete();
+            })
+            .catch(() => { checkLoadingComplete(); });
+    }
+
+    let chart = null;
+    function updateChart(dailyData) {
+        const ctx = document.getElementById('dailyChart').getContext('2d');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dailyData.map(d => d.date),
+                datasets: [{ label: 'Total Activity', data: dailyData.map(d => d.count), borderColor: '#0052FF', backgroundColor: 'rgba(0,82,255,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#0052FF', pointHoverRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    function fetchMessages(page) {
+        const type = document.getElementById('typeFilter').value;
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        const offset = page * pageSize;
+        let url = `/dashboard/api/messages?limit=${pageSize}&offset=${offset}`;
+        if (type) url += `&type=${type}`;
+        if (from) url += `&from=${from}`;
+        if (to) url += `&to=${to}`;
+        apiFetch(url)
+            .then(data => {
+                totalMessages = data.total;
+                renderTable(data.data);
+                renderPagination(page);
+                updateMap(data.data);
+                checkLoadingComplete();
+            })
+            .catch(() => { checkLoadingComplete(); });
+    }
+
+    function renderTable(messages) {
+        const tbody = document.getElementById('messagesBody');
+        tbody.innerHTML = '';
+        messages.forEach(msg => {
+            let mediaDisplay = '<span class="text-slate-400">None</span>';
+            if (msg.media_url) {
+                const ext = msg.media_url.split('.').pop().toLowerCase();
+                if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) mediaDisplay = '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">movie</span> Video</span>';
+                else if (['mp3', 'wav', 'aac'].includes(ext)) mediaDisplay = '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">audiotrack</span> Audio</span>';
+                else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) mediaDisplay = '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">image</span> Picture</span>';
+                else mediaDisplay = '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">attach_file</span> File</span>';
+            }
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="font-semibold text-slate-400">#${msg.id}</td>
+                <td><span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase">${msg.type}</span></td>
+                <td><div class="truncate max-w-[200px]">${msg.type === 'data' ? (msg.content || '') : mediaDisplay}</div></td>
+                <td><span class="text-xs text-slate-500">${msg.latitude ? `${msg.latitude.toFixed(3)}, ${msg.longitude.toFixed(3)}` : '-'}</span></td>
+                <td class="font-medium">${msg.username || 'unknown'}</td>
+                <td class="text-slate-500 text-xs">${new Date(msg.created_at).toLocaleString()}</td>
+                <td><button class="px-3 py-1 bg-[#0052FF] bg-opacity-10 text-[#0052FF] rounded font-bold text-xs hover:bg-opacity-20" onclick="showDetail(${msg.id})">Inspect</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderPagination(current) {
+        const totalPages = Math.ceil(totalMessages / pageSize);
+        const pag = document.getElementById('pagination');
+        pag.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === current ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link !rounded-md !mx-1 border-slate-200" href="#" onclick="goPage(${i})">${i+1}</a>`;
+            pag.appendChild(li);
+        }
+    }
+
+    function goPage(page) { currentPage = page; fetchMessages(page); }
+    function applyFilters() { currentPage = 0; fetchMessages(0); }
+    function resetFilters() {
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('fromDate').value = '';
+        document.getElementById('toDate').value = '';
+        applyFilters();
+    }
+
+    function updateMap(messages) {
+        map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+        const markers = [];
+        messages.forEach(msg => {
+            if (msg.latitude && msg.longitude) {
+                const m = L.marker([msg.latitude, msg.longitude])
+                    .bindPopup(`<b>${msg.type}</b><br>${msg.content || 'Media'}`)
+                    .addTo(map);
+                markers.push(m.getLatLng());
+            }
+        });
+        if (markers.length > 0) { map.fitBounds(L.latLngBounds(markers), { padding: [50, 50] }); }
+    }
+
+    function showDetail(id) {
+        apiFetch(`/dashboard/api/messages/${id}`)
+            .then(msg => {
+                let mediaHtml = '';
+                const baseUrl = window.location.origin;
+                if (msg.media_url) {
+                    let url = msg.media_url;
+                    if (!url.startsWith('http')) url = baseUrl + (url.startsWith('/') ? '' : '/') + url;
+                    const ext = msg.media_url.split('.').pop().toLowerCase();
+                    if (['jpg','png','webp'].includes(ext)) mediaHtml = `<img src="${url}" class="media-preview">`;
+                    else if (['mp4','webm'].includes(ext)) mediaHtml = `<video controls class="media-preview"><source src="${url}" type="video/${ext}"></video>`;
+                    else if (['mp3','wav'].includes(ext)) mediaHtml = `<audio controls class="w-full mt-4"><source src="${url}" type="audio/${ext}"></audio>`;
+                }
+                const body = document.getElementById('detailBody');
+                body.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Message ID</label><p class="text-xl font-bold">#${msg.id}</p></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Timestamp</label><p class="font-medium text-slate-600">${new Date(msg.created_at).toLocaleString()}</p></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Reporting User</label><p class="font-bold text-[#0052FF]">${msg.username || 'System'}</p></div>
+                            <div><label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Payload Content</label><div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-slate-700 italic">"${msg.content || 'No text payload'}"</div></div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-slate-100 min-h-[300px]">
+                            ${mediaHtml || '<span class="material-symbols-outlined text-slate-300 text-6xl">cloud_off</span><p class="text-slate-400 font-medium">No Media Content</p>'}
+                        </div>
+                    </div>
+                `;
+                new bootstrap.Modal(document.getElementById('detailModal')).show();
+            });
+    }
+
+    // ============================================================
+    // DELIVERIES
+    // ============================================================
+    function fetchDeliveries() {
+        apiFetch('/dashboard/api/deliveries').then(data => {
+            const tbody = document.getElementById('deliveriesBody');
+            tbody.innerHTML = data.deliveries.length ? '' : '<tr><td colspan="7" class="text-center py-8">No deliveries found.</td></tr>';
+            data.deliveries.forEach(d => {
+                const statusClass = d.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-bold text-slate-400">#${d.id}</td>
+                        <td>#${d.order_id}</td>
+                        <td class="font-bold">${d.customer_name || 'N/A'}</td>
+                        <td>${d.assigned_to || 'Unassigned'}</td>
+                        <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase ${statusClass}">${d.status}</span></td>
+                        <td class="text-slate-500">${d.scheduled_date ? new Date(d.scheduled_date).toLocaleDateString() : '-'}</td>
+                        <td><button class="px-3 py-1 bg-slate-100 rounded text-xs font-bold" onclick="updateDeliveryStatus(${d.id}, 'in_transit')">Transit</button></td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    function updateDeliveryStatus(deliveryId, status) {
+        if (!confirm(`Mark delivery #${deliveryId} as '${status}'?`)) return;
+        apiFetch(`/dashboard/api/deliveries/${deliveryId}/status`, { method: 'PUT', body: { status } })
+            .then(res => { alert(res.message); fetchDeliveries(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    document.getElementById('assignDeliveryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            order_id: parseInt(document.getElementById('assignOrderId').value),
+            assigned_to_user_id: parseInt(document.getElementById('assignToUser').value),
+            scheduled_date: document.getElementById('assignScheduledDate').value,
+            notes: document.getElementById('assignNotes').value
+        };
+        apiFetch('/api/deliveries/assign', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('assignDeliveryModal')).hide();
+                fetchDeliveries();
+                this.reset();
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // PAYMENTS
+    // ============================================================
+    function fetchPayments() {
+        apiFetch('/api/payments').then(data => {
+            const tbody = document.getElementById('paymentsBody');
+            tbody.innerHTML = '';
+            data.payments.forEach(p => {
+                tbody.innerHTML += `<tr><td>#${p.id}</td><td>${p.customer_name}</td><td>#${p.order_id||'-'}</td><td class="font-bold text-green-600">${window.currency}${p.amount.toFixed(2)}</td><td>${p.payment_method}</td><td>${p.collected_by}</td><td>${new Date(p.transaction_date).toLocaleDateString()}</td><td><span class="text-green-500 font-bold">●</span> ${p.status}</td></tr>`;
+            });
+        });
+    }
+
+    // ============================================================
+    // SETTLEMENTS
+    // ============================================================
+    function fetchSettlements() {
+        apiFetch('/dashboard/api/settlements').then(data => {
+            const tbody = document.getElementById('settlementsBody');
+            tbody.innerHTML = '';
+            data.settlements.forEach(s => {
+                tbody.innerHTML += `<tr><td>#${s.id}</td><td>${s.username}</td><td>${window.currency}${s.amount.toFixed(2)}</td><td>${s.status}</td><td>${s.cashier || '-'}</td><td>${s.finance_verifier || '-'}</td><td><button class="btn btn-sm btn-primary" onclick="approveSettlement(${s.id})">Approve</button></td></tr>`;
+            });
+        });
+    }
+
+    function approveSettlement(id) {
+        if (!confirm('Approve this settlement?')) return;
+        apiFetch(`/dashboard/api/settlements/${id}/approve`, { method: 'PUT' })
+            .then(res => { alert(res.message); fetchSettlements(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // STOCK TRANSFERS
+    // ============================================================
+    function fetchTransfers() {
+        apiFetch('/dashboard/api/stock-transfers').then(data => {
+            const tbody = document.getElementById('transfersBody');
+            tbody.innerHTML = data.transfers.length ? '' : '<tr><td colspan="7" class="text-center py-8">No stock transfers.</td></tr>';
+            data.transfers.forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${t.id}</td>
+                        <td>${t.from_user}</td>
+                        <td>${t.to_user}</td>
+                        <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase bg-${t.status === 'completed' ? 'green' : t.status === 'requested' ? 'yellow' : 'blue'}-100 text-${t.status === 'completed' ? 'green' : t.status === 'requested' ? 'yellow' : 'blue'}-700">${t.status}</span></td>
+                        <td>${t.meeting_location || '-'}</td>
+                        <td>${t.scheduled_time ? new Date(t.scheduled_time).toLocaleDateString() : '-'}</td>
+                        <td><button class="btn btn-sm btn-info" onclick="viewTransfer(${t.id})">View</button></td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    function viewTransfer(id) {
+        apiFetch(`/api/stock-transfers/${id}`)
+            .then(data => {
+                document.getElementById('transferDetailId').textContent = data.id;
+                document.getElementById('transferDetailFrom').textContent = data.from_user;
+                document.getElementById('transferDetailTo').textContent = data.to_user;
+                document.getElementById('transferDetailStatus').textContent = data.status;
+                document.getElementById('transferDetailScheduled').textContent = data.scheduled_time ? new Date(data.scheduled_time).toLocaleString() : 'N/A';
+                const tbody = document.getElementById('transferDetailItemsBody');
+                tbody.innerHTML = '';
+                data.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.product_name}</td><td>${item.requested_qty}</td><td>${item.transferred_qty}</td></tr>`;
+                });
+                new bootstrap.Modal(document.getElementById('transferDetailModal')).show();
+            })
+            .catch(err => alert('Error loading transfer details: ' + err));
+    }
+
+    function addTransferItemRow() {
+        const container = document.getElementById('transferItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2';
+        row.innerHTML = `
+            <div class="col-md-6">
+                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+            </div>
+            <div class="col-md-4">
+                <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    document.getElementById('createTransferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const items = [];
+        const rows = document.querySelectorAll('#transferItemsContainer .row');
+        rows.forEach(row => {
+            const productId = row.querySelector('[name="transferProductId"]').value;
+            const qty = row.querySelector('[name="transferQty"]').value;
+            if (productId && qty > 0) {
+                items.push({
+                    product_id: parseInt(productId),
+                    requested_qty: parseInt(qty)
+                });
+            }
+        });
+        if (items.length === 0) {
+            alert('Add at least one product.');
+            return;
+        }
+        const data = {
+            from_user_id: parseInt(document.getElementById('transferFromUser').value),
+            to_user_id: parseInt(document.getElementById('transferToUser').value),
+            meeting_location: document.getElementById('transferMeetingLocation').value,
+            scheduled_time: document.getElementById('transferScheduledTime').value,
+            items: items
+        };
+        apiFetch('/api/stock-transfers/create', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('createTransferModal')).hide();
+                fetchTransfers();
+                this.reset();
+                document.getElementById('transferItemsContainer').innerHTML = `
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // FINANCE
+    // ============================================================
+    function fetchFinanceSummary() {
+        apiFetch('/dashboard/api/finance/summary').then(data => {
+            document.getElementById('financeToday').textContent = `${window.currency}${data.total_collected_today.toFixed(2)}`;
+            document.getElementById('financeOutstanding').textContent = `${window.currency}${data.total_outstanding.toFixed(2)}`;
+            document.getElementById('financePendingSettlements').textContent = data.pending_settlements;
+        });
+    }
+
+    function fetchFinanceTransactions() {
+        apiFetch('/api/finance/transactions').then(data => {
+            const tbody = document.getElementById('financeTransactionsBody');
+            tbody.innerHTML = '';
+            data.transactions.forEach(t => {
+                tbody.innerHTML += `<tr><td>#${t.id}</td><td>${t.transaction_type}</td><td class="font-bold text-slate-800">${window.currency}${t.amount.toFixed(2)}</td><td>${t.reference}</td><td>${t.customer_name||'-'}</td><td>${t.username}</td><td>${new Date(t.transaction_date).toLocaleDateString()}</td></tr>`;
+            });
+        });
+    }
+
+    // ============================================================
+    // AUDIT LOGS
+    // ============================================================
+    function fetchAuditLogs() {
+        const action = document.getElementById('auditAction').value;
+        const from = document.getElementById('auditFrom').value;
+        const to = document.getElementById('auditTo').value;
+        let url = '/api/audit-logs?limit=100';
+        if (action) url += `&action=${action}`;
+        if (from) url += `&from=${from}`;
+        if (to) url += `&to=${to}`;
+        apiFetch(url).then(data => {
+            const tbody = document.getElementById('auditBody');
+            tbody.innerHTML = '';
+            data.logs.forEach(log => {
+                tbody.innerHTML += `<tr><td>#${log.id}</td><td>${log.username}</td><td class="font-bold">${log.action}</td><td>${log.table_name}</td><td>${log.record_id}</td><td class="text-xs max-w-[200px] truncate">${log.new_value||'-'}</td><td>${new Date(log.timestamp).toLocaleString()}</td></tr>`;
+            });
+        });
+    }
+
+    function resetAuditFilters() {
+        document.getElementById('auditAction').value = '';
+        document.getElementById('auditFrom').value = '';
+        document.getElementById('auditTo').value = '';
+        fetchAuditLogs();
+    }
+
+    // ============================================================
+    // REPORTS
+    // ============================================================
+    let salesChartInstance = null;
+    function fetchSalesReport() {
+        const from = document.getElementById('reportFrom').value;
+        const to = document.getElementById('reportTo').value;
+        const groupBy = document.getElementById('reportGroupBy').value;
+        apiFetch(`/api/reports/sales?from=${from}&to=${to}&group_by=${groupBy}`)
+            .then(data => {
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                if (salesChartInstance) salesChartInstance.destroy();
+                salesChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.report.map(r => r.period),
+                        datasets: [
+                            { label: 'Total Sales', data: data.report.map(r => r.total_sales), backgroundColor: '#0052FF' },
+                            { label: 'Orders', data: data.report.map(r => r.order_count), backgroundColor: '#94a3b8' }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            })
+            .catch(err => console.error('Sales report error:', err));
+    }
+
+    function fetchInventoryReport() {
+        apiFetch('/api/reports/inventory').then(data => {
+            const ctx = document.getElementById('inventoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.products.map(p => p.name),
+                    datasets: [{ label: 'Stock Qty', data: data.products.map(p => p.current_warehouse_qty), backgroundColor: '#22c55e' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        });
+    }
+
+    function fetchDeliveryPerformance() {
+        apiFetch('/api/reports/delivery-performance').then(data => {
+            const ctx = document.getElementById('deliveryPerformanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['On Time', 'Delayed', 'Failed'],
+                    datasets: [{ data: [data.on_time, data.delayed, data.failed], backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        });
+    }
+
+    // ============================================================
+    // PRICE LISTS
+    // ============================================================
+    function fetchPriceLists() {
+        apiFetch('/api/price-lists').then(data => {
+            const container = document.getElementById('priceListsContainer');
+            if (data.price_lists.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center text-slate-500 p-8">No price lists configured yet.</div>';
+                return;
+            }
+            let html = '';
+            data.price_lists.forEach(pl => {
+                html += `<div class="glass-card bg-white p-6">
+                    <h6 class="font-bold text-slate-800">${pl.name}</h6>
+                    <p class="text-sm text-slate-500">City: ${pl.city_name || 'All'} | Effective: ${pl.effective_from || 'N/A'} to ${pl.effective_to || 'N/A'}</p>
+                    <div class="mt-4 overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead><tr><th>Product</th><th>Price</th><th>Discount</th></tr></thead>
+                            <tbody>
+                                ${pl.items.map(item => `<tr><td>${item.product_name}</td><td>${window.currency}${item.unit_price}</td><td>${item.discount_percent}%</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-danger btn-sm mt-4" onclick="deletePriceList(${pl.id})">Delete</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        });
+    }
+
+    function deletePriceList(id) {
+        if (!confirm('Delete this price list?')) return;
+        apiFetch(`/api/price-lists/${id}`, { method: 'DELETE' })
+            .then(res => { alert(res.message); fetchPriceLists(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function addPLItemRow() {
+        const container = document.getElementById('plItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2';
+        row.innerHTML = `
+            <div class="col-md-4">
+                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="plProductId">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control rounded-lg" placeholder="Price" name="plPrice" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control rounded-lg" placeholder="Discount %" name="plDiscount" step="0.01">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    document.getElementById('createPriceListForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const items = [];
+        const rows = document.querySelectorAll('#plItemsContainer .row');
+        rows.forEach(row => {
+            const productId = row.querySelector('[name="plProductId"]').value;
+            const price = row.querySelector('[name="plPrice"]').value;
+            const discount = row.querySelector('[name="plDiscount"]').value;
+            if (productId && price) {
+                items.push({
+                    product_id: parseInt(productId),
+                    unit_price: parseFloat(price),
+                    discount_percent: parseFloat(discount) || 0
+                });
+            }
+        });
+        if (items.length === 0) {
+            alert('Add at least one product.');
+            return;
+        }
+        const data = {
+            name: document.getElementById('plName').value,
+            city_id: document.getElementById('plCity').value || null,
+            effective_from: document.getElementById('plFrom').value || null,
+            effective_to: document.getElementById('plTo').value || null,
+            items: items
+        };
+        apiFetch('/api/price-lists', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('createPriceListModal')).hide();
+                fetchPriceLists();
+                this.reset();
+                document.getElementById('plItemsContainer').innerHTML = `
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="plProductId">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control rounded-lg" placeholder="Price" name="plPrice" step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control rounded-lg" placeholder="Discount %" name="plDiscount" step="0.01">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // CREDIT LIMITS
+    // ============================================================
+    function fetchCreditLimits() {
+        apiFetch('/api/customers/credit').then(data => {
+            const tbody = document.getElementById('creditBody');
+            tbody.innerHTML = '';
+            data.customers.forEach(c => {
+                const available = c.credit_limit - c.outstanding_balance;
+                const status = available > 0 ? '<span class="badge bg-success">OK</span>' : '<span class="badge bg-danger">Exceeded</span>';
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-bold">${c.name}</td>
+                        <td>${window.currency}${c.outstanding_balance.toFixed(2)}</td>
+                        <td>${window.currency}${c.credit_limit.toFixed(2)}</td>
+                        <td>${window.currency}${available.toFixed(2)}</td>
+                        <td>${status}</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="editCredit(${c.id}, '${c.name}', ${c.credit_limit})">Edit Limit</button></td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    let editCustomerId = null;
+    function editCredit(id, name, limit) {
+        editCustomerId = id;
+        document.getElementById('editCreditCustomerId').value = id;
+        document.getElementById('editCreditCustomerName').textContent = name;
+        document.getElementById('editCreditLimit').value = limit;
+        new bootstrap.Modal(document.getElementById('editCreditModal')).show();
+    }
+
+    document.getElementById('editCreditForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editCreditCustomerId').value;
+        const newLimit = parseFloat(document.getElementById('editCreditLimit').value);
+        if (isNaN(newLimit) || newLimit < 0) { alert('Invalid limit'); return; }
+        apiFetch(`/api/customers/${id}/credit-limit`, {
+            method: 'PUT',
+            body: { credit_limit: newLimit }
+        })
+        .then(res => { alert(res.message); bootstrap.Modal.getInstance(document.getElementById('editCreditModal')).hide(); fetchCreditLimits(); })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // WAREHOUSE MANAGEMENT
+    // ============================================================
+
+    function populateWarehouseCityDropdown() {
+        apiFetch('/api/cities')
+            .then(data => {
+                const selectCreate = document.getElementById('whCity');
+                const selectEdit = document.getElementById('editWhCity');
+                const options = '<option value="">-- Select City --</option>' +
+                    data.cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                selectCreate.innerHTML = options;
+                selectEdit.innerHTML = options;
+            })
+            .catch(err => console.error('Error loading cities for warehouse form:', err));
+    }
+
+    function fetchWarehouses() {
+        apiFetch('/dashboard/api/warehouses').then(data => {
+            const tbody = document.getElementById('warehouseBody');
+            tbody.innerHTML = data.warehouses.length ? '' : '<tr><td colspan="7" class="text-center py-8">No warehouses found.</td></tr>';
+            data.warehouses.forEach(w => {
+                const statusBadge = w.is_active ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Inactive</span>';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${w.id}</td>
+                        <td class="font-bold">${w.name}</td>
+                        <td>${w.code}</td>
+                        <td>${w.city_name || 'N/A'}</td>
+                        <td>${w.address || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="editWarehouse(${w.id})">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteWarehouse(${w.id})">Deactivate</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    function deleteWarehouse(id) {
+        if (!confirm('Deactivate this warehouse?')) return;
+        apiFetch(`/dashboard/api/warehouses/${id}`, { method: 'DELETE' })
+            .then(res => { alert(res.message); fetchWarehouses(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function editWarehouse(id) {
+        apiFetch('/dashboard/api/warehouses').then(list => {
+            const wh = list.warehouses.find(w => w.id === id);
+            if (!wh) { alert('Warehouse not found'); return; }
+            document.getElementById('editWhId').value = wh.id;
+            document.getElementById('editWhName').value = wh.name;
+            document.getElementById('editWhCode').value = wh.code;
+            document.getElementById('editWhCity').value = wh.city_id;
+            document.getElementById('editWhAddress').value = wh.address || '';
+            document.getElementById('editWhActive').checked = wh.is_active;
+            new bootstrap.Modal(document.getElementById('editWarehouseModal')).show();
+        });
+    }
+
+    document.getElementById('createWarehouseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('whName').value,
+            code: document.getElementById('whCode').value,
+            city_id: parseInt(document.getElementById('whCity').value),
+            address: document.getElementById('whAddress').value
+        };
+        if (!data.city_id) {
+            alert('Please select a city.');
+            return;
+        }
+        apiFetch('/dashboard/api/warehouses', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('createWarehouseModal')).hide();
+                fetchWarehouses();
+                this.reset();
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    document.getElementById('editWarehouseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editWhId').value;
+        const data = {
+            name: document.getElementById('editWhName').value,
+            code: document.getElementById('editWhCode').value,
+            city_id: parseInt(document.getElementById('editWhCity').value),
+            address: document.getElementById('editWhAddress').value,
+            is_active: document.getElementById('editWhActive').checked
+        };
+        if (!data.city_id) {
+            alert('Please select a city.');
+            return;
+        }
+        apiFetch(`/dashboard/api/warehouses/${id}`, { method: 'PUT', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('editWarehouseModal')).hide();
+                fetchWarehouses();
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // PRODUCT INVENTORY (SKU Explorer)
+    // ============================================================
+    function loadProductDropdown() {
+        apiFetch('/api/products/search?limit=500').then(data => {
+            const select = document.getElementById('inventoryProductSelect');
+            select.innerHTML = '<option value="">-- Choose Product --</option>';
+            data.products.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.sku} | ${p.name}</option>`; });
+        });
+    }
+
+    function loadProductInventory() {
+        const pid = document.getElementById('inventoryProductSelect').value;
+        if(!pid) {
+            document.getElementById('inventoryDisplay').style.display = 'none';
+            return;
+        }
+        apiFetch(`/dashboard/api/products/${pid}/inventory`).then(data => {
+            document.getElementById('inventoryProductName').textContent = data.product_name;
+            const tbody = document.getElementById('inventoryBody');
+            tbody.innerHTML = '';
+            if (data.inventory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500">No inventory records found.</td></tr>';
+            } else {
+                data.inventory.forEach(inv => {
+                    tbody.innerHTML += `<tr><td>${inv.warehouse_name}</td><td>${inv.current_qty}</td><td>${inv.reserved_qty}</td><td>${inv.available_qty}</td><td><button class="text-[#0052FF] font-bold" onclick="selectWarehouseForUpdate(${inv.warehouse_id})">Select</button></td></tr>`;
+                });
+            }
+            document.getElementById('inventoryDisplay').style.display = 'block';
+            const whSel = document.getElementById('inventoryWarehouseSelect');
+            whSel.innerHTML = '<option value="">-- Select Warehouse --</option>';
+            if (data.inventory.length === 0) {
+                whSel.disabled = true;
+            } else {
+                whSel.disabled = false;
+                data.inventory.forEach(inv => { whSel.innerHTML += `<option value="${inv.warehouse_id}">${inv.warehouse_name}</option>`; });
+            }
+        }).catch(err => {
+            console.error(err);
+            alert('Error loading inventory data.');
+        });
+    }
+
+    function selectWarehouseForUpdate(warehouseId) {
+        document.getElementById('inventoryWarehouseSelect').value = warehouseId;
+    }
+
+    function updateInventory() {
+        const productId = document.getElementById('inventoryProductSelect').value;
+        const warehouseId = document.getElementById('inventoryWarehouseSelect').value;
+        const qty = parseInt(document.getElementById('inventoryQty').value);
+        const operation = document.getElementById('inventoryOperation').value;
+        if (!productId || !warehouseId) {
+            alert('Please select a product and a warehouse.');
+            return;
+        }
+        if (isNaN(qty) || qty < 0) {
+            alert('Please enter a valid quantity (≥ 0).');
+            return;
+        }
+        apiFetch('/dashboard/api/inventory/update', {
+            method: 'POST',
+            body: { product_id: parseInt(productId), warehouse_id: parseInt(warehouseId), quantity: qty, operation: operation }
+        })
+        .then(res => {
+            alert(res.message);
+            loadProductInventory();
+        })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // USERS
+    // ============================================================
+    function fetchUsers() {
+        apiFetch('/dashboard/api/users')
+            .then(data => {
+                const tb = document.getElementById('usersTable');
+                if (!data.data || data.data.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">No users found.</td></tr>';
+                    return;
+                }
+                tb.innerHTML = '';
+                data.data.forEach(u => {
+                    tb.innerHTML += `<tr><td>${u.id}</td><td class="font-bold">${u.username}</td><td><span class="bg-slate-100 px-2 py-1 rounded text-xs">${u.role}</span></td><td>${u.city_name||'-'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td><button class="text-red-500 font-bold text-xs" onclick="deleteUser(${u.id})">Delete</button></td></tr>`;
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching users:', err);
+                alert('Failed to load users. Check console for details.');
+            });
+    }
+
+    function deleteUser(id) {
+        if (!confirm('Deactivate this user?')) return;
+        apiFetch(`/dashboard/api/users/${id}`, { method: 'DELETE' })
+            .then(res => { alert(res.message || 'User deactivated'); fetchUsers(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    document.getElementById('createUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            username: document.getElementById('newUsername').value,
+            password: document.getElementById('newPassword').value,
+            role: document.getElementById('newRole').value,
+            city_id: document.getElementById('newCity').value || null
+        };
+        apiFetch('/dashboard/api/users', { method: 'POST', body: data })
+            .then(res => {
+                if (res.error) {
+                    alert(res.error);
+                    return;
+                }
+                alert(res.message || 'User created successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+                fetchUsers();
+                this.reset();
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // CITIES MANAGEMENT
+    // ============================================================
+    function fetchCities() {
+        apiFetch('/api/cities?include_inactive=true')
+            .then(data => {
+                const tbody = document.getElementById('citiesBody');
+                if (data.cities.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="4">No cities found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.cities.forEach(c => {
+                    const statusBadge = c.is_active ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>' :
+                                                     '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Inactive</span>';
+                    const actionText = c.is_active ? 'Close' : 'Reactivate';
+                    const actionClass = c.is_active ? 'btn-warning' : 'btn-success';
+                    html += `
+                        <tr>
+                            <td>${c.id}</td>
+                            <td class="font-bold">${c.name}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-sm ${actionClass}" onclick="toggleCity(${c.id})">${actionText}</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching cities:', err);
+                document.getElementById('citiesBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="4">Failed to load cities.</td></tr>';
+            });
+    }
+
+    function toggleCity(cityId) {
+        if (!confirm('Toggle city active status?')) return;
+        apiFetch(`/api/cities/${cityId}/toggle`, { method: 'PUT' })
+            .then(res => {
+                alert(res.message);
+                fetchCities();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    document.getElementById('addCityForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('newCityName').value.trim();
+        if (!name) {
+            alert('Please enter a city name.');
+            return;
+        }
+        apiFetch('/api/cities', {
+            method: 'POST',
+            body: { name: name }
+        })
+        .then(res => {
+            if (res.status === 'success') {
+                alert(`City "${res.name}" added successfully.`);
+                bootstrap.Modal.getInstance(document.getElementById('addCityModal')).hide();
+                this.reset();
+                fetchCities();
+            } else {
+                alert('Error: ' + (res.error || 'Unknown error'));
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // SETTINGS (including auto-approve and token config)
+    // ============================================================
+    window.currency = '$';
+
+    function fetchSettings() {
+        apiFetch('/dashboard/api/settings').then(data => {
+            window.currency = data.currency || '$';
+            document.getElementById('currencyInput').value = window.currency;
+            document.getElementById('taxRateInput').value = data.tax_rate || 0;
+            document.getElementById('taxLabelInput').value = data.tax_label || 'Tax';
+            document.getElementById('autoApproveEnabled').checked = data.auto_approve_enabled || false;
+            document.getElementById('autoApproveThreshold').value = data.auto_approve_threshold || 10;
+            document.getElementById('autoApproveTimeWindow').value = data.auto_approve_time_window || 1;
+            document.getElementById('autoApproveMaxTotal').value = data.auto_approve_max_total || 20;
+            document.getElementById('maxTokenCap').value = data.max_token_cap || 15;
+            document.getElementById('tokenRenewalThreshold').value = data.token_renewal_threshold || 2;
+            document.getElementById('defaultExpiryDays').value = data.default_expiry_days || 7;
+            fetchFinanceSummary();
+            fetchProductList();
+            fetchPayments();
+            fetchSettlements();
+            fetchFinanceTransactions();
+            fetchCreditLimits();
+            fetchPriceLists();
+        });
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const currency = document.getElementById('currencyInput').value.trim();
+        const tax_rate = parseFloat(document.getElementById('taxRateInput').value) || 0;
+        const tax_label = document.getElementById('taxLabelInput').value.trim();
+        const auto_approve_enabled = document.getElementById('autoApproveEnabled').checked;
+        const auto_approve_threshold = parseInt(document.getElementById('autoApproveThreshold').value) || 10;
+        const auto_approve_time_window = parseInt(document.getElementById('autoApproveTimeWindow').value) || 1;
+        const auto_approve_max_total = parseInt(document.getElementById('autoApproveMaxTotal').value) || 20;
+        const max_token_cap = parseInt(document.getElementById('maxTokenCap').value) || 15;
+        const token_renewal_threshold = parseInt(document.getElementById('tokenRenewalThreshold').value) || 2;
+        const default_expiry_days = parseInt(document.getElementById('defaultExpiryDays').value) || 7;
+
+        apiFetch('/dashboard/api/settings', {
+            method: 'POST',
+            body: { currency, tax_rate, tax_label, auto_approve_enabled, auto_approve_threshold, auto_approve_time_window, auto_approve_max_total, max_token_cap, token_renewal_threshold, default_expiry_days }
+        })
+        .then(res => { alert(res.message); fetchSettings(); })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // PRODUCT MANAGEMENT
+    // ============================================================
+
+    function populateProductCityDropdown() {
+        apiFetch('/api/cities')
+            .then(data => {
+                const select = document.getElementById('prodCity');
+                select.innerHTML = '<option value="">Select City</option>';
+                data.cities.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+                const editSelect = document.getElementById('editProdCity');
+                editSelect.innerHTML = '<option value="">Select City</option>';
+                data.cities.forEach(c => {
+                    editSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+                const filterSelect = document.getElementById('productCityFilter');
+                filterSelect.innerHTML = '<option value="">All Cities</option>';
+                data.cities.forEach(c => {
+                    filterSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+            })
+            .catch(err => console.error('Error loading cities for product form:', err));
+    }
+
+    let productPage = 0;
+    const productLimit = 15;
+    let productTotal = 0;
+
+    function fetchProductList() {
+        const search = document.getElementById('productSearch').value.trim();
+        const cityId = document.getElementById('productCityFilter').value;
+        const status = document.getElementById('productStatusFilter').value;
+        let url = `/api/products?limit=${productLimit}&offset=${productPage * productLimit}`;
+        if (search) url += `&q=${encodeURIComponent(search)}`;
+        if (cityId) url += `&city_id=${cityId}`;
+        if (status !== '') url += `&is_active=${status}`;
+
+        apiFetch(url)
+            .then(data => {
+                productTotal = data.total;
+                renderProductTable(data.products);
+                renderProductPagination();
+            })
+            .catch(err => {
+                console.error('Error fetching products:', err);
+                document.getElementById('productBody').innerHTML = `<tr><td colspan="9" class="text-center py-8 text-red-500">Failed to load products.</td></tr>`;
+            });
+    }
+
+    function renderProductTable(products) {
+        const tbody = document.getElementById('productBody');
+        if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">No products found.</td></tr>';
+            return;
+        }
+        let html = '';
+        products.forEach(p => {
+            const statusBadge = p.is_active ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>' :
+                                              '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Inactive</span>';
+            html += `
+                <tr>
+                    <td>${p.id}</td>
+                    <td class="font-bold">${p.name}</td>
+                    <td>${p.sku || '-'}</td>
+                    <td>${p.barcode || '-'}</td>
+                    <td>${window.currency}${p.unit_price.toFixed(2)}</td>
+                    <td>${p.city_name || 'N/A'}</td>
+                    <td>${p.current_warehouse_qty || 0}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="openEditProduct(${p.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function renderProductPagination() {
+        const totalPages = Math.ceil(productTotal / productLimit);
+        const pag = document.getElementById('productPagination');
+        const info = document.getElementById('productPaginationInfo');
+        const start = productPage * productLimit + 1;
+        const end = Math.min((productPage + 1) * productLimit, productTotal);
+        info.textContent = `Showing ${start}–${end} of ${productTotal} products`;
+
+        pag.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === productPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link !rounded-md !mx-1 border-slate-200" href="#" onclick="goProductPage(${i})">${i+1}</a>`;
+            pag.appendChild(li);
+        }
+    }
+
+    function goProductPage(page) {
+        productPage = page;
+        fetchProductList();
+    }
+
+    function resetProductFilters() {
+        document.getElementById('productSearch').value = '';
+        document.getElementById('productCityFilter').value = '';
+        document.getElementById('productStatusFilter').value = 'true';
+        productPage = 0;
+        fetchProductList();
+    }
+
+    document.getElementById('createProductForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('prodName').value.trim();
+        const sku = document.getElementById('prodSku').value.trim() || undefined;
+        const barcode = document.getElementById('prodBarcode').value.trim() || undefined;
+        const unit_price = parseFloat(document.getElementById('prodPrice').value);
+        const tax_rate = parseFloat(document.getElementById('prodTax').value) || 0;
+        const city_id = parseInt(document.getElementById('prodCity').value);
+        const category = document.getElementById('prodCategory').value.trim() || undefined;
+        const description = document.getElementById('prodDescription').value.trim() || undefined;
+        const image_url = document.getElementById('prodImage').value.trim() || undefined;
+        const is_active = document.getElementById('prodActive').checked;
+
+        if (!name) {
+            alert('Product name is required.');
+            return;
+        }
+        if (isNaN(unit_price) || unit_price < 0) {
+            alert('Please enter a valid unit price.');
+            return;
+        }
+        if (!city_id) {
+            alert('Please select a city.');
+            return;
+        }
+
+        const payload = { name, sku, barcode, unit_price, tax_rate, city_id, category, description, image_url, is_active };
+
+        apiFetch('/api/products', { method: 'POST', body: payload })
+            .then(res => {
+                if (res.status === 'success') {
+                    alert(res.message);
+                    this.reset();
+                    document.getElementById('prodActive').checked = true;
+                    fetchProductList();
+                } else {
+                    alert('Error: ' + (res.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    function openEditProduct(productId) {
+        apiFetch(`/api/products/${productId}`)
+            .then(product => {
+                document.getElementById('editProductId').value = product.id;
+                document.getElementById('editProdName').value = product.name;
+                document.getElementById('editProdSku').value = product.sku || '';
+                document.getElementById('editProdBarcode').value = product.barcode || '';
+                document.getElementById('editProdPrice').value = product.unit_price;
+                document.getElementById('editProdTax').value = product.tax_rate;
+                document.getElementById('editProdCity').value = product.city_id;
+                document.getElementById('editProdCategory').value = product.category || '';
+                document.getElementById('editProdDescription').value = product.description || '';
+                document.getElementById('editProdImage').value = product.image_url || '';
+                document.getElementById('editProdActive').checked = product.is_active;
+                new bootstrap.Modal(document.getElementById('editProductModal')).show();
+            })
+            .catch(err => alert('Error loading product: ' + err));
+    }
+
+    document.getElementById('editProductForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editProductId').value;
+        const name = document.getElementById('editProdName').value.trim();
+        const sku = document.getElementById('editProdSku').value.trim() || undefined;
+        const barcode = document.getElementById('editProdBarcode').value.trim() || undefined;
+        const unit_price = parseFloat(document.getElementById('editProdPrice').value);
+        const tax_rate = parseFloat(document.getElementById('editProdTax').value) || 0;
+        const city_id = parseInt(document.getElementById('editProdCity').value);
+        const category = document.getElementById('editProdCategory').value.trim() || undefined;
+        const description = document.getElementById('editProdDescription').value.trim() || undefined;
+        const image_url = document.getElementById('editProdImage').value.trim() || undefined;
+        const is_active = document.getElementById('editProdActive').checked;
+
+        if (!name) {
+            alert('Product name is required.');
+            return;
+        }
+        if (isNaN(unit_price) || unit_price < 0) {
+            alert('Please enter a valid unit price.');
+            return;
+        }
+        if (!city_id) {
+            alert('Please select a city.');
+            return;
+        }
+
+        const payload = { name, sku, barcode, unit_price, tax_rate, city_id, category, description, image_url, is_active };
+
+        apiFetch(`/api/products/${id}`, { method: 'PUT', body: payload })
+            .then(res => {
+                if (res.status === 'success') {
+                    alert(res.message);
+                    bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+                    fetchProductList();
+                } else {
+                    alert('Error: ' + (res.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    function deleteProduct(productId) {
+        if (!confirm('Are you sure you want to deactivate this product?')) return;
+        apiFetch(`/api/products/${productId}`, { method: 'DELETE' })
+            .then(res => {
+                if (res.status === 'success') {
+                    alert(res.message);
+                    fetchProductList();
+                } else {
+                    alert('Error: ' + (res.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // DEVICE MANAGEMENT
+    // ============================================================
+    function fetchApiKeys() {
+        apiFetch('/dashboard/api/admin/role-keys')
+            .then(data => {
+                const tbody = document.getElementById('apiKeysBody');
+                if (!data.role_keys || data.role_keys.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="6">No account-type API keys found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.role_keys.forEach(k => {
+                    html += `
+                        <tr>
+                            <td>${k.id}</td>
+                            <td class="font-semibold capitalize">${k.role}</td>
+                            <td><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span></td>
+                            <td class="text-xs">${new Date(k.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${k.updated_at ? new Date(k.updated_at).toLocaleDateString() : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="revokeRoleKey(${k.id})">Revoke</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching API keys:', err);
+                document.getElementById('apiKeysBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="6">Failed to load account-type API keys.</td></tr>';
+            });
+    }
+
+    function revokeRoleKey(keyId) {
+        if (!confirm('Revoke this account-type API key? Every account using this key will lose API access.')) return;
+        apiFetch(`/dashboard/api/admin/role-keys/${keyId}`, { method: 'DELETE' })
+            .then(res => { alert(res.message); fetchApiKeys(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function populateUserDropdowns() {
+        apiFetch('/dashboard/api/users')
+            .then(data => {
+                const users = data.data || [];
+                const selectGpc = document.getElementById('gpcUserSelect');
+                const selectToken = document.getElementById('tokenUserSelect');
+                const options = '<option value="">Select User</option>' +
+                    users.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
+                if (selectGpc) selectGpc.innerHTML = options;
+                if (selectToken) selectToken.innerHTML = options;
+            })
+            .catch(err => console.error('Error loading users:', err));
+    }
+
+    document.getElementById('generateApiKeyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const role = document.getElementById('apiKeyRoleSelect').value;
+
+        if (!role) {
+            alert('Please select an account type.');
+            return;
+        }
+
+        apiFetch('/dashboard/api/admin/role-keys', {
+            method: 'POST',
+            body: { role }
+        })
+        .then(res => {
+            if (res.status === 'success') {
+                document.getElementById('apiKeyRaw').textContent = res.api_key;
+                document.getElementById('apiKeyResult').style.display = 'block';
+                alert(`Shared ${res.role} API key generated successfully. Copy the raw key now.`);
+                fetchApiKeys();
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('generateApiKeyModal')).hide();
+                    document.getElementById('apiKeyResult').style.display = 'none';
+                    this.reset();
+                }, 5000);
+            } else {
+                alert('Error: ' + (res.error || 'Unknown error'));
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // TOKEN POOL VIEWER
+    // ============================================================
+    function populateTokenUserDropdown() {
+        populateUserDropdowns();
+    }
+
+    function fetchTokenPool() {
+        const userId = document.getElementById('tokenUserSelect').value;
+        if (!userId) {
+            document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>';
+            document.getElementById('tokenTotal').textContent = '-';
+            document.getElementById('tokenUnused').textContent = '-';
+            document.getElementById('tokenUsed').textContent = '-';
+            document.getElementById('tokenExpired').textContent = '-';
+            return;
+        }
+        apiFetch(`/dashboard/api/admin/tokens/${userId}`)
+            .then(data => {
+                document.getElementById('tokenTotal').textContent = data.stats.total || 0;
+                document.getElementById('tokenUnused').textContent = data.stats.unused || 0;
+                document.getElementById('tokenUsed').textContent = data.stats.used || 0;
+                document.getElementById('tokenExpired').textContent = data.stats.expired || 0;
+
+                const tbody = document.getElementById('tokenBody');
+                if (!data.tokens || data.tokens.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No tokens found for this user.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.tokens.forEach(t => {
+                    const statusBadge = t.token_status === 'UNUSED' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Unused</span>' :
+                                       t.token_status === 'USED' ? '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Used</span>' :
+                                       '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Expired</span>';
+                    html += `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td class="font-mono text-sm">${t.session_id}</td>
+                            <td class="font-mono text-sm">${t.cipher_token}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-xs">${new Date(t.expiry_timestamp).toLocaleDateString()}</td>
+                            <td class="text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${t.used_at ? new Date(t.used_at).toLocaleDateString() : '-'}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching token pool:', err);
+                document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load tokens.</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // GPC FILES MANAGEMENT
+    // ============================================================
+    function populateGpcUserDropdowns() {
+        populateUserDropdowns();
+    }
+
+    document.getElementById('generateGpcForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const user_id = document.getElementById('gpcUserSelect').value;
+        const expiry_days = parseInt(document.getElementById('gpcExpiryDays').value) || 7;
+        const show_stock = document.getElementById('gpcShowStock').checked;
+
+        if (!user_id) {
+            alert('Please select a user.');
+            return;
+        }
+
+        const url = `/dashboard/api/admin/gpc/generate?user_id=${user_id}&expiry_days=${expiry_days}&show_stock_quantity=${show_stock}`;
+        fetch(url, { credentials: 'same-origin' })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => { throw new Error(err.error || 'Download failed'); });
+                }
+                return res.blob();
+            })
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `user_${user_id}.gpc`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                document.getElementById('gpcGenerateResult').innerHTML = '<div class="bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl">✅ File downloaded successfully.</div>';
+                document.getElementById('gpcGenerateResult').style.display = 'block';
+            })
+            .catch(err => {
+                document.getElementById('gpcGenerateResult').innerHTML = `<div class="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl">❌ Error: ${err.message}</div>`;
+                document.getElementById('gpcGenerateResult').style.display = 'block';
+            });
+    });
+
+    // ============================================================
+    // FIXED: Upload GPC form – no "Imported" data
+    // ============================================================
+    document.getElementById('uploadGpcForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('gpcFileInput');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Please select a .gpc file.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/api/admin/gpc/upload', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const resultDiv = document.getElementById('gpcUploadResult');
+            if (data.status === 'success') {
+                // Only the success message – no "Imported"
+                resultDiv.innerHTML = `<div class="bg-green-100 border border-green-300 text-green-800 p-4 rounded-xl">✅ ${data.message}</div>`;
+            } else {
+                resultDiv.innerHTML = `<div class="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl">❌ Error: ${data.error || 'Unknown error'}</div>`;
+            }
+            resultDiv.style.display = 'block';
+            fileInput.value = '';
+        })
+        .catch(err => {
+            document.getElementById('gpcUploadResult').innerHTML = `<div class="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl">❌ Error: ${err.message}</div>`;
+            document.getElementById('gpcUploadResult').style.display = 'block';
+        });
+    });
+
+    // ============================================================
+    // WEBSOCKET
+    // ============================================================
+    function setupWebSocket() {
+        var socket = io();
+        socket.on('connect', () => { socket.emit('join_captain_room'); });
+        socket.on('new_order', (data) => {
+            var toastEl = document.getElementById('orderToast');
+            document.getElementById('toastBody').innerHTML = `<b>Order #${data.order_id}</b><br>${data.customer_name} - Total: ${window.currency}${data.net_total}`;
+            new bootstrap.Toast(toastEl).show();
+        });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    window.onload = function() {
+        initMap();
+        fetchStats();
+        fetchMessages(0);
+        fetchDeliveries();
+        fetchPayments();
+        fetchSettlements();
+        fetchTransfers();
+        fetchFinanceSummary();
+        fetchFinanceTransactions();
+        fetchAuditLogs();
+        fetchSalesReport();
+        fetchInventoryReport();
+        fetchDeliveryPerformance();
+        fetchPriceLists();
+        fetchCreditLimits();
+        populateWarehouseCityDropdown();
+        fetchWarehouses();
+        fetchUsers();
+        fetchCities();
+        fetchSettings();
+        setupWebSocket();
+        loadProductDropdown();
+        populateProductCityDropdown();
+        if (window.location.hash === '#products') {
+            fetchProductList();
+        }
+        populateUserDropdowns();
+        if (window.location.hash === '#devices') fetchApiKeys();
+        if (window.location.hash === '#tokens') populateTokenUserDropdown();
+        if (window.location.hash === '#gpc') populateGpcUserDropdowns();
+    };
+</script>
+</body>
+</html>
