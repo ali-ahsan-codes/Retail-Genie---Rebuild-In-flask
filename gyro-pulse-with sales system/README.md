@@ -47,3 +47,11 @@ No production deployment, database initialization or business-data migration is 
 by the baseline checks. Applying each later phase requires separate approval.
 
 See [current recovery evidence and setup](docs/RECOVERY_2A.md). Earlier conversation results do not verify this checkout.
+
+Phase 2B scoped office pairing is now implemented in the isolated copies. See
+[setup, protocol and current evidence](docs/PHASE_2B.md). Business sync remains disabled;
+Phases 3–7 and real deployment acceptance are not complete.
+
+Phase 3 now adds opt-in durable delivery (not catalog/order application). See
+[transport setup, transaction semantics and remaining acceptance](docs/PHASE_3.md).
+Phases 4–7 are still incomplete; production remains blocked.

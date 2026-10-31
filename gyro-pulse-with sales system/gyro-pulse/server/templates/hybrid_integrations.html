@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Hybrid API Release</title></head><body>
+<h1>Office pairing · metadata permission only</h1><p>Retail remains stock/accounting authority. No catalog, orders or transport permission is granted.</p>
+{% if message %}<p>{{ message }}</p>{% endif %}
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="action" value="issue"><label>Stable office UUID <input name="office_id" value="{{ office.office_id if office else '' }}" required></label><button>Issue replacement 10-minute pairing grant</button></form>
+{% if bundle %}<p>One-time secret. Move privately; never put in a URL or public logs. Exchange rotates the old bearer. Lost exchange response requires a fresh grant.</p><textarea readonly rows="12" cols="100">{{ bundle }}</textarea>{% endif %}
+{% if office %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="action" value="revoke"><button>Revoke office credentials and pending grants</button></form>{% endif %}
+{% if office and office.current_credential_id %}
+<h2>Optional delivery-only transport permission</h2><p>Off by default after each pairing/rotation. Delivery receipts never mean approval or stock posting.</p>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button name="action" value="transport_enable">Enable durable transfer</button><button name="action" value="transport_disable">Disable durable transfer</button></form>
+{% endif %}
+</body></html>

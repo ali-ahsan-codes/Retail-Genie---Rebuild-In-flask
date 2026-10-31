@@ -13,7 +13,10 @@ class FoundationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.manifest = json.loads((ROOT / 'docs/SOURCE_MANIFEST.json').read_text())
-        cls.overlays = json.loads((ROOT / 'docs/RECOVERY_2A_MANIFEST.json').read_text())['files']
+        cls.recovery_overlays = json.loads((ROOT / 'docs/RECOVERY_2A_MANIFEST.json').read_text())['files']
+        cls.phase2b_overlays = json.loads((ROOT / 'docs/PHASE_2B_MANIFEST.json').read_text())['files']
+        cls.phase3_overlays = json.loads((ROOT / 'docs/PHASE_3_MANIFEST.json').read_text())['files']
+        cls.overlays = {**cls.recovery_overlays, **cls.phase2b_overlays, **cls.phase3_overlays}
 
     def test_original_sources_unchanged(self):
         for item in self.manifest['files']:
@@ -26,10 +29,29 @@ class FoundationTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256((ROOT / item['copy']).read_bytes()).hexdigest(), self.overlays.get(item['copy'], {}).get('sha256', item['copy_sha256']))
 
     def test_recovery_overlay_integrity(self):
+        # Verify the entire immutable evidence chain, not rewritten earlier manifests.
+        previous={item['copy']:item['copy_sha256'] for item in self.manifest['files']}
+        for index,layer in enumerate([self.recovery_overlays,self.phase2b_overlays,self.phase3_overlays]):
+            for name,entry in layer.items():
+                if index>0:self.assertEqual(entry.get('previous_sha256'),previous.get(name))
+                elif 'baseline_sha256' in entry:self.assertEqual(entry['baseline_sha256'],previous.get(name))
+                previous[name]=entry['sha256']
+
+    def test_current_overlay_integrity(self):
         for name,entry in self.overlays.items():
             with self.subTest(path=name):
                 self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(),entry['sha256'])
                 if name.endswith('.py'):ast.parse((ROOT/name).read_text())
+
+    def test_contract_mirrors_and_prior_hashes(self):
+        self.assertEqual((ROOT/'gyro-pulse/server/integration_contract.py').read_bytes(),
+                         (ROOT/'retail-genie/retail_genie/integration_contract.py').read_bytes())
+        self.assertEqual((ROOT/'gyro-pulse/server/sync_core.py').read_text().replace('from models import db','from .extensions import db'),
+                         (ROOT/'retail-genie/retail_genie/sync_core.py').read_text())
+        baseline={item['copy']:item['copy_sha256'] for item in self.manifest['files']}
+        previous={**baseline, **{name:entry['sha256'] for name,entry in self.recovery_overlays.items()}}
+        for name,entry in self.phase2b_overlays.items():
+            self.assertEqual(entry.get('previous_sha256'),previous.get(name))
 
     def test_python_syntax(self):
         for item in self.manifest['files']:

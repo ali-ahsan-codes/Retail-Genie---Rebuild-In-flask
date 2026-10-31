@@ -1,0 +1,78 @@
+{
+  "phase": "3-transport-implementation",
+  "production_accepted": false,
+  "files": {
+    "README.md": {
+      "sha256": "b516ebaeeeadc96c6611957240562bde4f1ec8da0393c0f9f26f7985a463bf71",
+      "previous_sha256": "c9abe2bceed991fe518ba6cacc7a74ab31788e716bff1adfe446cadee0d801de"
+    },
+    "docs/ROADMAP.md": {
+      "sha256": "174d4c026aa31d0a421224b7ea88b56b62ccf59234111b48c3f4209501f82835",
+      "previous_sha256": "9dcd831d5868cbf2725b53b62678c1dd6a27ad0b53108ff9852f56ec1ff5e82b"
+    },
+    "docs/PHASE_3.md": {
+      "sha256": "f5f3918e9dec185946b3b4dc6c1a965d58e05ec56fcf46d74839b18dfccac9f9"
+    },
+    "integration/phase-status.json": {
+      "sha256": "41d1542d8b7642418e0b63ed832581ad1d01f6043939b8a76a078ef7819e5762",
+      "previous_sha256": "7fcc690ac55f8c2a504d14f8cb3c98edaeb95bc109787a3519e6e14b49f9cc9b"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "36b3d1650610b4e2227436b70107a57913c2512532d5ec84afd45dd820e51854",
+      "previous_sha256": "23097b01bd0fcc62d3ca53b612b1d8690a40923308b9ba6dcf7d5a0e20c38662"
+    },
+    "gyro-pulse/server/app.py": {
+      "sha256": "448301ea21de71be678080a03105b799b396384eeaedde96c3499a854e039e96",
+      "previous_sha256": "631b8632e7b90103b88c7ce59a20a7e4d45865570188c09ca3126f234ab762cb"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "81b81859f937a5a45d3370c36212ae00cd63d3c9abda5078650fd0527da0324e",
+      "previous_sha256": "425d1f28aecc35197b897a73e72fc70f15005599863454b01adcab0a186a0f4d"
+    },
+    "gyro-pulse/server/integration_contract.py": {
+      "sha256": "a77d8c62d053f6b02e291dd220199df503abad3def3c1e3dd6db4324e0f77c3d",
+      "previous_sha256": "b63ab0e08070b9083cb1f403381da9633c52d1b69e7326d349e6a0de67e44fca"
+    },
+    "gyro-pulse/server/integration_api.py": {
+      "sha256": "1fcf2d6f03b7b3750e1abffcdeeced6a53af40caab876569c5292c0a092ca457",
+      "previous_sha256": "e04f1481c82677b684fba1f8ec48db7a3805cc98129ea2afa2058faa1a3bb412"
+    },
+    "gyro-pulse/server/sync_core.py": {
+      "sha256": "c2a04ac6bc69bc88b3c9635b9b358ebfad3235e30654b559aa96bc9f8a71fbf1"
+    },
+    "gyro-pulse/server/templates/hybrid_integrations.html": {
+      "sha256": "1820e91df90a1325959071dcbf3892cf3a882520e8046485063e1a7328fe2521",
+      "previous_sha256": "72845cca06efd68acf0e502f63eebf0ea8476303148d93bf09bfbab3ee0453b4"
+    },
+    "gyro-pulse/server/tests/test_sync_core.py": {
+      "sha256": "607207349752715c62559a81731184a7816d1f1fd4cf7a0828086b8d14023022"
+    },
+    "gyro-pulse/server/tests/test_transport_api.py": {
+      "sha256": "0222b62e1c3e257a2541eee30f259d0a5810f95339f93831408ef05d6aa2a7b4"
+    },
+    "retail-genie/retail_genie/__init__.py": {
+      "sha256": "8a4cdc2b48382a79d1d6372d755c47e5a8840e438bb13429d2036355097f97bc",
+      "previous_sha256": "f7a0be58d95d226fcbb6bb2322271e6bbb619ab30a1c70768a1a2ce0c4c3ea6f"
+    },
+    "retail-genie/retail_genie/integration_contract.py": {
+      "sha256": "a77d8c62d053f6b02e291dd220199df503abad3def3c1e3dd6db4324e0f77c3d",
+      "previous_sha256": "b63ab0e08070b9083cb1f403381da9633c52d1b69e7326d349e6a0de67e44fca"
+    },
+    "retail-genie/retail_genie/field_integration.py": {
+      "sha256": "4e004359d759b9be1dad30bd0b7db5737aa19ee337b4e6569a102d1e8adb4f25",
+      "previous_sha256": "6a5aedbb4eb367d255d47d5f6a3b782371c0e736abf842443288ac892b2a105e"
+    },
+    "retail-genie/retail_genie/field_transport.py": {
+      "sha256": "46d70f3e66b3d7b78322e13debf57222fbd3d54c5fff01990590571bbbc02efc"
+    },
+    "retail-genie/retail_genie/sync_core.py": {
+      "sha256": "8c55862ec41d028cd05bfa18bd54fce99997fae6fef0f8d55eaf509a87006208"
+    },
+    "retail-genie/tests/test_sync_core.py": {
+      "sha256": "ae2612bd90aed3ea31db9382ae02298ac30ef793ef461cf6955d30a3e3524a31"
+    },
+    "retail-genie/tests/test_field_transport.py": {
+      "sha256": "ccb1e51ea947b57bbf6bcd05c36f13ec44770c34f1c3ac82f086d44d7603d8b4"
+    }
+  }
+}

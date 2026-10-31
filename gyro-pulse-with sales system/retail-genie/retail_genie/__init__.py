@@ -129,6 +129,12 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(tenancy_admin_bp)
     app.register_blueprint(backup_admin_bp)
+    from .field_integration import register as register_field_integration
+    register_field_integration(app)
+    from .sync_core import register as register_transport
+    register_transport(app)
+    from .field_transport import register as register_transport_worker
+    register_transport_worker(app)
     app.register_blueprint(settings_bp)
     app.register_blueprint(scm_bp)
     app.register_blueprint(attendance_bp)
