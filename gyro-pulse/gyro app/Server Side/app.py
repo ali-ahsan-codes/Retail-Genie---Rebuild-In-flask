@@ -53,6 +53,11 @@ def create_app():
         app.config['BACKUP_FOLDER'] = './backups'
     app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64 MB max upload payload
 
+    production = os.getenv('APP_ENV') == 'production'
+    if production and (not os.getenv('SECRET_KEY') or len(os.getenv('SECRET_KEY', '')) < 32 or not os.getenv('MASTER_SECRET')):
+        raise RuntimeError('Production requires SECRET_KEY (32+ characters) and MASTER_SECRET')
+    app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', SESSION_COOKIE_SECURE=production)
+
     # Database Setup
     db_url = os.getenv('DATABASE_URL', 'sqlite:///gyro_pulse.db')
     if db_url.startswith("postgres://"):
@@ -126,58 +131,39 @@ def create_app():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
 
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask import request
+        if request.is_json or request.path.startswith(('/api', '/session-check', '/user-info')):
+            return jsonify({'error': 'Authentication required'}), 401
+        return redirect(url_for('auth.login'))
+
+    from fulfillment import register_fulfillment
+    register_fulfillment(app)
     return app
 
 
-# Create application instance
+# WSGI import has no database writes, default accounts or background threads.
 app = create_app()
 
-# Create tables if they don't exist
-with app.app_context():
+@app.cli.command('init-db')
+def init_database():
+    """Initialize a new database; use migrations for existing deployments."""
     db.create_all()
-    # Seed default admin user if no users exist
+
+@app.cli.command('create-admin')
+def create_admin():
+    """Interactively provision the first administrator without default credentials."""
+    import click
     from werkzeug.security import generate_password_hash
-    if not User.query.first():
-        admin = User(
-            username='admin',
-            password_hash=generate_password_hash('admin123'),
-            role='admin',
-            is_active=True,
-            show_stock_quantity=True  # Default: show stock quantities
-        )
-        db.session.add(admin)
-        db.session.commit()
-        print("Default admin user created: admin / admin123")
-        print("System ready with device-bound API keys, token pools, and GPC encryption.")
-
-# --------------------------------------------------------------------------
-# Auto-backup scheduler
-# --------------------------------------------------------------------------
-def scheduled_backup():
-    with app.app_context():
-        try:
-            backup_db()
-            print(f"[{datetime.now()}] Auto backup completed successfully.")
-        except Exception as e:
-            print(f"[{datetime.now()}] Auto backup failed: {e}")
-
-# Start scheduler only if not in debug mode? (optional)
-# For development, you may want to keep it running anyway.
-scheduler = BackgroundScheduler()
-interval = get_backup_interval()
-scheduler.add_job(scheduled_backup, 'interval', minutes=interval)
-scheduler.start()
-print(f"[OK] Auto backup scheduler started - running every {interval} minute(s).")
-
-# Shutdown scheduler gracefully when the app exits
-atexit.register(lambda: scheduler.shutdown())
+    username = click.prompt('Username')
+    password = click.prompt('Password', hide_input=True, confirmation_prompt=True)
+    if len(password) < 12:
+        raise click.ClickException('Password must contain at least 12 characters')
+    if User.query.filter_by(username=username).first():
+        raise click.ClickException('Username already exists')
+    db.session.add(User(username=username, password_hash=generate_password_hash(password), role='admin', is_active=True))
+    db.session.commit()
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
-    
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=debug_mode
-    )
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)

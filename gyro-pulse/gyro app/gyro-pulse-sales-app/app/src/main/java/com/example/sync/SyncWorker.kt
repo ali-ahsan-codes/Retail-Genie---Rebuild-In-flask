@@ -33,6 +33,8 @@ class SyncWorker(
         }
 
         return try {
+            if (!repository.flushOrderOutbox()) return Result.retry()
+
             // 1. Check sync status
             val status = repository.checkSyncStatus(userId)
             if (status != null && status.uploadRequired) {

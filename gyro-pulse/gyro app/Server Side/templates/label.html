@@ -290,7 +290,7 @@
             <div class="code-box">
                 <!-- Render QR as base64 image -->
                 {% if order.package_qr %}
-                    <img src="data:image/png;base64,{{ order.package_qr }}" alt="QR Code" class="qr-image" />
+                    <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="qr-image" />
                 {% else %}
                     <div class="code">N/A</div>
                 {% endif %}

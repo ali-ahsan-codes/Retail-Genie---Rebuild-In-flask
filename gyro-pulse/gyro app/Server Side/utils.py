@@ -180,7 +180,7 @@ def decrypt_gpc_payload(encrypted_data: bytes, master_secret: bytes) -> dict:
         encrypted_data = encrypted_data.encode('utf-8')
 
     try:
-        decoded_data = base64.b64decode(encrypted_data, validate=False)
+        decoded_data = base64.b64decode(encrypted_data, validate=True)
         if decoded_data and len(decoded_data) >= 32 and decoded_data != encrypted_data:
             encrypted_data = decoded_data
     except Exception:
@@ -325,6 +325,9 @@ def generate_gpc_file(user_id: int, expiry_days: int, show_stock: bool = True,
     session_id = derive_session_id()
     expiry_date = datetime.utcnow() + timedelta(days=expiry_days)
 
+    if not 1 <= max_token_cap <= 1000 or not 1 <= expiry_days <= 365:
+        raise ValueError('Invalid token cap or expiry days')
+    existing_key.expires_at = expiry_date
     token_count = random.randint(1, max_token_cap)
     tokens = []
     for _ in range(token_count):
@@ -386,17 +389,28 @@ def import_gpc_export(file_content: bytes) -> dict:
     """
     payload = parse_gpc_file(file_content)
 
-    # For now, just return a summary (no sensitive data)
-    summary = {
-        'user_id': payload.get('user_id'),
-        'username': payload.get('username'),
-        'session_id': payload.get('session_id'),
-        'products_in_catalog': len(payload.get('catalog', {}).get('products', [])),
-        'tokens_imported': len(payload.get('tokens', [])),
-        'expiry_date': payload.get('expiry_date'),
-        'show_stock_quantity': payload.get('catalog_permissions', {}).get('show_stock_quantity', False)
-    }
-    return summary
+    from api import place_order
+    from flask import request
+    importing_user = request.user
+    owner = db.session.get(User, payload.get('user_id'))
+    if not owner or not owner.is_active or owner.role != 'sales':
+        raise ValueError('Export must identify an active sales user')
+    if importing_user.role != 'admin' and importing_user.city_id != owner.city_id:
+        raise ValueError('Export belongs to another city')
+    orders = payload.get('orders', [])
+    if not isinstance(orders, list) or len(orders) > 500:
+        raise ValueError('Export must contain at most 500 orders')
+    results = []
+    for order_data in orders:
+        if not isinstance(order_data, dict) or not order_data.get('client_order_id'):
+            results.append({'status': 'rejected', 'error': 'client_order_id required'})
+            continue
+        # Each order is a separate idempotent transaction. Failed entries can be retried.
+        with current_app.test_request_context('/api/orders/place', method='POST', json=order_data):
+            request.user = owner
+            response = current_app.make_response(place_order())
+            results.append({'client_order_id': order_data['client_order_id'], 'http_status': response.status_code, **response.get_json()})
+    return {'user_id': owner.id, 'orders': results, 'accepted': sum(r.get('http_status') == 200 for r in results), 'rejected': sum(r.get('http_status') != 200 for r in results)}
 
 # ==================================================================
 # TOKEN AUTO-REFILL LOGIC

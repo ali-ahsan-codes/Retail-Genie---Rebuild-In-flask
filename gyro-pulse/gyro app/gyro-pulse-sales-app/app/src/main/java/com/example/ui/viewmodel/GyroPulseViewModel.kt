@@ -888,9 +888,9 @@ class GyroPulseViewModel(
                 files = null
             )
 
-            if (result != null && result.status == "success") {
+            if (result != null && result.status in listOf("success", "queued")) {
                 _orderResult.value = result
-                _uiEvent.emit("Order #${result.order_id} placed successfully!")
+                _uiEvent.emit(if (result.status == "queued") "Order saved offline; awaiting server confirmation" else "Order #${result.order_id} placed successfully!")
                 clearCart()
                 _selectedCustomer.value = null
             } else {

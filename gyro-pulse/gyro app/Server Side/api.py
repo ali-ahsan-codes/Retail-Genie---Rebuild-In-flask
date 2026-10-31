@@ -109,7 +109,7 @@ def check_api_key():
         return
 
     if current_user.is_authenticated:
-        if current_user.is_active and current_user.role in ['admin', 'subadmin', 'captain', 'storekeeper', 'sales', 'van']:
+        if current_user.is_active and current_user.role in ['admin', 'subadmin', 'captain', 'storekeeper', 'sales', 'van', 'finance', 'cashier']:
             request.user = current_user
             return
         return jsonify({'error': 'Access forbidden'}), 403
@@ -121,6 +121,12 @@ def check_api_key():
     key_hash = hash_api_key(api_key)
     api_key_record = ApiKey.query.filter_by(api_key_hash=key_hash, status='ACTIVE').first()
     if api_key_record:
+        if api_key_record.expires_at and api_key_record.expires_at <= datetime.utcnow():
+            api_key_record.status = 'EXPIRED'
+            db.session.commit()
+            return jsonify({'error': 'API key expired'}), 401
+        if request.headers.get('X-Device-UUID') != api_key_record.device_uuid:
+            return jsonify({'error': 'Device identity mismatch'}), 401
         user = User.query.get(api_key_record.user_id)
         if user and user.is_active:
             api_key_record.last_used_at = datetime.utcnow()
@@ -128,6 +134,8 @@ def check_api_key():
             request.user = user
             return
 
+    if os.getenv('APP_ENV') == 'production':
+        return jsonify(error='Invalid API key; legacy role keys disabled in production'), 401
     role_key = RoleApiKey.query.filter_by(api_key=api_key).first()
     if not role_key:
         return jsonify({'error': 'Invalid API key'}), 401
@@ -172,8 +180,14 @@ def responses_stub():
 
 @api_bp.route('/customers/search', methods=['GET'])
 def customers_search_stub():
-    # Real customer search should be implemented, but we keep stub for now
-    return jsonify({'customers': []})
+    user = request.user
+    query = Customer.query.filter_by(is_active=True)
+    if user.role != 'admin':
+        query = query.filter_by(city_id=user.city_id)
+    term = request.args.get('q', '').strip()
+    if term:
+        query = query.filter(or_(Customer.name.ilike('%' + term + '%'), Customer.phone.ilike('%' + term + '%')))
+    return jsonify(customers=[{'id': c.id, 'name': c.name, 'phone': c.phone, 'city_id': c.city_id} for c in query.order_by(Customer.name).limit(50)])
 
 # ---------- REAL CUSTOMER CREATION (NEW) ----------
 @api_bp.route('/customers', methods=['POST'])
@@ -256,16 +270,19 @@ def login():
     if user.role not in ['admin', 'sales', 'subadmin', 'captain', 'storekeeper', 'van']:
         return jsonify({'error': 'Access forbidden'}), 403
 
-    role_key = RoleApiKey.query.filter_by(role=user.role).first()
-    if not role_key:
-        new_key = uuid.uuid4().hex
-        role_key = RoleApiKey(role=user.role, api_key=new_key)
-        db.session.add(role_key)
-        db.session.commit()
+    device_uuid = data.get('device_uuid')
+    if not isinstance(device_uuid, str) or not device_uuid or len(device_uuid) > 100:
+        return jsonify(error='device_uuid required (maximum 100 characters)'), 400
+    ApiKey.query.filter_by(user_id=user.id, device_uuid=device_uuid, status='ACTIVE').update({'status': 'REVOKED'})
+    raw_key = secrets.token_hex(32)
+    expiry_days = int(ServerConfig.get('DEFAULT_EXPIRY_DAYS', '7'))
+    db.session.add(ApiKey(user_id=user.id, device_uuid=device_uuid, api_key_hash=hash_api_key(raw_key), status='ACTIVE', expires_at=datetime.utcnow() + timedelta(days=expiry_days)))
+    db.session.commit()
 
     return jsonify({
         'user_id': user.id,
-        'api_key': role_key.api_key,
+        'api_key': raw_key,
+        'device_uuid': device_uuid,
         'username': user.username,
         'role': user.role,
         'city_id': user.city_id
@@ -474,7 +491,8 @@ def upload_gpc():
         )
         return jsonify({
             'status': 'success',
-            'message': 'GPC file uploaded and processed successfully'
+            'message': 'GPC file processed',
+            'summary': summary
         })
     except Exception as e:
         current_app.logger.error(f"GPC import error: {str(e)}\n{traceback.format_exc()}")
@@ -1422,6 +1440,14 @@ def place_order():
     if not data:
         return jsonify({'error': 'JSON body required'}), 400
 
+    from models import OfflineSubmission
+    client_id = data.get('client_order_id')
+    if client_id:
+        if not isinstance(client_id, str) or len(client_id) > 64:
+            return jsonify(error='Invalid client_order_id'), 400
+        previous = OfflineSubmission.query.filter_by(user_id=user.id, client_id=client_id).first()
+        if previous:
+            return jsonify(status='success', order_id=previous.order_id, duplicate=True)
     customer_id = data.get('customer_id')
     if not customer_id:
         return jsonify({'error': 'customer_id required'}), 400
@@ -1430,6 +1456,8 @@ def place_order():
     if not customer:
         return jsonify({'error': 'Customer not found'}), 404
 
+    if user.role != 'admin' and customer.city_id != user.city_id:
+        return jsonify(error='Customer belongs to another city'), 403
     if customer.city_id and not is_city_active(customer.city_id):
         return jsonify({
             'error': 'The city for this customer is currently inactive. Cannot place order.'
@@ -1448,7 +1476,13 @@ def place_order():
         product = Product.query.get(product_id)
         if not product:
             return jsonify({'error': f'Product {product_id} not found'}), 404
+        if not isinstance(qty, int) or isinstance(qty, bool) or qty <= 0:
+            return jsonify(error='Quantity must be a positive integer'), 400
+        if not product.is_active or product.city_id != customer.city_id:
+            return jsonify(error='Product unavailable in customer city'), 400
         price = safe_decimal(item.get('unit_price', product.unit_price))
+        if not price.is_finite() or price < 0:
+            return jsonify(error='Unit price must be finite and non-negative'), 400
         line_total = price * Decimal(str(qty))
         order_total += line_total
 
@@ -1457,6 +1491,8 @@ def place_order():
     tax_amount = (order_total - discount) * tax_rate / Decimal('100')
     net_total = order_total - discount + tax_amount
 
+    if not net_total.is_finite() or net_total < 0 or discount < 0 or discount > order_total or tax_rate < 0:
+        return jsonify(error='Invalid order totals'), 400
     if customer.credit_limit and customer.credit_limit > 0:
         new_outstanding = customer.outstanding_balance + net_total
         if new_outstanding > customer.credit_limit:
@@ -1518,6 +1554,9 @@ def place_order():
             )
             db.session.add(order_media)
 
+        if client_id:
+            db.session.add(OfflineSubmission(user_id=user.id, client_id=client_id, order_id=order.id))
+        customer.outstanding_balance = (customer.outstanding_balance or Decimal('0')) + net_total
         db.session.commit()
         log_activity(user.id, 'place_order', 'orders', order.id, None, {'customer': customer.name, 'total': str(net_total)})
 

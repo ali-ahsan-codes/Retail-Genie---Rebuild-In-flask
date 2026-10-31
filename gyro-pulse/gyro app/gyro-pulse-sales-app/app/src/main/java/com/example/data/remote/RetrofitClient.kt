@@ -35,7 +35,7 @@ object RetrofitClient {
                         if (!originalUrl.encodedPath.contains("/api/login")) {
                             if (!currentKey.isNullOrEmpty()) {
                                 builder.addHeader("X-API-Key", currentKey)
-                                newUrlBuilder.addQueryParameter("api_key", currentKey)
+                                builder.addHeader("X-Device-UUID", prefs.getDeviceId())
                             }
                             if (userId != null && userId != -1) {
                                 newUrlBuilder.addQueryParameter("user_id", userId.toString())
@@ -46,7 +46,7 @@ object RetrofitClient {
                     }
                 })
                 .addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
+                    level = HttpLoggingInterceptor.Level.NONE
                 })
                 .build()
 

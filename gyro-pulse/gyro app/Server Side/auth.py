@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from models import User, ApiKey, ServerConfig
+from models import db, User, ApiKey, ServerConfig
 from utils import hash_api_key, generate_api_key
-from datetime import datetime
+from datetime import datetime, timedelta
 import secrets
 import uuid
 
@@ -92,7 +92,7 @@ def login():
                     api_key_hash=key_hash,
                     user_id=user.id,
                     status='ACTIVE',
-                    expires_at=datetime.utcnow().replace(year=datetime.utcnow().year + 1) if expiry_days else None
+                    expires_at=datetime.utcnow() + timedelta(days=expiry_days) if expiry_days else None
                 )
                 db.session.add(api_key)
                 db.session.commit()
@@ -218,7 +218,7 @@ def generate_api_key_mobile():
         api_key_hash=key_hash,
         user_id=current_user.id,
         status='ACTIVE',
-        expires_at=datetime.utcnow().replace(year=datetime.utcnow().year + 1) if expiry_days else None
+        expires_at=datetime.utcnow() + timedelta(days=expiry_days) if expiry_days else None
     )
     db.session.add(api_key)
     db.session.commit()

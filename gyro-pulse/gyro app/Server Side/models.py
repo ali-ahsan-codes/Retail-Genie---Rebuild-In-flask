@@ -728,3 +728,11 @@ class DeviceCommand(db.Model):
     # Do NOT add a separate 'user' relationship here
 
     __table_args__ = (db.Index('idx_device_commands_status', 'status'),)
+class OfflineSubmission(db.Model):
+    """Unique per-device order identity prevents duplicate retry/import submissions."""
+    __tablename__ = 'offline_submissions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    client_id = db.Column(db.String(64), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    __table_args__ = (db.UniqueConstraint('user_id', 'client_id'),)

@@ -54,6 +54,7 @@ class GyroPulseRepository(
             val jsonReq = JSONObject().apply {
                 put("username", username)
                 put("password", password)
+                put("device_uuid", prefs.getDeviceId())
             }
             val requestBody = jsonReq.toString().toRequestBody("application/json".toMediaTypeOrNull())
             val responseBody = api.login(requestBody)
@@ -751,6 +752,7 @@ class GyroPulseRepository(
         return try {
             val api = RetrofitClient.getApi(prefs)
             val json = JSONObject().apply {
+                put("client_order_id", UUID.randomUUID().toString())
                 put("customer_id", customerId ?: JSONObject.NULL)
                 put("customer_name", customerName)
                 put("customer_phone", customerPhone)
@@ -775,8 +777,16 @@ class GyroPulseRepository(
                 put("payment_terms", paymentTerms ?: "")
                 put("special_instructions", specialInstructions ?: "")
             }
+            val owner = prefs.getUserId() ?: return null
+            val outbox = com.example.data.local.OrderOutbox(context)
+            outbox.save(owner, json)
             val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
-            val response = api.placeOrder(requestBody)
+            val response = try {
+                api.placeOrder(requestBody)
+            } catch (e: java.io.IOException) {
+                return OrderPlaceResponse(status = "queued", order_id = -1, message = "Saved offline. Waiting for server confirmation.")
+            }
+            outbox.remove(owner, json.getString("client_order_id"))
             val responseJson = JSONObject(response.string())
             OrderPlaceResponse(
                 status = responseJson.getString("status"),
@@ -787,6 +797,23 @@ class GyroPulseRepository(
             e.printStackTrace()
             null
         }
+    }
+
+    suspend fun flushOrderOutbox(): Boolean {
+        val owner = prefs.getUserId() ?: return true
+        val outbox = com.example.data.local.OrderOutbox(context)
+        for (payload in outbox.pending(owner)) {
+            try {
+                val body = payload.toString().toRequestBody("application/json".toMediaTypeOrNull())
+                val response = JSONObject(RetrofitClient.getApi(prefs).placeOrder(body).string())
+                if (response.optString("status") != "success") return false
+                outbox.remove(owner, payload.getString("client_order_id"))
+            } catch (e: Exception) {
+                // Preserve rejected/unconfirmed records for review; never silently discard.
+                return false
+            }
+        }
+        return true
     }
 
     suspend fun syncMobile(): JSONObject? {
