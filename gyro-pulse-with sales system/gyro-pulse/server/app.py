@@ -143,6 +143,10 @@ def create_app():
 
     from fulfillment import register_fulfillment
     register_fulfillment(app)
+    from integration_api import register as register_pairing
+    register_pairing(app)
+    from sync_core import register as register_transport
+    register_transport(app)
     register_dedicated(app)
     return app
 

@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Field connection</title></head><body>
+<h1>Field connection · {{ company.name }}</h1><p>Company UUID: {{ company.id }}</p>
+<p>Retail is inventory/accounting authority. Pairing grants metadata access only. No stock/order sync enabled.</p>
+{% if message %}<p>{{ message }}</p>{% endif %}
+{% if connection %}<p>Office UUID: {{ connection.office_id }}</p><p>Stored metadata only, not live connection status. Cloud instance: {{ connection.instance_id or 'Not paired' }} | Credential expires: {{ connection.expires_at or 'None' }}</p>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="pair"><label>Paste single-use pairing JSON privately <textarea name="bundle" required maxlength="16384" rows="12" cols="100"></textarea></label><button>Pair / rotate credential</button></form>
+{% else %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="initialize"><button>Initialize stable office identity</button></form>{% endif %}
+<p>Revoke cloud access in the Gyro administrator's /integrations page. No bearer secrets are displayed here.</p>
+</body></html>

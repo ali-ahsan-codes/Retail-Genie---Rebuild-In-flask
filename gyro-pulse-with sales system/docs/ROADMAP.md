@@ -122,3 +122,16 @@ extending to that topology, design per-branch authority, allocations and partiti
 The current branch contained only Phase 1, not the later source described in earlier chat.
 Recovery 2A is recorded in RECOVERY_2A.md and a separate hash overlay. Later phases remain missing
 until code is recovered/rebuilt and tested; no historical chat count is accepted as current evidence.
+
+## Current 2B implementation
+
+Scoped metadata-only office pairing is rebuilt; see PHASE_2B.md for local setup, evidence,
+explicit limits and remaining live acceptance. This is not restored transport/catalog/order code.
+Phase 3 remains the next implementation step; production and Phase 8 stay gated.
+
+## Phase 3 implementation update
+
+Durable inbox/outbox, retries, lease fencing, duplicate protection, scoped HTTPS endpoints and
+an explicit one-shot native worker are implemented. See PHASE_3.md for current test evidence.
+Delivery is not business acceptance. Native catalog/order/mobile adapters and real Phase 7
+acceptance are not implemented/approved by this update.

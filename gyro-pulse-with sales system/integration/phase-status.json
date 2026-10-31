@@ -4,10 +4,31 @@
   "production_ready": false,
   "inventory_authority": "retail-genie",
   "field_hub": "gyro-pulse",
-  "next_phase": "Rebuild 2B pairing, then transport/catalog/native-order/mobile adapters; run Phase 7 only against recovered, tested source",
-  "note": "Current checkout had Phase 1 only. Git/local recovery found no later implementation. Dedicated-company isolation is reimplemented and tested; 2B-7 are NOT recovered/verified. Earlier chat test counts are not current-checkout evidence. No business sync or release enabled.",
-  "active_phase": 2,
+  "next_phase": "Phase 4 native catalog snapshots; Phase 5 approval; Phase 6 mobile; Phase 7 real acceptance",
+  "note": "Transport implementation tested using SQLite, Flask HTTP clients and mocked native HTTPS. No catalog producer/application, native order posting, Android implementation or real MySQL/TLS/UAT acceptance yet. Receipt means received, not applied.",
+  "active_phase": 3,
   "recovery_in_progress": true,
-  "recovered_subphase": "2A dedicated-company guard",
-  "previous_conversation_evidence_available": false
+  "recovered_subphase": "2A + 2B + Phase 3 transport implementation",
+  "previous_conversation_evidence_available": false,
+  "pairing_implemented": true,
+  "business_sync_enabled": false,
+  "phase_2b_verification": {
+    "gyro_tests_passed": 53,
+    "retail_tests_passed": 21,
+    "foundation_recovery_tests_passed": 12,
+    "database": "sqlite_unit_only",
+    "native_https": "mocked_unit_responses",
+    "mysql_accepted": false,
+    "production_accepted": false
+  },
+  "transport_implemented": true,
+  "delivery_mode": "explicit administrator opt-in and operator-invoked one-shot worker",
+  "phase_3_verification": {
+    "gyro_tests_passed": 86,
+    "retail_tests_passed": 52,
+    "foundation_tests_passed": 12,
+    "mysql_accepted": false,
+    "deployed_tls_accepted": false,
+    "business_uat_accepted": false
+  }
 }

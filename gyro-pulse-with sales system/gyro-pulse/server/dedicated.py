@@ -34,6 +34,8 @@ def uid(value):
 
 
 def origin(value):
+    if not isinstance(value, str) or '?' in value or '#' in value:
+        raise ValueError('An HTTPS origin without query or fragment is required')
     if not isinstance(value, str) or len(value) > 300 or any(ord(c) <= 32 for c in value):
         raise ValueError('Explicit HTTPS public origin required')
     try:
@@ -99,7 +101,7 @@ def register(app):
         if not matches:
             return jsonify(error='Dedicated binding absent/mismatched; operator recovery required', production_ready=False), 503
         # Until explicit reviewed adapters exist, NONE of the legacy business endpoints are safe.
-        if request.endpoint not in {'auth.login', 'api.login', 'auth.logout', 'hybrid_status'} and request.endpoint is not None:
+        if request.endpoint not in {'auth.login', 'api.login', 'auth.logout', 'hybrid_status', 'integration.manage', 'integration.exchange', 'integration.status', 'integration.sync_receive', 'integration.sync_pull', 'integration.sync_ack'} and request.endpoint is not None:
             return jsonify(error='Legacy business access disabled in connected mode', authority='retail-genie'), 409
         return None
 
@@ -109,7 +111,7 @@ def register(app):
             return jsonify(error='Dedicated deployment not configured'), 409
         return jsonify(schema_version=1, company_id=app.config['GYRO_COMPANY_ID'],
                        instance_id=app.config['GYRO_INSTANCE_ID'], inventory_authority='retail-genie',
-                       business_sync_enabled=False, pairing_available=False, production_ready=False)
+                       business_sync_enabled=False, pairing_available=all(inspect(db.engine).has_table(name) for name in ['hybrid_integration_office','hybrid_pairing_grants','hybrid_integration_credentials','hybrid_integration_audit']), production_ready=False)
 
     @app.cli.command('init-deployment-binding')
     def initialize():

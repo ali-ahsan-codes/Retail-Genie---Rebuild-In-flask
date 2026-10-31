@@ -1,0 +1,69 @@
+{
+  "phase": "rebuild-2B",
+  "description": "Scoped metadata-only office pairing; chained over unchanged recovery 2A and original Phase 1 evidence. No business sync/release acceptance.",
+  "files": {
+    "README.md": {
+      "sha256": "c9abe2bceed991fe518ba6cacc7a74ab31788e716bff1adfe446cadee0d801de",
+      "previous_sha256": "06d2fab43e346e951d65787414dc0083f5df95b6b8d11b9d411365dc9e52c27d"
+    },
+    "docs/ROADMAP.md": {
+      "sha256": "9dcd831d5868cbf2725b53b62678c1dd6a27ad0b53108ff9852f56ec1ff5e82b",
+      "previous_sha256": "636ebf8791237609b1c87301fe2c68e302479cf748700b89f391383fa9224402"
+    },
+    "docs/PHASE_2B.md": {
+      "sha256": "5bc41e3b133ca246588084be5bb1dc3e2290b4246aedf11247abc6b55bed80ea"
+    },
+    "integration/phase-status.json": {
+      "sha256": "7fcc690ac55f8c2a504d14f8cb3c98edaeb95bc109787a3519e6e14b49f9cc9b",
+      "previous_sha256": "3b1cf45e89dd1516e304de84f9ed6955bb26ef76ab77c043c48bd454df3825c7"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "23097b01bd0fcc62d3ca53b612b1d8690a40923308b9ba6dcf7d5a0e20c38662",
+      "previous_sha256": "45f9a9d45565159c6ec51523e7fe780ec2cc4c9c645790b527dc39d6321a5aa5"
+    },
+    "gyro-pulse/server/app.py": {
+      "sha256": "631b8632e7b90103b88c7ce59a20a7e4d45865570188c09ca3126f234ab762cb",
+      "previous_sha256": "97ead16e408cddae9f945a715cd2f4df4d9262aa4db0523d085bb08d0cd9a780"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "425d1f28aecc35197b897a73e72fc70f15005599863454b01adcab0a186a0f4d",
+      "previous_sha256": "a23a28e0ad0a4c6d2b54c95582a0586325a1164b9e3839cc7e5348d67654a2be"
+    },
+    "gyro-pulse/server/integration_api.py": {
+      "sha256": "e04f1481c82677b684fba1f8ec48db7a3805cc98129ea2afa2058faa1a3bb412"
+    },
+    "gyro-pulse/server/integration_contract.py": {
+      "sha256": "b63ab0e08070b9083cb1f403381da9633c52d1b69e7326d349e6a0de67e44fca"
+    },
+    "gyro-pulse/server/templates/hybrid_integrations.html": {
+      "sha256": "72845cca06efd68acf0e502f63eebf0ea8476303148d93bf09bfbab3ee0453b4"
+    },
+    "gyro-pulse/server/tests/test_pairing.py": {
+      "sha256": "f358507b1c355b4ac501d11e135046a9747afb21cc9a39eb49edbfc9dbfd4cb1"
+    },
+    "retail-genie/.env.example": {
+      "sha256": "f139ce22eea570c1d2436bf0828356da6407c31f822c0545b424b3e20025fffc",
+      "previous_sha256": "9b83ea7ddf26e2308531068dd264cf914bbc09d205b52d0ddd3e8e333c1687ea"
+    },
+    "retail-genie/requirements.txt": {
+      "sha256": "173805c0b4bef87d844e6ff2dfdd29fbcfff900663a0efb69c395c708cd477b3",
+      "previous_sha256": "aa925486348f00922b04914bef4d0b1a7d905a7983a630ab4467e957cdc51ce1"
+    },
+    "retail-genie/retail_genie/__init__.py": {
+      "sha256": "f7a0be58d95d226fcbb6bb2322271e6bbb619ab30a1c70768a1a2ce0c4c3ea6f",
+      "previous_sha256": "38f83a65510110200d2db52c0070996de9ecb423bfd960de2862ab53e75afac8"
+    },
+    "retail-genie/retail_genie/field_integration.py": {
+      "sha256": "6a5aedbb4eb367d255d47d5f6a3b782371c0e736abf842443288ac892b2a105e"
+    },
+    "retail-genie/retail_genie/integration_contract.py": {
+      "sha256": "b63ab0e08070b9083cb1f403381da9633c52d1b69e7326d349e6a0de67e44fca"
+    },
+    "retail-genie/retail_genie/templates/field_integration.html": {
+      "sha256": "0d95f2cb232d2fb212dff1f320ee17aedf93a5d39eebbc82d264fe3af65cc5eb"
+    },
+    "retail-genie/tests/test_field_integration.py": {
+      "sha256": "f7ad9d94c6be5637ee1f907b3fd9cc5bf960939ef5b5e36fd1ae67cd63f09e36"
+    }
+  }
+}
