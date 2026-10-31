@@ -1,0 +1,9 @@
+{
+  "implemented_phase": 1,
+  "connector_enabled": false,
+  "production_ready": false,
+  "inventory_authority": "retail-genie",
+  "field_hub": "gyro-pulse",
+  "next_phase": "2: versioned API contract, scoped credentials and pairing",
+  "note": "Documentation/status only. No app reads this file or enables integration from it."
+}

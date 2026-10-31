@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Return slip {{ document.id }}{% endblock %}
+{% block content %}
+<div class="print-actions no-print">
+  <a class="button button-secondary" href="{{ url_for('sales.returns_page', company_id=company.id) }}">Back to returns</a>
+  <button class="button button-primary" type="button" data-print-document>Print return slip</button>
+</div>
+<article class="return-slip" aria-label="Bilingual return slip">
+  <header>
+    <p class="eyebrow">{{ company.name }} · Customer return</p>
+    <h1>Return slip <span lang="ar" dir="rtl" class="print-ar">إيصال إرجاع</span></h1>
+    <p>Return / <span lang="ar" dir="rtl" class="print-ar">رقم الإرجاع</span> {{ document.id }}</p>
+    <p>Original bill / <span lang="ar" dir="rtl" class="print-ar">الفاتورة الأصلية</span> {{ order.invoice_number or order.order_number }}</p>
+  </header>
+  <hr>
+  <p><b>Customer / <span lang="ar" dir="rtl" class="print-ar">العميل</span>:</b> {{ order.customer_name or '—' }} · {{ order.customer_phone }}</p>
+  <p><b>Type / <span lang="ar" dir="rtl" class="print-ar">النوع</span>:</b> {{ document.kind|replace('_',' ')|title }}</p>
+  <table><thead><tr>
+    <th>Item<br><span lang="ar" dir="rtl" class="print-ar">الصنف</span></th>
+    <th>Qty<br><span lang="ar" dir="rtl" class="print-ar">الكمية</span></th>
+    <th>Unit price<br><span lang="ar" dir="rtl" class="print-ar">سعر الوحدة</span></th>
+    <th>Total<br><span lang="ar" dir="rtl" class="print-ar">الإجمالي</span></th>
+  </tr></thead><tbody>{% for item in document.items %}<tr><td>{{ item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.line_total }}</td></tr>{% endfor %}</tbody></table>
+  <p><b>Refund / credit amount · <span lang="ar" dir="rtl" class="print-ar">مبلغ الاسترداد / الرصيد</span>:</b> {{ document.refund_amount }} OMR</p>
+  <p><b>Method / <span lang="ar" dir="rtl" class="print-ar">طريقة الاسترداد</span>:</b> {{ document.refund_method|replace('_',' ')|title }}</p>
+  {% if document.transaction_reference %}<p><b>Reference / <span lang="ar" dir="rtl" class="print-ar">المرجع</span>:</b> {{ document.transaction_reference }}</p>{% endif %}
+  <p><b>Reason / <span lang="ar" dir="rtl" class="print-ar">السبب</span>:</b> {{ document.reason }}</p>
+  <p class="muted">{{ document.created_at }}</p>
+  <footer>Processed return · Keep this slip for your records<br><span lang="ar" dir="rtl" class="print-ar">تمت معالجة الإرجاع · يرجى الاحتفاظ بهذا الإيصال</span></footer>
+</article>
+{% endblock %}
+{% block scripts %}
+<style nonce="{{ csp_nonce }}">
+  .return-slip{max-width:750px;margin:2rem auto;padding:2rem;background:white;border:1px solid #d5dce7;color:#111;font-family:Arial,"Noto Naskh Arabic",sans-serif}.return-slip header{text-align:center}.return-slip table{width:100%;border-collapse:collapse;margin:1.5rem 0}.return-slip th,.return-slip td{padding:.6rem;text-align:left;border-bottom:1px solid #ddd}.return-slip footer{text-align:center;margin-top:3rem}.print-ar{font-family:"Noto Naskh Arabic","Noto Sans Arabic","Segoe UI",Arial,sans-serif;unicode-bidi:isolate}.print-actions{display:flex;justify-content:flex-end;gap:.5rem}@media print{.no-print,.topbar,.site-footer{display:none!important}.page-shell{width:100%;padding:0}.return-slip{margin:0;max-width:none;border:0}}
+</style>
+<script nonce="{{ csp_nonce }}">document.querySelector('[data-print-document]')?.addEventListener('click',()=>window.print());</script>
+{% endblock %}

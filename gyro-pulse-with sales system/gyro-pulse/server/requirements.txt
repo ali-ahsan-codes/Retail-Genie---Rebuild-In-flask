@@ -1,0 +1,46 @@
+# ================================================================
+# CORE WEB FRAMEWORK & EXTENSIONS
+# ================================================================
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.2
+Flask-SocketIO==5.3.6      # Real-time WebSocket support (for captain/order notifications)
+Flask-CORS==4.0.0          # Cross-Origin Resource Sharing
+
+# ================================================================
+# ASYNCIO & WEBSOCKET SERVER
+# ================================================================
+eventlet==0.33.3           # Required by Flask-SocketIO for WebSocket handling
+
+# ================================================================
+# DATABASE DRIVERS
+# ================================================================
+PyMySQL==1.1.0             # MySQL driver for SQLAlchemy
+# (Also used directly in backup.py, flush_data.py, migrate.py, init_db.py)
+
+# ================================================================
+# ENVIRONMENT & UTILITY
+# ================================================================
+python-dotenv==1.0.0       # Load .env file
+Werkzeug==2.3.7            # WSGI utilities (ProxyFix, secure_filename, etc.)
+
+# ================================================================
+# QR CODE GENERATION & IMAGE PROCESSING
+# ================================================================
+qrcode==7.4.2              # Generate package QR codes (used in pack_order)
+Pillow==10.1.0             # Image processing backend for qrcode
+
+# ================================================================
+# SECURITY (ENCRYPTION)
+# ================================================================
+cryptography==41.0.7       # AES-256 encryption for .gpc files (PBKDF2, AES-CBC)
+
+# ================================================================
+# SCHEDULER (AUTOMATIC BACKUPS)
+# ================================================================
+APScheduler==3.10.4        # Background job scheduler (auto backup every N minutes)
+
+# ================================================================
+# OPTIONAL: If you use any other packages, add them here
+# ================================================================
+# e.g., Flask-Migrate for Alembic migrations (not used in this codebase)

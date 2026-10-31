@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sharing policies · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">MAIN ADMIN · TENANT POLICY</p>
+    <h1>{{ container.name }}</h1>
+    <p class="muted">Each domain has an independent sharing policy. Role permissions and store assignments remain additional access gates.</p>
+  </div>
+  <a class="button button-secondary" href="{{ url_for('tenancy_admin.domain_policy_index') }}">All tenants</a>
+</section>
+
+<div class="policy-callout card">
+  <strong>Current rule:</strong> Company-level sharing is the provisional default. A policy can never allow access across tenant containers. Policy edits take effect on subsequent requests and are audit logged.
+</div>
+
+<section class="card accounts-card">
+  <div class="table-wrap">
+    <table class="policy-table">
+      <thead><tr><th>Data domain</th><th>Enabled</th><th>Sharing scope</th><th>Version</th><th></th></tr></thead>
+      <tbody>
+        {% for domain in domains %}
+          {% set policy = policies.get(domain) %}
+          <tr>
+            <td><strong>{{ domain_labels[domain] }}</strong><small class="table-subtext">{{ domain }}</small></td>
+            <td>
+              {% if policy %}
+                <span class="pill {{ 'pill-success' if policy.is_enabled else 'pill-muted' }}">{{ 'Enabled' if policy.is_enabled else 'Disabled' }}</span>
+              {% else %}
+                <span class="pill pill-muted">Missing</span>
+              {% endif %}
+            </td>
+            <td>{{ mode_labels.get(policy.sharing_mode, 'Not configured') if policy else 'Not configured' }}</td>
+            <td>{{ policy.policy_version if policy else '—' }}</td>
+            <td>
+              {% if policy %}
+                <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.edit_domain_policy', tenant_container_id=container.id, domain=domain) }}">Edit</a>
+              {% else %}
+                <span class="muted">Contact support</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

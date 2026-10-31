@@ -1,0 +1,1953 @@
+{
+  "phase": 1,
+  "source_commit": "6cafdca4a6bb8bd0f67712c7667a1832e9fa1b56",
+  "files": [
+    {
+      "source": "Retail Genie Final/.env.example",
+      "copy": "retail-genie/.env.example",
+      "source_sha256": "95f3d1a64939313c65f65f96c151a30dad4c0e8393dd6eb41d6e8c308f1e7140",
+      "copy_sha256": "9b83ea7ddf26e2308531068dd264cf914bbc09d205b52d0ddd3e8e333c1687ea",
+      "adapted": true
+    },
+    {
+      "source": "Retail Genie Final/.gitignore",
+      "copy": "retail-genie/.gitignore",
+      "source_sha256": "36de05494f8eac9002f176e4ab3d98ebe5d8d0c61880a2e51397e72e10c00394",
+      "copy_sha256": "36de05494f8eac9002f176e4ab3d98ebe5d8d0c61880a2e51397e72e10c00394",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/APPLICATION_BLUEPRINT.md",
+      "copy": "retail-genie/APPLICATION_BLUEPRINT.md",
+      "source_sha256": "b72c55dcf37fc314adf5f6a5b93236f09ef671fbea05fee6eb45c547a79287ea",
+      "copy_sha256": "b72c55dcf37fc314adf5f6a5b93236f09ef671fbea05fee6eb45c547a79287ea",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/COMPANY_CONTAINER_GUIDE.html",
+      "copy": "retail-genie/COMPANY_CONTAINER_GUIDE.html",
+      "source_sha256": "c4efd815a1ad90bef8fcae7f2995a4ae42dfd478497c269c88507d2934106f0b",
+      "copy_sha256": "c4efd815a1ad90bef8fcae7f2995a4ae42dfd478497c269c88507d2934106f0b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/LOCAL_INSTALL_GUIDE.md",
+      "copy": "retail-genie/LOCAL_INSTALL_GUIDE.md",
+      "source_sha256": "f3a5749f30ad0ca57d34ef86ed40689e4939081358217255f9702102016b9d13",
+      "copy_sha256": "f3a5749f30ad0ca57d34ef86ed40689e4939081358217255f9702102016b9d13",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/README.md",
+      "copy": "retail-genie/README.md",
+      "source_sha256": "36d85f62202c4f1efc2b7e0eedf1a620e92264eea823f224511e8af0222424d7",
+      "copy_sha256": "36d85f62202c4f1efc2b7e0eedf1a620e92264eea823f224511e8af0222424d7",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/database-schema.sql",
+      "copy": "retail-genie/database-schema.sql",
+      "source_sha256": "ea9bf1b0a4e579dcffe7cf2d7f016f60c506e2e8cf72372798909989e3f61a32",
+      "copy_sha256": "8f7929db243a43d246b1856799fa07382e216c1f39d748239252d72a30590d75",
+      "adapted": true
+    },
+    {
+      "source": "Retail Genie Final/file.md",
+      "copy": "retail-genie/file.md",
+      "source_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "copy_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/install.ps1",
+      "copy": "retail-genie/install.ps1",
+      "source_sha256": "8facd1bfe75bc5651093b0bb81a7cef90eeb5089356f31fa8e7baa638f46353f",
+      "copy_sha256": "8facd1bfe75bc5651093b0bb81a7cef90eeb5089356f31fa8e7baa638f46353f",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/list.md",
+      "copy": "retail-genie/list.md",
+      "source_sha256": "b83e4783d7a608fcfacfabe317a3a4bc0b755c3e00f5587d7c5707cfa590a77f",
+      "copy_sha256": "b83e4783d7a608fcfacfabe317a3a4bc0b755c3e00f5587d7c5707cfa590a77f",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/requirements.txt",
+      "copy": "retail-genie/requirements.txt",
+      "source_sha256": "aa925486348f00922b04914bef4d0b1a7d905a7983a630ab4467e957cdc51ce1",
+      "copy_sha256": "aa925486348f00922b04914bef4d0b1a7d905a7983a630ab4467e957cdc51ce1",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/__init__.py",
+      "copy": "retail-genie/retail_genie/__init__.py",
+      "source_sha256": "38f83a65510110200d2db52c0070996de9ecb423bfd960de2862ab53e75afac8",
+      "copy_sha256": "38f83a65510110200d2db52c0070996de9ecb423bfd960de2862ab53e75afac8",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/__init__.py",
+      "copy": "retail-genie/retail_genie/admin/__init__.py",
+      "source_sha256": "8429ea05f439a63d8537bea0f1c769a78bef7a25f5dcca6782aea41e07e9a008",
+      "copy_sha256": "8429ea05f439a63d8537bea0f1c769a78bef7a25f5dcca6782aea41e07e9a008",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/backup_forms.py",
+      "copy": "retail-genie/retail_genie/admin/backup_forms.py",
+      "source_sha256": "05ffc91c72941ff944ccd98f21488d58d2f5e9d82496adfd809d9c6d7182d138",
+      "copy_sha256": "05ffc91c72941ff944ccd98f21488d58d2f5e9d82496adfd809d9c6d7182d138",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/backup_routes.py",
+      "copy": "retail-genie/retail_genie/admin/backup_routes.py",
+      "source_sha256": "a7d27a82ee51767959c13c3ede5e67a40b5cec05568afce6c8db74bf0a93338d",
+      "copy_sha256": "a7d27a82ee51767959c13c3ede5e67a40b5cec05568afce6c8db74bf0a93338d",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/forms.py",
+      "copy": "retail-genie/retail_genie/admin/forms.py",
+      "source_sha256": "83efc966d359e83d9c7c3b074a9391b85e06284fa0dfef8ecd8cf063285c363b",
+      "copy_sha256": "83efc966d359e83d9c7c3b074a9391b85e06284fa0dfef8ecd8cf063285c363b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/routes.py",
+      "copy": "retail-genie/retail_genie/admin/routes.py",
+      "source_sha256": "b5d9d065486942c7349cb9aa07b33984d8b79f80f652859d00e0cfa9c765fc38",
+      "copy_sha256": "b5d9d065486942c7349cb9aa07b33984d8b79f80f652859d00e0cfa9c765fc38",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/tenancy_forms.py",
+      "copy": "retail-genie/retail_genie/admin/tenancy_forms.py",
+      "source_sha256": "6c10ffdf59d73a9635b0737f078ec1d886ee3d591216d1ae94796f5e2fc2bfce",
+      "copy_sha256": "6c10ffdf59d73a9635b0737f078ec1d886ee3d591216d1ae94796f5e2fc2bfce",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/admin/tenancy_routes.py",
+      "copy": "retail-genie/retail_genie/admin/tenancy_routes.py",
+      "source_sha256": "4fd185efc88ed83f23ced26376b57567970f83cb0c97906c497e779d8aa7f628",
+      "copy_sha256": "4fd185efc88ed83f23ced26376b57567970f83cb0c97906c497e779d8aa7f628",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/attendance/__init__.py",
+      "copy": "retail-genie/retail_genie/attendance/__init__.py",
+      "source_sha256": "909c37b36ff646308f30ba2b38794c9724aaa9e7030d3651f38ac7800fa77b00",
+      "copy_sha256": "909c37b36ff646308f30ba2b38794c9724aaa9e7030d3651f38ac7800fa77b00",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/attendance/routes.py",
+      "copy": "retail-genie/retail_genie/attendance/routes.py",
+      "source_sha256": "27b2b590888ab233b1d769b0e6c7f1596e55a4f52befbecacbd82f76398575a8",
+      "copy_sha256": "27b2b590888ab233b1d769b0e6c7f1596e55a4f52befbecacbd82f76398575a8",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/attendance/service.py",
+      "copy": "retail-genie/retail_genie/attendance/service.py",
+      "source_sha256": "8217e8c294f77fc94b9b0dee2f8996df11addb33769850941b68075d27e6ad7a",
+      "copy_sha256": "8217e8c294f77fc94b9b0dee2f8996df11addb33769850941b68075d27e6ad7a",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/__init__.py",
+      "copy": "retail-genie/retail_genie/auth/__init__.py",
+      "source_sha256": "968747845c925fb707288693176d96a416c887b59ad4b84213a6c820c333ae0b",
+      "copy_sha256": "968747845c925fb707288693176d96a416c887b59ad4b84213a6c820c333ae0b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/forms.py",
+      "copy": "retail-genie/retail_genie/auth/forms.py",
+      "source_sha256": "cd4bc1f3c8570dc638d41a26698d3582e0acf6bede2a30e6b563e7317b543206",
+      "copy_sha256": "cd4bc1f3c8570dc638d41a26698d3582e0acf6bede2a30e6b563e7317b543206",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/permissions.py",
+      "copy": "retail-genie/retail_genie/auth/permissions.py",
+      "source_sha256": "675a76ba7ea21d19afe3aad672ce75b2c73777ee30ff351ebe2839c678f5c8bd",
+      "copy_sha256": "675a76ba7ea21d19afe3aad672ce75b2c73777ee30ff351ebe2839c678f5c8bd",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/routes.py",
+      "copy": "retail-genie/retail_genie/auth/routes.py",
+      "source_sha256": "b81f10e3ae5b66c38c4ee82b727e9f9ff763399675fb049ae750dc2e6cac5f16",
+      "copy_sha256": "b81f10e3ae5b66c38c4ee82b727e9f9ff763399675fb049ae750dc2e6cac5f16",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/store_scope.py",
+      "copy": "retail-genie/retail_genie/auth/store_scope.py",
+      "source_sha256": "c618a6df0b3dbc51e2c2e365d52591de66d97bb5421074f4402b5bacc8ce2d46",
+      "copy_sha256": "c618a6df0b3dbc51e2c2e365d52591de66d97bb5421074f4402b5bacc8ce2d46",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/tenant_context.py",
+      "copy": "retail-genie/retail_genie/auth/tenant_context.py",
+      "source_sha256": "1dfaee6230373fe4b3bc240ed842b1360898648c4061573ff2d51d334b6e25f3",
+      "copy_sha256": "1dfaee6230373fe4b3bc240ed842b1360898648c4061573ff2d51d334b6e25f3",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/auth/tenant_policy.py",
+      "copy": "retail-genie/retail_genie/auth/tenant_policy.py",
+      "source_sha256": "3916ed97ac21003ebae60c9eac59cc74bcc069637f77cb49ea33b1c56f09ff2c",
+      "copy_sha256": "3916ed97ac21003ebae60c9eac59cc74bcc069637f77cb49ea33b1c56f09ff2c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/catalog/__init__.py",
+      "copy": "retail-genie/retail_genie/catalog/__init__.py",
+      "source_sha256": "405e3ff8f3639562fba427f1a0347f8bc1c7794ccf57417a68d0b3506a2b8699",
+      "copy_sha256": "405e3ff8f3639562fba427f1a0347f8bc1c7794ccf57417a68d0b3506a2b8699",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/catalog/forms.py",
+      "copy": "retail-genie/retail_genie/catalog/forms.py",
+      "source_sha256": "e4db6750911543d5bd2b969a1ac439cf8ed612f2be80be2a72c751412d81635a",
+      "copy_sha256": "e4db6750911543d5bd2b969a1ac439cf8ed612f2be80be2a72c751412d81635a",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/catalog/routes.py",
+      "copy": "retail-genie/retail_genie/catalog/routes.py",
+      "source_sha256": "2cc9dad96f070ddcec693ad7423d62c3f58b9692879344a479230a73a7589f96",
+      "copy_sha256": "2cc9dad96f070ddcec693ad7423d62c3f58b9692879344a479230a73a7589f96",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/catalog/service.py",
+      "copy": "retail-genie/retail_genie/catalog/service.py",
+      "source_sha256": "1bbf9b022da62589c241d3b8dc1e7b90da664f3ca9eff4f90e7a56f21886cffe",
+      "copy_sha256": "1bbf9b022da62589c241d3b8dc1e7b90da664f3ca9eff4f90e7a56f21886cffe",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/cloud/__init__.py",
+      "copy": "retail-genie/retail_genie/cloud/__init__.py",
+      "source_sha256": "97c6db86eb3ade26a06d3efd3d2fdf42e643d24a05f18a31fd2569bad088768b",
+      "copy_sha256": "97c6db86eb3ade26a06d3efd3d2fdf42e643d24a05f18a31fd2569bad088768b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/cloud/routes.py",
+      "copy": "retail-genie/retail_genie/cloud/routes.py",
+      "source_sha256": "1b0168098642dd37b1f0c7f95f3cd4cf7f0d8da7bc0f8db6aef5e20ff3cd6df4",
+      "copy_sha256": "1b0168098642dd37b1f0c7f95f3cd4cf7f0d8da7bc0f8db6aef5e20ff3cd6df4",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/cloud/service.py",
+      "copy": "retail-genie/retail_genie/cloud/service.py",
+      "source_sha256": "01202d998efc84b4640d3e1cb2aa59a9980e3e3541a5150b3053f1e5a4c0e04b",
+      "copy_sha256": "01202d998efc84b4640d3e1cb2aa59a9980e3e3541a5150b3053f1e5a4c0e04b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/commercial/__init__.py",
+      "copy": "retail-genie/retail_genie/commercial/__init__.py",
+      "source_sha256": "242349804425fdfffe3ec3052b82850b1916891a9f1bf2ccaaf57f9a3967661a",
+      "copy_sha256": "242349804425fdfffe3ec3052b82850b1916891a9f1bf2ccaaf57f9a3967661a",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/commercial/emailing.py",
+      "copy": "retail-genie/retail_genie/commercial/emailing.py",
+      "source_sha256": "d2a51611da1961685edc361d68506352420ca281abbaae8f9bb54d0c3136a5b8",
+      "copy_sha256": "d2a51611da1961685edc361d68506352420ca281abbaae8f9bb54d0c3136a5b8",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/commercial/routes.py",
+      "copy": "retail-genie/retail_genie/commercial/routes.py",
+      "source_sha256": "0d16131a17cfadffe1cae2eab3e712649e1173a19d308eb542a049d1a82c0085",
+      "copy_sha256": "0d16131a17cfadffe1cae2eab3e712649e1173a19d308eb542a049d1a82c0085",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/commercial/service.py",
+      "copy": "retail-genie/retail_genie/commercial/service.py",
+      "source_sha256": "5af7f0963c74fab4e222bb2145013ea443d5bd5b8b711af66df25d0e4fc6eb20",
+      "copy_sha256": "5af7f0963c74fab4e222bb2145013ea443d5bd5b8b711af66df25d0e4fc6eb20",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/config.py",
+      "copy": "retail-genie/retail_genie/config.py",
+      "source_sha256": "3193dad0e91fd09830cdefce6dcf9624e9bf704b1d53f2ed2ada808ba7fe0d25",
+      "copy_sha256": "fcd3f10add93b25e242bc209ed778ebf7e82dca5ecc930bfa2d1459c13d7b1e9",
+      "adapted": true
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/demo_data.py",
+      "copy": "retail-genie/retail_genie/demo_data.py",
+      "source_sha256": "4c752f2d7c4caa53632ebe4ba7d65ce948173139e7b1470d8e629f5e83e5f02d",
+      "copy_sha256": "4c752f2d7c4caa53632ebe4ba7d65ce948173139e7b1470d8e629f5e83e5f02d",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/device.py",
+      "copy": "retail-genie/retail_genie/device.py",
+      "source_sha256": "3e61b4d52603578747faea8b414b2ff94a2f99c965b94c1cb1e9d2c67bb26a29",
+      "copy_sha256": "3e61b4d52603578747faea8b414b2ff94a2f99c965b94c1cb1e9d2c67bb26a29",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/display/__init__.py",
+      "copy": "retail-genie/retail_genie/display/__init__.py",
+      "source_sha256": "edcab518f1daf0fb99dd074a741dce212a7b8a5cc34df5118fab624659997993",
+      "copy_sha256": "edcab518f1daf0fb99dd074a741dce212a7b8a5cc34df5118fab624659997993",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/display/routes.py",
+      "copy": "retail-genie/retail_genie/display/routes.py",
+      "source_sha256": "885e278d744b76b93879490861c52f377867107baabdc794117841d10e171a1e",
+      "copy_sha256": "885e278d744b76b93879490861c52f377867107baabdc794117841d10e171a1e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/express/__init__.py",
+      "copy": "retail-genie/retail_genie/express/__init__.py",
+      "source_sha256": "4b63207d72ee42626a677ab7429fcefe2d35e9228e311ac0df80d90042929f75",
+      "copy_sha256": "4b63207d72ee42626a677ab7429fcefe2d35e9228e311ac0df80d90042929f75",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/express/routes.py",
+      "copy": "retail-genie/retail_genie/express/routes.py",
+      "source_sha256": "4b76479c9db0fcde6daebc46f6860c127d4c1cd8337ba1508a2fb499b067419c",
+      "copy_sha256": "4b76479c9db0fcde6daebc46f6860c127d4c1cd8337ba1508a2fb499b067419c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/extensions.py",
+      "copy": "retail-genie/retail_genie/extensions.py",
+      "source_sha256": "e497cd2e46fb15f0c7ad7dde6747c3585572ad3c04655f3b372892d35538ebe2",
+      "copy_sha256": "e497cd2e46fb15f0c7ad7dde6747c3585572ad3c04655f3b372892d35538ebe2",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/health/__init__.py",
+      "copy": "retail-genie/retail_genie/health/__init__.py",
+      "source_sha256": "4f63cc2a9fdf797aa51bc24c74484d1a6ad406761e7b76e43f3ef4044ca44004",
+      "copy_sha256": "4f63cc2a9fdf797aa51bc24c74484d1a6ad406761e7b76e43f3ef4044ca44004",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/health/routes.py",
+      "copy": "retail-genie/retail_genie/health/routes.py",
+      "source_sha256": "3f91c6b566c5792e5a15e6623c3b44092a9056c505d96c1b13aff8b5c69f67a6",
+      "copy_sha256": "3f91c6b566c5792e5a15e6623c3b44092a9056c505d96c1b13aff8b5c69f67a6",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/main/__init__.py",
+      "copy": "retail-genie/retail_genie/main/__init__.py",
+      "source_sha256": "88d3d8a3f67021fabbcc84015c3db1c9f8d65f56023f07a12976ec86de4101b8",
+      "copy_sha256": "88d3d8a3f67021fabbcc84015c3db1c9f8d65f56023f07a12976ec86de4101b8",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/main/routes.py",
+      "copy": "retail-genie/retail_genie/main/routes.py",
+      "source_sha256": "415a161ed1d2e97d2d1ef6d00dc73ce8bdf8983faca2c2db699c3653cae43b46",
+      "copy_sha256": "415a161ed1d2e97d2d1ef6d00dc73ce8bdf8983faca2c2db699c3653cae43b46",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/messaging/__init__.py",
+      "copy": "retail-genie/retail_genie/messaging/__init__.py",
+      "source_sha256": "dd000e5efb9e73878e84908b11dfd05e4560225da87ad7fff129a9d4ba70fa99",
+      "copy_sha256": "dd000e5efb9e73878e84908b11dfd05e4560225da87ad7fff129a9d4ba70fa99",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/messaging/routes.py",
+      "copy": "retail-genie/retail_genie/messaging/routes.py",
+      "source_sha256": "bfb169a0ba5f8ebd297ede99bd089b9eaf0cc3e597e773e988a37f72bde572a1",
+      "copy_sha256": "bfb169a0ba5f8ebd297ede99bd089b9eaf0cc3e597e773e988a37f72bde572a1",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/messaging/service.py",
+      "copy": "retail-genie/retail_genie/messaging/service.py",
+      "source_sha256": "9ae7ac03d7be84ddbf262dfd0245a80c8abc5f501a22fa9102358b6273528a18",
+      "copy_sha256": "9ae7ac03d7be84ddbf262dfd0245a80c8abc5f501a22fa9102358b6273528a18",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/__init__.py",
+      "copy": "retail-genie/retail_genie/models/__init__.py",
+      "source_sha256": "b2ab39d8f08b9334d64b44603ae6db261803208acd05d05cabfa4e770bb20a91",
+      "copy_sha256": "b2ab39d8f08b9334d64b44603ae6db261803208acd05d05cabfa4e770bb20a91",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/attendance.py",
+      "copy": "retail-genie/retail_genie/models/attendance.py",
+      "source_sha256": "04a8dbad278a30ba0081077c61b3521f215a9c9607c8324f52a37ea426b18014",
+      "copy_sha256": "04a8dbad278a30ba0081077c61b3521f215a9c9607c8324f52a37ea426b18014",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/backup.py",
+      "copy": "retail-genie/retail_genie/models/backup.py",
+      "source_sha256": "8332b081194f2d5dfe156d57871c9285c9733d799d40cfeb5969a257e226dccf",
+      "copy_sha256": "8332b081194f2d5dfe156d57871c9285c9733d799d40cfeb5969a257e226dccf",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/billing.py",
+      "copy": "retail-genie/retail_genie/models/billing.py",
+      "source_sha256": "c606a346b74f0d2c817bc0fda7e2f852ce06084bba77519eb48c3ed2aea46ad5",
+      "copy_sha256": "c606a346b74f0d2c817bc0fda7e2f852ce06084bba77519eb48c3ed2aea46ad5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/catalog.py",
+      "copy": "retail-genie/retail_genie/models/catalog.py",
+      "source_sha256": "7309f09f3fd3af1ac86f92ff38bf89964a6d17978b0e6c6080b244fceb2cfa04",
+      "copy_sha256": "7309f09f3fd3af1ac86f92ff38bf89964a6d17978b0e6c6080b244fceb2cfa04",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/cloud.py",
+      "copy": "retail-genie/retail_genie/models/cloud.py",
+      "source_sha256": "a97b0fa175402e96ec39f174913cf892d5098acdc85aed3d75852103975b93da",
+      "copy_sha256": "a97b0fa175402e96ec39f174913cf892d5098acdc85aed3d75852103975b93da",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/commercial.py",
+      "copy": "retail-genie/retail_genie/models/commercial.py",
+      "source_sha256": "b6eeb2307c724637eebc8b1272d4824a8f8f01478828a6d939a582004ba83643",
+      "copy_sha256": "b6eeb2307c724637eebc8b1272d4824a8f8f01478828a6d939a582004ba83643",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/messaging.py",
+      "copy": "retail-genie/retail_genie/models/messaging.py",
+      "source_sha256": "35a9aea30bf8b86c3258e63c388ee4c8e4fbb8163102e7b51cffc31f0352ba02",
+      "copy_sha256": "35a9aea30bf8b86c3258e63c388ee4c8e4fbb8163102e7b51cffc31f0352ba02",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/realtime.py",
+      "copy": "retail-genie/retail_genie/models/realtime.py",
+      "source_sha256": "ee991331b17adc203c1e710d3a3760b9fd83233f47a1d1e2fd2cc0cf1f08e527",
+      "copy_sha256": "ee991331b17adc203c1e710d3a3760b9fd83233f47a1d1e2fd2cc0cf1f08e527",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/saas.py",
+      "copy": "retail-genie/retail_genie/models/saas.py",
+      "source_sha256": "1930be81495292bfc0dff2bbe099fb2cfd887537a6a78979bf539d37ded7a8d3",
+      "copy_sha256": "1930be81495292bfc0dff2bbe099fb2cfd887537a6a78979bf539d37ded7a8d3",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/scm.py",
+      "copy": "retail-genie/retail_genie/models/scm.py",
+      "source_sha256": "a74d8bb957dcf46ff741010da3add6e667fae5f87b13334c7991c159a163df6c",
+      "copy_sha256": "a74d8bb957dcf46ff741010da3add6e667fae5f87b13334c7991c159a163df6c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/settings.py",
+      "copy": "retail-genie/retail_genie/models/settings.py",
+      "source_sha256": "95efcb9b6b59b5bb9d26d83be1408195bb22cbe1f4e3eb287f8588d485530ebc",
+      "copy_sha256": "95efcb9b6b59b5bb9d26d83be1408195bb22cbe1f4e3eb287f8588d485530ebc",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/stock_audit.py",
+      "copy": "retail-genie/retail_genie/models/stock_audit.py",
+      "source_sha256": "379730c59fcb985fb5117a6ed7eb249520cf4c8e8b5d6dd9e26122fe7ebec4ed",
+      "copy_sha256": "379730c59fcb985fb5117a6ed7eb249520cf4c8e8b5d6dd9e26122fe7ebec4ed",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/tenancy.py",
+      "copy": "retail-genie/retail_genie/models/tenancy.py",
+      "source_sha256": "844e70c96e75a5793196bfbd1b7ea5fd06260806937645207f3b086dfd671c2c",
+      "copy_sha256": "844e70c96e75a5793196bfbd1b7ea5fd06260806937645207f3b086dfd671c2c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/models/user.py",
+      "copy": "retail-genie/retail_genie/models/user.py",
+      "source_sha256": "bc893df59f7b8c4006dedf83ac764a2c0a7529d66b020f2ec1c66d3e35e557ee",
+      "copy_sha256": "bc893df59f7b8c4006dedf83ac764a2c0a7529d66b020f2ec1c66d3e35e557ee",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/realtime/__init__.py",
+      "copy": "retail-genie/retail_genie/realtime/__init__.py",
+      "source_sha256": "dfce1f558525b63b0d90f762fffd3aa29756297128158dab91fdaddc9942766a",
+      "copy_sha256": "dfce1f558525b63b0d90f762fffd3aa29756297128158dab91fdaddc9942766a",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/realtime/handlers.py",
+      "copy": "retail-genie/retail_genie/realtime/handlers.py",
+      "source_sha256": "646db30a9e1ea97417321ab2f9e7daa709eaf4ba1cf6a632e7122c1f41bc1ca5",
+      "copy_sha256": "646db30a9e1ea97417321ab2f9e7daa709eaf4ba1cf6a632e7122c1f41bc1ca5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/realtime/routes.py",
+      "copy": "retail-genie/retail_genie/realtime/routes.py",
+      "source_sha256": "31909be9f4e4fb5dab6b6e238c813b13e8c3bfa12d56c57175244bb006d733ac",
+      "copy_sha256": "31909be9f4e4fb5dab6b6e238c813b13e8c3bfa12d56c57175244bb006d733ac",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/realtime/service.py",
+      "copy": "retail-genie/retail_genie/realtime/service.py",
+      "source_sha256": "6fbe2839305ab056718b4199bebcf84c64ebb58746e2713f6e30fe804eb20d2d",
+      "copy_sha256": "6fbe2839305ab056718b4199bebcf84c64ebb58746e2713f6e30fe804eb20d2d",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/reports/__init__.py",
+      "copy": "retail-genie/retail_genie/reports/__init__.py",
+      "source_sha256": "bf73a9ad499c65a44ff6c21f33cd11a84e6dd8cfa8e30d9c8c71d013b19ddfc5",
+      "copy_sha256": "bf73a9ad499c65a44ff6c21f33cd11a84e6dd8cfa8e30d9c8c71d013b19ddfc5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/reports/routes.py",
+      "copy": "retail-genie/retail_genie/reports/routes.py",
+      "source_sha256": "f5f1d7ad3d99bde090f3c26c20844e7eb85e688b76a4957152e222bc4a574596",
+      "copy_sha256": "f5f1d7ad3d99bde090f3c26c20844e7eb85e688b76a4957152e222bc4a574596",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/reports/service.py",
+      "copy": "retail-genie/retail_genie/reports/service.py",
+      "source_sha256": "4b2c7f5b3740c1eb713ff307da20762a1eb68b5c0f6f3101c40f5a508e412871",
+      "copy_sha256": "4b2c7f5b3740c1eb713ff307da20762a1eb68b5c0f6f3101c40f5a508e412871",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/saas/__init__.py",
+      "copy": "retail-genie/retail_genie/saas/__init__.py",
+      "source_sha256": "8f44d9062e3391e9fe2365c44c34dd639c91b344bc645983657cabb66515928c",
+      "copy_sha256": "8f44d9062e3391e9fe2365c44c34dd639c91b344bc645983657cabb66515928c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/saas/forms.py",
+      "copy": "retail-genie/retail_genie/saas/forms.py",
+      "source_sha256": "0fa3a134a4327e7ae9788bb37bb2843a28a39ebe82221ef5eed4f79eefa7a907",
+      "copy_sha256": "0fa3a134a4327e7ae9788bb37bb2843a28a39ebe82221ef5eed4f79eefa7a907",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/saas/routes.py",
+      "copy": "retail-genie/retail_genie/saas/routes.py",
+      "source_sha256": "4f4e67136856cb4e41cffd967898eeaf893f11de6978dac29aa4fb3055ac2c21",
+      "copy_sha256": "4f4e67136856cb4e41cffd967898eeaf893f11de6978dac29aa4fb3055ac2c21",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/saas/service.py",
+      "copy": "retail-genie/retail_genie/saas/service.py",
+      "source_sha256": "75256469120fc3021e61c2ce4aecb6ab90b122851d5025a9888138ae56ad0692",
+      "copy_sha256": "75256469120fc3021e61c2ce4aecb6ab90b122851d5025a9888138ae56ad0692",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/sales/__init__.py",
+      "copy": "retail-genie/retail_genie/sales/__init__.py",
+      "source_sha256": "7ef1bfa3533531d30cb2bab9010dcc5ba121071710243207506336369a2bee41",
+      "copy_sha256": "7ef1bfa3533531d30cb2bab9010dcc5ba121071710243207506336369a2bee41",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/sales/routes.py",
+      "copy": "retail-genie/retail_genie/sales/routes.py",
+      "source_sha256": "e756d8c1211c5a90708d62832be4614d8480315cf4eaa82f735a58d9e20243ea",
+      "copy_sha256": "e756d8c1211c5a90708d62832be4614d8480315cf4eaa82f735a58d9e20243ea",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/sales/service.py",
+      "copy": "retail-genie/retail_genie/sales/service.py",
+      "source_sha256": "be818c05943416b8c1f7842c64774de492f0f0e1d31af2e225cc2feb4a5f00ca",
+      "copy_sha256": "be818c05943416b8c1f7842c64774de492f0f0e1d31af2e225cc2feb4a5f00ca",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/scm/__init__.py",
+      "copy": "retail-genie/retail_genie/scm/__init__.py",
+      "source_sha256": "1d8698b9eefd00051b7bd09fd85796335e8809a99c40221d3060f4f66bf2e86b",
+      "copy_sha256": "1d8698b9eefd00051b7bd09fd85796335e8809a99c40221d3060f4f66bf2e86b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/scm/routes.py",
+      "copy": "retail-genie/retail_genie/scm/routes.py",
+      "source_sha256": "823772933d147c94d188717d40990b5d94b569a9de43aec55ff7f414a9406bfa",
+      "copy_sha256": "823772933d147c94d188717d40990b5d94b569a9de43aec55ff7f414a9406bfa",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/scm/service.py",
+      "copy": "retail-genie/retail_genie/scm/service.py",
+      "source_sha256": "783a0322f7e847a9f1d19e76d15320e954fd5f58ea52315b8ce24493369f0407",
+      "copy_sha256": "783a0322f7e847a9f1d19e76d15320e954fd5f58ea52315b8ce24493369f0407",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/settings/__init__.py",
+      "copy": "retail-genie/retail_genie/settings/__init__.py",
+      "source_sha256": "2eee1402c143fefa4b4282102aba6c1dbce617eefa4a32a72890130dd2db3d29",
+      "copy_sha256": "2eee1402c143fefa4b4282102aba6c1dbce617eefa4a32a72890130dd2db3d29",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/settings/routes.py",
+      "copy": "retail-genie/retail_genie/settings/routes.py",
+      "source_sha256": "68bd77551cbb4afa51370cb4c7638f58834cd7016da71efae767845e550ff355",
+      "copy_sha256": "68bd77551cbb4afa51370cb4c7638f58834cd7016da71efae767845e550ff355",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/settings/service.py",
+      "copy": "retail-genie/retail_genie/settings/service.py",
+      "source_sha256": "c2fca84a8fa99c9d40158c6c1c5bfef2246d0aa131a6a691f26359d99f9bd19c",
+      "copy_sha256": "c2fca84a8fa99c9d40158c6c1c5bfef2246d0aa131a6a691f26359d99f9bd19c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/share.py",
+      "copy": "retail-genie/retail_genie/share.py",
+      "source_sha256": "af6846471580ee357f9c8c3bd1f4f892ebd84526605ec7ec4bea6bd31204efa7",
+      "copy_sha256": "af6846471580ee357f9c8c3bd1f4f892ebd84526605ec7ec4bea6bd31204efa7",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/css/app.css",
+      "copy": "retail-genie/retail_genie/static/css/app.css",
+      "source_sha256": "b74e75b8e9788020a6713e750bc85dcf689e698d85a6e61fd09dd2211364dece",
+      "copy_sha256": "b74e75b8e9788020a6713e750bc85dcf689e698d85a6e61fd09dd2211364dece",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/cashup.js",
+      "copy": "retail-genie/retail_genie/static/js/cashup.js",
+      "source_sha256": "1971851776182fd8155b8d8a3a57cc55be17e1c45321222746de2ef39a5974f5",
+      "copy_sha256": "1971851776182fd8155b8d8a3a57cc55be17e1c45321222746de2ef39a5974f5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/catalog-offline-stock.js",
+      "copy": "retail-genie/retail_genie/static/js/catalog-offline-stock.js",
+      "source_sha256": "c7c25fda4b3302a1ed19ddb77a3d440a31a75a66779eb1572d1ad9abe779b8c0",
+      "copy_sha256": "c7c25fda4b3302a1ed19ddb77a3d440a31a75a66779eb1572d1ad9abe779b8c0",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/catalog-realtime.js",
+      "copy": "retail-genie/retail_genie/static/js/catalog-realtime.js",
+      "source_sha256": "db136357958304ad7c17f2d3f75d156ae4d2ed2683621a7e3c51fb44944bdd2b",
+      "copy_sha256": "db136357958304ad7c17f2d3f75d156ae4d2ed2683621a7e3c51fb44944bdd2b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/express-checkout.js",
+      "copy": "retail-genie/retail_genie/static/js/express-checkout.js",
+      "source_sha256": "003f789e5d100e343402d5c3f43ab7e1e4df92df5351aa2b3c721a49f1c29360",
+      "copy_sha256": "003f789e5d100e343402d5c3f43ab7e1e4df92df5351aa2b3c721a49f1c29360",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/pos.js",
+      "copy": "retail-genie/retail_genie/static/js/pos.js",
+      "source_sha256": "2442343c21cc065d366e4c9854c3c98240b4658f0960e1884525745792c3ed53",
+      "copy_sha256": "2442343c21cc065d366e4c9854c3c98240b4658f0960e1884525745792c3ed53",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/removal-approvals.js",
+      "copy": "retail-genie/retail_genie/static/js/removal-approvals.js",
+      "source_sha256": "4f1ebdcc224a80a2b45584976063e2a5cd71d7661bc32c0ae321cbf593226400",
+      "copy_sha256": "4f1ebdcc224a80a2b45584976063e2a5cd71d7661bc32c0ae321cbf593226400",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/js/sales-realtime.js",
+      "copy": "retail-genie/retail_genie/static/js/sales-realtime.js",
+      "source_sha256": "f552eabddfe703166841415a29ff50301e1394c02a2564050ff43cfec472068b",
+      "copy_sha256": "f552eabddfe703166841415a29ff50301e1394c02a2564050ff43cfec472068b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/vendor/SOCKET.IO-CLIENT-LICENSE.txt",
+      "copy": "retail-genie/retail_genie/static/vendor/SOCKET.IO-CLIENT-LICENSE.txt",
+      "source_sha256": "73cb68c437d59e066f9386ef97be57298df4db119fdbd7d7150817c6dbd9f189",
+      "copy_sha256": "73cb68c437d59e066f9386ef97be57298df4db119fdbd7d7150817c6dbd9f189",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/static/vendor/socket.io.min.js",
+      "copy": "retail-genie/retail_genie/static/vendor/socket.io.min.js",
+      "source_sha256": "b0e735814f8dcfecd6cdb8a7ce95a297a7e1e5f2727a29e6f5901801d52fa0c5",
+      "copy_sha256": "b0e735814f8dcfecd6cdb8a7ce95a297a7e1e5f2727a29e6f5901801d52fa0c5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/stock_audits/__init__.py",
+      "copy": "retail-genie/retail_genie/stock_audits/__init__.py",
+      "source_sha256": "880058730f25e1bb307f8720f61a3eaabff25b79e99d70ae4d5440856f0df263",
+      "copy_sha256": "880058730f25e1bb307f8720f61a3eaabff25b79e99d70ae4d5440856f0df263",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/stock_audits/routes.py",
+      "copy": "retail-genie/retail_genie/stock_audits/routes.py",
+      "source_sha256": "884a57659b6d8d02c9a00104bab8764229207bce64ca574af2edb7545079e4fd",
+      "copy_sha256": "884a57659b6d8d02c9a00104bab8764229207bce64ca574af2edb7545079e4fd",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/stock_audits/service.py",
+      "copy": "retail-genie/retail_genie/stock_audits/service.py",
+      "source_sha256": "018211d106e92291a246593aca7736ddd36d8034f30abe86e0681b25beb6e8bc",
+      "copy_sha256": "018211d106e92291a246593aca7736ddd36d8034f30abe86e0681b25beb6e8bc",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/backups.html",
+      "copy": "retail-genie/retail_genie/templates/admin/backups.html",
+      "source_sha256": "f5adf6a75c0c0d5e16fbd4004ba0614504a91a57cb62d1f4effedf7c4a9679ef",
+      "copy_sha256": "f5adf6a75c0c0d5e16fbd4004ba0614504a91a57cb62d1f4effedf7c4a9679ef",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/billing_settings.html",
+      "copy": "retail-genie/retail_genie/templates/admin/billing_settings.html",
+      "source_sha256": "cc68c8de390bad6c45701b6a520883398b3ef18d4df26823d1e869f4b64f74ea",
+      "copy_sha256": "cc68c8de390bad6c45701b6a520883398b3ef18d4df26823d1e869f4b64f74ea",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/child_company.html",
+      "copy": "retail-genie/retail_genie/templates/admin/child_company.html",
+      "source_sha256": "3ade9eef796f7431116f9bf237f6c6818e35534f789ae29b0b23bdab6344acdd",
+      "copy_sha256": "3ade9eef796f7431116f9bf237f6c6818e35534f789ae29b0b23bdab6344acdd",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/companies.html",
+      "copy": "retail-genie/retail_genie/templates/admin/companies.html",
+      "source_sha256": "2338d8c119827edd7486cfdd57f958e4a62082a127b67f7cbdd74122461b000f",
+      "copy_sha256": "2338d8c119827edd7486cfdd57f958e4a62082a127b67f7cbdd74122461b000f",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/company_container_guide.html",
+      "copy": "retail-genie/retail_genie/templates/admin/company_container_guide.html",
+      "source_sha256": "cc30f42df63b60528485d5e68a6935e7e2f54cbc92713944522e736470a7666e",
+      "copy_sha256": "cc30f42df63b60528485d5e68a6935e7e2f54cbc92713944522e736470a7666e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/company_transfer.html",
+      "copy": "retail-genie/retail_genie/templates/admin/company_transfer.html",
+      "source_sha256": "e63c38453774eda43f50f7f0dfbcd8ec5b6e5ef208be4c09561642a8d0ab11cb",
+      "copy_sha256": "e63c38453774eda43f50f7f0dfbcd8ec5b6e5ef208be4c09561642a8d0ab11cb",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/containers.html",
+      "copy": "retail-genie/retail_genie/templates/admin/containers.html",
+      "source_sha256": "e3648f9cb5ee3db86a5a2a8ef5c1a21e96e521c137494d63f7d51da0df68b6bc",
+      "copy_sha256": "e3648f9cb5ee3db86a5a2a8ef5c1a21e96e521c137494d63f7d51da0df68b6bc",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/domain_policies.html",
+      "copy": "retail-genie/retail_genie/templates/admin/domain_policies.html",
+      "source_sha256": "9bec291168c6ec85208283f50d8bf0e5a8a8d70f3e3020612e2952deca51b127",
+      "copy_sha256": "9bec291168c6ec85208283f50d8bf0e5a8a8d70f3e3020612e2952deca51b127",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/domain_policy_edit.html",
+      "copy": "retail-genie/retail_genie/templates/admin/domain_policy_edit.html",
+      "source_sha256": "c6eed250358c50cb04e8960207a368ad128e39349fb9f260ee30f9dd2066cf7e",
+      "copy_sha256": "c6eed250358c50cb04e8960207a368ad128e39349fb9f260ee30f9dd2066cf7e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/domain_policy_index.html",
+      "copy": "retail-genie/retail_genie/templates/admin/domain_policy_index.html",
+      "source_sha256": "aea8eb069b71b594520ab0a216652f5b58fd16151584b7c29f3236ca816ce96c",
+      "copy_sha256": "aea8eb069b71b594520ab0a216652f5b58fd16151584b7c29f3236ca816ce96c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/store_assignments.html",
+      "copy": "retail-genie/retail_genie/templates/admin/store_assignments.html",
+      "source_sha256": "081651a2f5981309a70eece6410faf8095019eb21583180970d487a89f86ac6f",
+      "copy_sha256": "081651a2f5981309a70eece6410faf8095019eb21583180970d487a89f86ac6f",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/stores.html",
+      "copy": "retail-genie/retail_genie/templates/admin/stores.html",
+      "source_sha256": "ab23156114e065d9292d0b0954fb5eb26e6e2be014cf212d3e0854b11e244d02",
+      "copy_sha256": "ab23156114e065d9292d0b0954fb5eb26e6e2be014cf212d3e0854b11e244d02",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/admin/users.html",
+      "copy": "retail-genie/retail_genie/templates/admin/users.html",
+      "source_sha256": "a5b99b4540343fdccab87de745552303da92367ed35179d90ed88be4579e2420",
+      "copy_sha256": "a5b99b4540343fdccab87de745552303da92367ed35179d90ed88be4579e2420",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/attendance/breaks_dashboard.html",
+      "copy": "retail-genie/retail_genie/templates/attendance/breaks_dashboard.html",
+      "source_sha256": "303d39de9dd2698f3bbfb35f8b08790a623feb6fc7ce549f113f4f982f3f0365",
+      "copy_sha256": "303d39de9dd2698f3bbfb35f8b08790a623feb6fc7ce549f113f4f982f3f0365",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/attendance/index.html",
+      "copy": "retail-genie/retail_genie/templates/attendance/index.html",
+      "source_sha256": "f8970e0c8f4944ad5b0fa5ac956fbd813528eda29d1834d114d55f6153322c4b",
+      "copy_sha256": "f8970e0c8f4944ad5b0fa5ac956fbd813528eda29d1834d114d55f6153322c4b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/auth/change_password.html",
+      "copy": "retail-genie/retail_genie/templates/auth/change_password.html",
+      "source_sha256": "a11080e40e10344d36374ae1a765f4c593a0cd78bb7aa7e4fb9a813c63d7fdf1",
+      "copy_sha256": "a11080e40e10344d36374ae1a765f4c593a0cd78bb7aa7e4fb9a813c63d7fdf1",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/auth/login.html",
+      "copy": "retail-genie/retail_genie/templates/auth/login.html",
+      "source_sha256": "3bd7f805fdfdb89ea2f22e61a8ceece4dcceef4f78c7652a05ce179fb9cd1d5b",
+      "copy_sha256": "3bd7f805fdfdb89ea2f22e61a8ceece4dcceef4f78c7652a05ce179fb9cd1d5b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/auth/select_tenant.html",
+      "copy": "retail-genie/retail_genie/templates/auth/select_tenant.html",
+      "source_sha256": "7b5ae64ec500bdd9ce6142c74e142762acc2c7b1b0a31e3d5e4b7cce5cb7a74e",
+      "copy_sha256": "7b5ae64ec500bdd9ce6142c74e142762acc2c7b1b0a31e3d5e4b7cce5cb7a74e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/base.html",
+      "copy": "retail-genie/retail_genie/templates/base.html",
+      "source_sha256": "039a6387e6ed9fce28dbac7e41c417963c9bf69ca85d500cb790e068f2b15ca2",
+      "copy_sha256": "039a6387e6ed9fce28dbac7e41c417963c9bf69ca85d500cb790e068f2b15ca2",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/catalog/categories.html",
+      "copy": "retail-genie/retail_genie/templates/catalog/categories.html",
+      "source_sha256": "90ea7be8746e012ac406e08f9e49fe48d978c504854df3df0427bb5116a42443",
+      "copy_sha256": "90ea7be8746e012ac406e08f9e49fe48d978c504854df3df0427bb5116a42443",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/catalog/company_picker.html",
+      "copy": "retail-genie/retail_genie/templates/catalog/company_picker.html",
+      "source_sha256": "f134b0ae318d30679c1f5ad48f261849b7bc3065343a6bc117aaad83196280f9",
+      "copy_sha256": "f134b0ae318d30679c1f5ad48f261849b7bc3065343a6bc117aaad83196280f9",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/catalog/labels.html",
+      "copy": "retail-genie/retail_genie/templates/catalog/labels.html",
+      "source_sha256": "371217e99542ef6e9b4af0611c8e50fc753c585c53071bbae076457148f62a97",
+      "copy_sha256": "371217e99542ef6e9b4af0611c8e50fc753c585c53071bbae076457148f62a97",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/catalog/products.html",
+      "copy": "retail-genie/retail_genie/templates/catalog/products.html",
+      "source_sha256": "25c8a93fbb63ed9d4cb90ae220b103f9baebb9f3e495a509b412bf26ef0e5e86",
+      "copy_sha256": "25c8a93fbb63ed9d4cb90ae220b103f9baebb9f3e495a509b412bf26ef0e5e86",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/cloud/index.html",
+      "copy": "retail-genie/retail_genie/templates/cloud/index.html",
+      "source_sha256": "f6e502cbda8dffa1ad8feb286d323bae58a3b70087730092f1957d1be7129ca5",
+      "copy_sha256": "f6e502cbda8dffa1ad8feb286d323bae58a3b70087730092f1957d1be7129ca5",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/commercial/demand_notice_print.html",
+      "copy": "retail-genie/retail_genie/templates/commercial/demand_notice_print.html",
+      "source_sha256": "11d9db2f7dfc51a3e84584ce7bc10a3826b4be11ddc2e8d9a5b9b24320bd218a",
+      "copy_sha256": "11d9db2f7dfc51a3e84584ce7bc10a3826b4be11ddc2e8d9a5b9b24320bd218a",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/commercial/demand_notices.html",
+      "copy": "retail-genie/retail_genie/templates/commercial/demand_notices.html",
+      "source_sha256": "95ca57d2e69408f0c04ab464fabcce040876a7aa35e293590845bc8d73464baf",
+      "copy_sha256": "95ca57d2e69408f0c04ab464fabcce040876a7aa35e293590845bc8d73464baf",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/commercial/quotation_print.html",
+      "copy": "retail-genie/retail_genie/templates/commercial/quotation_print.html",
+      "source_sha256": "98aab82b62e10d988acc840933b980a9f4683e107982b8ec89af6d5a0a219aec",
+      "copy_sha256": "98aab82b62e10d988acc840933b980a9f4683e107982b8ec89af6d5a0a219aec",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/commercial/quotations.html",
+      "copy": "retail-genie/retail_genie/templates/commercial/quotations.html",
+      "source_sha256": "3e5bc7e8b22263577810063d6fc600d10ee21e07db1d7a886a75aa4bb73d3181",
+      "copy_sha256": "3e5bc7e8b22263577810063d6fc600d10ee21e07db1d7a886a75aa4bb73d3181",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/display/lcd.html",
+      "copy": "retail-genie/retail_genie/templates/display/lcd.html",
+      "source_sha256": "eb35ce90ce8c24d22934b7e3fabc543bf5a58a9d21d0ad65e9d091357c78c398",
+      "copy_sha256": "eb35ce90ce8c24d22934b7e3fabc543bf5a58a9d21d0ad65e9d091357c78c398",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/errors/403.html",
+      "copy": "retail-genie/retail_genie/templates/errors/403.html",
+      "source_sha256": "95be54c1b699bca1153ab15f38d733bb7e3657bd2ce0e6a03031cbab219de100",
+      "copy_sha256": "95be54c1b699bca1153ab15f38d733bb7e3657bd2ce0e6a03031cbab219de100",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/errors/404.html",
+      "copy": "retail-genie/retail_genie/templates/errors/404.html",
+      "source_sha256": "a490c4b5a028216626255afe30aa0de24dc8cca743c068f2f6c8a948ff45a2d2",
+      "copy_sha256": "a490c4b5a028216626255afe30aa0de24dc8cca743c068f2f6c8a948ff45a2d2",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/errors/500.html",
+      "copy": "retail-genie/retail_genie/templates/errors/500.html",
+      "source_sha256": "1dc30383faaf513bf97e9a9c98a3472db2ff0d038633b390366715be18e51eb6",
+      "copy_sha256": "1dc30383faaf513bf97e9a9c98a3472db2ff0d038633b390366715be18e51eb6",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/express/checkout.html",
+      "copy": "retail-genie/retail_genie/templates/express/checkout.html",
+      "source_sha256": "822d02bf9e25bb0400efd544580f824e812f0bb4ba331300895352681524990e",
+      "copy_sha256": "822d02bf9e25bb0400efd544580f824e812f0bb4ba331300895352681524990e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/main/dashboard.html",
+      "copy": "retail-genie/retail_genie/templates/main/dashboard.html",
+      "source_sha256": "a3d8488fbaac5b92565223a46153c08287eb0bda5e45a0fdd3ca576761b620ba",
+      "copy_sha256": "a3d8488fbaac5b92565223a46153c08287eb0bda5e45a0fdd3ca576761b620ba",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/messaging/compose.html",
+      "copy": "retail-genie/retail_genie/templates/messaging/compose.html",
+      "source_sha256": "6fde63782b2c698a2e42a4b9b133b8b8f4ce8cd2364082a7265e5bf4fe4c23eb",
+      "copy_sha256": "6fde63782b2c698a2e42a4b9b133b8b8f4ce8cd2364082a7265e5bf4fe4c23eb",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/messaging/index.html",
+      "copy": "retail-genie/retail_genie/templates/messaging/index.html",
+      "source_sha256": "54fb7f631d40f3e4d7f3965d0456d1e9f7c790aa115a2e2c0b4bff368310bd8c",
+      "copy_sha256": "54fb7f631d40f3e4d7f3965d0456d1e9f7c790aa115a2e2c0b4bff368310bd8c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/messaging/thread.html",
+      "copy": "retail-genie/retail_genie/templates/messaging/thread.html",
+      "source_sha256": "558b2998e748012a384af41be35c646e25c2b04bd8b6bcc7853049f051b7bed8",
+      "copy_sha256": "558b2998e748012a384af41be35c646e25c2b04bd8b6bcc7853049f051b7bed8",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/reports/activity.html",
+      "copy": "retail-genie/retail_genie/templates/reports/activity.html",
+      "source_sha256": "ce13b7a141343b7ab1d8790a358db68b5c177023ebc776434b0340bad6d89faa",
+      "copy_sha256": "ce13b7a141343b7ab1d8790a358db68b5c177023ebc776434b0340bad6d89faa",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/reports/sales.html",
+      "copy": "retail-genie/retail_genie/templates/reports/sales.html",
+      "source_sha256": "86e3c35cff4ce48afc41a86425f65b21280f017cebb164d1f179c1da5dca3fe3",
+      "copy_sha256": "86e3c35cff4ce48afc41a86425f65b21280f017cebb164d1f179c1da5dca3fe3",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/saas/invoice_print.html",
+      "copy": "retail-genie/retail_genie/templates/saas/invoice_print.html",
+      "source_sha256": "83dfffa13632ae63abcd949c00ccfa13c951c1eff05c167a6b950b1d38a53f95",
+      "copy_sha256": "83dfffa13632ae63abcd949c00ccfa13c951c1eff05c167a6b950b1d38a53f95",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/saas/plans.html",
+      "copy": "retail-genie/retail_genie/templates/saas/plans.html",
+      "source_sha256": "bc7d4d8b76dd3625c55e2c79fabd43ac0c1a6b68ec099d236567b4f7e31dea46",
+      "copy_sha256": "bc7d4d8b76dd3625c55e2c79fabd43ac0c1a6b68ec099d236567b4f7e31dea46",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/saas/requests.html",
+      "copy": "retail-genie/retail_genie/templates/saas/requests.html",
+      "source_sha256": "34b979f1197f4536bc404760056104876c7c0cc27befdcc31a4a1cf21d529c0c",
+      "copy_sha256": "34b979f1197f4536bc404760056104876c7c0cc27befdcc31a4a1cf21d529c0c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/saas/subscriptions.html",
+      "copy": "retail-genie/retail_genie/templates/saas/subscriptions.html",
+      "source_sha256": "d011ef8be35411a07c732c9bd14042951713b0649013dde85d3b9297c1a4c12b",
+      "copy_sha256": "d011ef8be35411a07c732c9bd14042951713b0649013dde85d3b9297c1a4c12b",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/saas/tenant_portal.html",
+      "copy": "retail-genie/retail_genie/templates/saas/tenant_portal.html",
+      "source_sha256": "898abf5fbb82da20027428e654e1dadf50894c717242d06172dfa24282e40511",
+      "copy_sha256": "898abf5fbb82da20027428e654e1dadf50894c717242d06172dfa24282e40511",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/daily_cashup.html",
+      "copy": "retail-genie/retail_genie/templates/sales/daily_cashup.html",
+      "source_sha256": "b35539d6036c7c0f3ac59d8ad24daed2458706e5051483c5552cb895ac8e85af",
+      "copy_sha256": "b35539d6036c7c0f3ac59d8ad24daed2458706e5051483c5552cb895ac8e85af",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/order_print.html",
+      "copy": "retail-genie/retail_genie/templates/sales/order_print.html",
+      "source_sha256": "06364f911c94446a613e7e12b261f753f9040f9afc0db1335171602619708a96",
+      "copy_sha256": "06364f911c94446a613e7e12b261f753f9040f9afc0db1335171602619708a96",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/orders.html",
+      "copy": "retail-genie/retail_genie/templates/sales/orders.html",
+      "source_sha256": "88db421379ba27f2e67f66ed36c6b1e434d5924cd226dc238f3773723344cbbd",
+      "copy_sha256": "88db421379ba27f2e67f66ed36c6b1e434d5924cd226dc238f3773723344cbbd",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/pos.html",
+      "copy": "retail-genie/retail_genie/templates/sales/pos.html",
+      "source_sha256": "dcf331eee1b41be7457ff357a0257e22dc9a609ad1dc5292176f3ad2cec03bd6",
+      "copy_sha256": "dcf331eee1b41be7457ff357a0257e22dc9a609ad1dc5292176f3ad2cec03bd6",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/removal_approvals.html",
+      "copy": "retail-genie/retail_genie/templates/sales/removal_approvals.html",
+      "source_sha256": "afcf96676030379e9620cad4dd49753d8866af1ddd7045f91f1c31cb4752615e",
+      "copy_sha256": "afcf96676030379e9620cad4dd49753d8866af1ddd7045f91f1c31cb4752615e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/return_print.html",
+      "copy": "retail-genie/retail_genie/templates/sales/return_print.html",
+      "source_sha256": "7005766874028d328bea316f2e18f10ddd672235b1e40c6ba26458138d72b150",
+      "copy_sha256": "7005766874028d328bea316f2e18f10ddd672235b1e40c6ba26458138d72b150",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/sales/returns.html",
+      "copy": "retail-genie/retail_genie/templates/sales/returns.html",
+      "source_sha256": "e987b353ba6853661172ebdd3b1237fdbc8bfe3fd8cf84f2da7266f3a246a9cb",
+      "copy_sha256": "e987b353ba6853661172ebdd3b1237fdbc8bfe3fd8cf84f2da7266f3a246a9cb",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/scm/dashboard.html",
+      "copy": "retail-genie/retail_genie/templates/scm/dashboard.html",
+      "source_sha256": "4b985137b95b8b72b584d7496625b9a4aa330bde2d8cdadc7afd4bc310b1d19e",
+      "copy_sha256": "4b985137b95b8b72b584d7496625b9a4aa330bde2d8cdadc7afd4bc310b1d19e",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/scm/purchase_order.html",
+      "copy": "retail-genie/retail_genie/templates/scm/purchase_order.html",
+      "source_sha256": "8b5f584397a18bf1a870d86a4f9fa33c06998db8d6782756562c5f3f4a4b4d37",
+      "copy_sha256": "8b5f584397a18bf1a870d86a4f9fa33c06998db8d6782756562c5f3f4a4b4d37",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/scm/purchase_orders.html",
+      "copy": "retail-genie/retail_genie/templates/scm/purchase_orders.html",
+      "source_sha256": "6ebd12bc22a03643e45b178695226bccc38b2dcff98557827954b2f75356f491",
+      "copy_sha256": "6ebd12bc22a03643e45b178695226bccc38b2dcff98557827954b2f75356f491",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/scm/supplier_detail.html",
+      "copy": "retail-genie/retail_genie/templates/scm/supplier_detail.html",
+      "source_sha256": "486a0e604ddf19bdb289da8bf967645d881a10da280463f035a1bc0a9fd90ff0",
+      "copy_sha256": "486a0e604ddf19bdb289da8bf967645d881a10da280463f035a1bc0a9fd90ff0",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/scm/suppliers.html",
+      "copy": "retail-genie/retail_genie/templates/scm/suppliers.html",
+      "source_sha256": "884aa84fd09aec66307f2c6f024a4d229cb76fcd75b9c72dbe4037faab693bdf",
+      "copy_sha256": "884aa84fd09aec66307f2c6f024a4d229cb76fcd75b9c72dbe4037faab693bdf",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/settings/index.html",
+      "copy": "retail-genie/retail_genie/templates/settings/index.html",
+      "source_sha256": "b623e46f6cd9b3aab057ecec2ae572a2d5141525d937e2f0e6b08c611484ca1c",
+      "copy_sha256": "b623e46f6cd9b3aab057ecec2ae572a2d5141525d937e2f0e6b08c611484ca1c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/stock_audits/create.html",
+      "copy": "retail-genie/retail_genie/templates/stock_audits/create.html",
+      "source_sha256": "f7fec9356367bbdd9232f963a276ab4306df8afa965022486c042c5607bc3f46",
+      "copy_sha256": "f7fec9356367bbdd9232f963a276ab4306df8afa965022486c042c5607bc3f46",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/stock_audits/detail.html",
+      "copy": "retail-genie/retail_genie/templates/stock_audits/detail.html",
+      "source_sha256": "a8db8bf57527232e640b7c5b09f05ec7347404cd896efd738fe9dece08c57d83",
+      "copy_sha256": "a8db8bf57527232e640b7c5b09f05ec7347404cd896efd738fe9dece08c57d83",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/stock_audits/index.html",
+      "copy": "retail-genie/retail_genie/templates/stock_audits/index.html",
+      "source_sha256": "1192ce5ff654eacbebf923c111337da8eb9db6dde58bb3276000e595ee551049",
+      "copy_sha256": "1192ce5ff654eacbebf923c111337da8eb9db6dde58bb3276000e595ee551049",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/templates/stock_audits/report.html",
+      "copy": "retail-genie/retail_genie/templates/stock_audits/report.html",
+      "source_sha256": "154a9d4f59009fc9edb1bf1ef78648ae63fcb7a23c58bc9e755edf068a7cefd2",
+      "copy_sha256": "154a9d4f59009fc9edb1bf1ef78648ae63fcb7a23c58bc9e755edf068a7cefd2",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/tenancy/__init__.py",
+      "copy": "retail-genie/retail_genie/tenancy/__init__.py",
+      "source_sha256": "7cd61bc25e6d38b0cf60698bda74a29789cf42c0bbef0ac36b633c48be64fb7d",
+      "copy_sha256": "7cd61bc25e6d38b0cf60698bda74a29789cf42c0bbef0ac36b633c48be64fb7d",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/tenancy/company_transfer.py",
+      "copy": "retail-genie/retail_genie/tenancy/company_transfer.py",
+      "source_sha256": "1af9e3844026d16e70896eac095e0313c900ea3123c18e6466a553d31d9d9354",
+      "copy_sha256": "1af9e3844026d16e70896eac095e0313c900ea3123c18e6466a553d31d9d9354",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/tenancy/service.py",
+      "copy": "retail-genie/retail_genie/tenancy/service.py",
+      "source_sha256": "63e6d373472aab654d7110dc0e3c52e7e72939d00ffe982df031828bd31420a9",
+      "copy_sha256": "63e6d373472aab654d7110dc0e3c52e7e72939d00ffe982df031828bd31420a9",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/run.py",
+      "copy": "retail-genie/run.py",
+      "source_sha256": "26b54f3e44c27b5054cb89f3a188f60741f99a86ef4361cc83e56ad041fa2f71",
+      "copy_sha256": "9ebd45d1db0933d679e5070a96a5da6cb08762ee24ffe9ca7f0f9821263af8b8",
+      "adapted": true
+    },
+    {
+      "source": "Retail Genie Final/scripts/setup_database.py",
+      "copy": "retail-genie/scripts/setup_database.py",
+      "source_sha256": "4d2ab100290bc101d6ea66369a77f295e47868788e3f6f391687535068da0f3b",
+      "copy_sha256": "b61d1de1fdf12488794985a9c2ba4056469a5344552d950a24c464f7375a6cd8",
+      "adapted": true
+    },
+    {
+      "source": "Retail Genie Final/seed_admin.py",
+      "copy": "retail-genie/seed_admin.py",
+      "source_sha256": "8b0af54479373e3a7f04a2fd89afc2c5e924cbe2a54e33b53916928c9f2be14c",
+      "copy_sha256": "8b0af54479373e3a7f04a2fd89afc2c5e924cbe2a54e33b53916928c9f2be14c",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/wsgi.py",
+      "copy": "retail-genie/wsgi.py",
+      "source_sha256": "63257e2dc0ec8adcd584cb4741dc9d805aaff11e4a473c8b5e0fab5876730c16",
+      "copy_sha256": "63257e2dc0ec8adcd584cb4741dc9d805aaff11e4a473c8b5e0fab5876730c16",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/.env.example",
+      "copy": "gyro-pulse/server/.env.example",
+      "source_sha256": "5a37a21beedc61974d78d49aba303c64c4f78946e2e59d54f826a7359a53d7c5",
+      "copy_sha256": "cd1681600f44468bb826b3f85981dbe1a4029234a1ce790d023a40961501f10f",
+      "adapted": true
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/api.py",
+      "copy": "gyro-pulse/server/api.py",
+      "source_sha256": "b34cdab24fbfc759f2048077e02d6fb04adfa551fb2711edb7d8f9202a0a95af",
+      "copy_sha256": "b34cdab24fbfc759f2048077e02d6fb04adfa551fb2711edb7d8f9202a0a95af",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/app.py",
+      "copy": "gyro-pulse/server/app.py",
+      "source_sha256": "2df68e91fdcaf5c6d0183f29755a54c9c1290b274ed97e8b617755cc4b325e50",
+      "copy_sha256": "e36ecf309698b6d36c61feef2a75aa12313d8882b9f99123c126e24912098f00",
+      "adapted": true
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/auth.py",
+      "copy": "gyro-pulse/server/auth.py",
+      "source_sha256": "b898c7d1709286a83e628232d9deae741760a02c3814f04eeed3bacfbc27c13d",
+      "copy_sha256": "b898c7d1709286a83e628232d9deae741760a02c3814f04eeed3bacfbc27c13d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/backup.py",
+      "copy": "gyro-pulse/server/backup.py",
+      "source_sha256": "87f05e6d2cc287c66e0789f14362b34968856ec1712e9431c8467e5a596d34fd",
+      "copy_sha256": "87f05e6d2cc287c66e0789f14362b34968856ec1712e9431c8467e5a596d34fd",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/config.json",
+      "copy": "gyro-pulse/server/config.json",
+      "source_sha256": "29cb6bbbc0f99fbbbaa183f4ecae6d3ff8f922a6c2f87ec1c66982b19ea5136e",
+      "copy_sha256": "e54be98ec4a2fede6ac5171a63a1bc58c80a9fee8b01b46c970bfd8ca0b9dbc0",
+      "adapted": true
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/dashboard.py",
+      "copy": "gyro-pulse/server/dashboard.py",
+      "source_sha256": "616af3f29c4bf57634da7fe4c154ec4d820906c49b76cb0d856c615a291783e3",
+      "copy_sha256": "616af3f29c4bf57634da7fe4c154ec4d820906c49b76cb0d856c615a291783e3",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/extract.py",
+      "copy": "gyro-pulse/server/extract.py",
+      "source_sha256": "537fbf40aec1ae7d54e57c5b2c3849755c2612f88a6e80524c819960c3a5ea1c",
+      "copy_sha256": "537fbf40aec1ae7d54e57c5b2c3849755c2612f88a6e80524c819960c3a5ea1c",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/flush_data.py",
+      "copy": "gyro-pulse/server/flush_data.py",
+      "source_sha256": "469d01fc27e348131ff55adce6be9dcef798bfba1e9ae6559130a3b1e67a66ef",
+      "copy_sha256": "469d01fc27e348131ff55adce6be9dcef798bfba1e9ae6559130a3b1e67a66ef",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/fulfillment.py",
+      "copy": "gyro-pulse/server/fulfillment.py",
+      "source_sha256": "88bcde6a8711315be479873737bd70e05ab9e68bec4a6f64ea892858d3e6ccfa",
+      "copy_sha256": "88bcde6a8711315be479873737bd70e05ab9e68bec4a6f64ea892858d3e6ccfa",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/guide/Guide-in secondery system.html",
+      "copy": "gyro-pulse/server/guide/Guide-in secondery system.html",
+      "source_sha256": "a7ecf753832477d0d3a9c8d89273bac4b18f2208ae78d0fc88d8decc0b5052cb",
+      "copy_sha256": "a7ecf753832477d0d3a9c8d89273bac4b18f2208ae78d0fc88d8decc0b5052cb",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/guide/Process-cloud-flare.html",
+      "copy": "gyro-pulse/server/guide/Process-cloud-flare.html",
+      "source_sha256": "a3a906670e89989a5026e307ff4c8bbb1c4578c2638cb3d3c86f80b356f4b345",
+      "copy_sha256": "a3a906670e89989a5026e307ff4c8bbb1c4578c2638cb3d3c86f80b356f4b345",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/guide/guide-python-app local install.html",
+      "copy": "gyro-pulse/server/guide/guide-python-app local install.html",
+      "source_sha256": "8cdd7e483b4bfa88104b5ab1dc7617e2a1250ba94a0c9d8aded3e6ad90f4c3a6",
+      "copy_sha256": "8cdd7e483b4bfa88104b5ab1dc7617e2a1250ba94a0c9d8aded3e6ad90f4c3a6",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/init_db.py",
+      "copy": "gyro-pulse/server/init_db.py",
+      "source_sha256": "dc78a88c1a7b6a491ac03f7000306559230dd128378624c8454e0392523fe46b",
+      "copy_sha256": "dc78a88c1a7b6a491ac03f7000306559230dd128378624c8454e0392523fe46b",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/migrate.py",
+      "copy": "gyro-pulse/server/migrate.py",
+      "source_sha256": "a09e1897286a442c23ef7770527ea5d95c9325291fb2e469c75851e478dd293d",
+      "copy_sha256": "a09e1897286a442c23ef7770527ea5d95c9325291fb2e469c75851e478dd293d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/models.py",
+      "copy": "gyro-pulse/server/models.py",
+      "source_sha256": "cca2ee6db5f31c18f08303f343e5c9d0f5d25529e81117eee8be26bbd1c9796e",
+      "copy_sha256": "cca2ee6db5f31c18f08303f343e5c9d0f5d25529e81117eee8be26bbd1c9796e",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/requirements-dev.txt",
+      "copy": "gyro-pulse/server/requirements-dev.txt",
+      "source_sha256": "5cfa0cba849b6c7fed5c1f95abbe86f286c2c3d1bc0e05ff5a50a4e2ed4137b8",
+      "copy_sha256": "5cfa0cba849b6c7fed5c1f95abbe86f286c2c3d1bc0e05ff5a50a4e2ed4137b8",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/requirements-production.txt",
+      "copy": "gyro-pulse/server/requirements-production.txt",
+      "source_sha256": "227c661cc893f40d74b5543d16a0c8f464a7b565e73ef7e5a9331b3317730e7f",
+      "copy_sha256": "227c661cc893f40d74b5543d16a0c8f464a7b565e73ef7e5a9331b3317730e7f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/requirements.txt",
+      "copy": "gyro-pulse/server/requirements.txt",
+      "source_sha256": "aac0d5b85fb7fafa4c125fcf35939bb0f6ec8062b31034869d60fd45872501ce",
+      "copy_sha256": "aac0d5b85fb7fafa4c125fcf35939bb0f6ec8062b31034869d60fd45872501ce",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/rotate_keys.py",
+      "copy": "gyro-pulse/server/rotate_keys.py",
+      "source_sha256": "44a5b2b180e252bd54b63c3cff90f879a54856550c5c84205563ecb6fb420569",
+      "copy_sha256": "44a5b2b180e252bd54b63c3cff90f879a54856550c5c84205563ecb6fb420569",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/schema.sql",
+      "copy": "gyro-pulse/server/schema.sql",
+      "source_sha256": "1a4d15eef9da52f1ad5e022fc85d096bc37d29666e2f630371924d866a94aa3f",
+      "copy_sha256": "1a4d15eef9da52f1ad5e022fc85d096bc37d29666e2f630371924d866a94aa3f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/setup_db.bat",
+      "copy": "gyro-pulse/server/setup_db.bat",
+      "source_sha256": "a9593c2a93be6c31c71aaab5e8df42462df4b9ef9f9133157ad74c9540cdd225",
+      "copy_sha256": "a9593c2a93be6c31c71aaab5e8df42462df4b9ef9f9133157ad74c9540cdd225",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/static/css/retail-genie.css",
+      "copy": "gyro-pulse/server/static/css/retail-genie.css",
+      "source_sha256": "b74e75b8e9788020a6713e750bc85dcf689e698d85a6e61fd09dd2211364dece",
+      "copy_sha256": "b74e75b8e9788020a6713e750bc85dcf689e698d85a6e61fd09dd2211364dece",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/static/operations.js",
+      "copy": "gyro-pulse/server/static/operations.js",
+      "source_sha256": "51a6fb5947edb491d7e474aa9d61a8d00a0a07fb166135d99678beb2ba3929e4",
+      "copy_sha256": "51a6fb5947edb491d7e474aa9d61a8d00a0a07fb166135d99678beb2ba3929e4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/admin_dashboard.html",
+      "copy": "gyro-pulse/server/templates/admin_dashboard.html",
+      "source_sha256": "e7597ccf467bf5acbc7afc161cec86e2741db53fa3f8d799e41ae72b302becfa",
+      "copy_sha256": "e7597ccf467bf5acbc7afc161cec86e2741db53fa3f8d799e41ae72b302becfa",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/captain_dashboard.html",
+      "copy": "gyro-pulse/server/templates/captain_dashboard.html",
+      "source_sha256": "cf556c9f714632907455fa19d751307e1f2cf3666f02d84f2d0666d49bb8f95b",
+      "copy_sha256": "cf556c9f714632907455fa19d751307e1f2cf3666f02d84f2d0666d49bb8f95b",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/label.html",
+      "copy": "gyro-pulse/server/templates/label.html",
+      "source_sha256": "d4ee09155a6b1630f840afee3736077d9d92d947c4feee65e6ed2dfc6684702a",
+      "copy_sha256": "d4ee09155a6b1630f840afee3736077d9d92d947c4feee65e6ed2dfc6684702a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/login.html",
+      "copy": "gyro-pulse/server/templates/login.html",
+      "source_sha256": "8e3b8ce7adf3b50a9448b999afbe9ca20b197726ad846e98c27109fe9e0eadc9",
+      "copy_sha256": "8e3b8ce7adf3b50a9448b999afbe9ca20b197726ad846e98c27109fe9e0eadc9",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/operations.html",
+      "copy": "gyro-pulse/server/templates/operations.html",
+      "source_sha256": "21b1cb51192bff7a985af886af9758e7db873bd9c477863ff6dad4d1e2ee190f",
+      "copy_sha256": "21b1cb51192bff7a985af886af9758e7db873bd9c477863ff6dad4d1e2ee190f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/storekeeper_dashboard.html",
+      "copy": "gyro-pulse/server/templates/storekeeper_dashboard.html",
+      "source_sha256": "f899deab6f657e7dea1ae39a1bb82e7fc3d00ccf7bd76f838bb9a83a2fe0a2a4",
+      "copy_sha256": "f899deab6f657e7dea1ae39a1bb82e7fc3d00ccf7bd76f838bb9a83a2fe0a2a4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/templates/subadmin_dashboard.html",
+      "copy": "gyro-pulse/server/templates/subadmin_dashboard.html",
+      "source_sha256": "30249f34d9dd265e32596ed57cca422a9d76f77dac2a8f81d073667776341b4d",
+      "copy_sha256": "30249f34d9dd265e32596ed57cca422a9d76f77dac2a8f81d073667776341b4d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/tests/browser_smoke.py",
+      "copy": "gyro-pulse/server/tests/browser_smoke.py",
+      "source_sha256": "9acb1b1aa21824e84c8d8e0e9216ee89131f1dd7ff927f21807ce501630b7a61",
+      "copy_sha256": "9acb1b1aa21824e84c8d8e0e9216ee89131f1dd7ff927f21807ce501630b7a61",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/tests/conftest.py",
+      "copy": "gyro-pulse/server/tests/conftest.py",
+      "source_sha256": "69a53b2cec0798614f29d4a59734838b11dffdac7ef2750c6c78166ca64c9492",
+      "copy_sha256": "69a53b2cec0798614f29d4a59734838b11dffdac7ef2750c6c78166ca64c9492",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/tests/test_gpc_contract.py",
+      "copy": "gyro-pulse/server/tests/test_gpc_contract.py",
+      "source_sha256": "4d4e3083e82b1e938563354f5501cfbf935d3bffb001d878d1dab30d93a92194",
+      "copy_sha256": "4d4e3083e82b1e938563354f5501cfbf935d3bffb001d878d1dab30d93a92194",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/tests/test_workflows.py",
+      "copy": "gyro-pulse/server/tests/test_workflows.py",
+      "source_sha256": "b064b9e6286bc0e814ff6e0b1b8db032f32537743109fffc4877736226058590",
+      "copy_sha256": "b064b9e6286bc0e814ff6e0b1b8db032f32537743109fffc4877736226058590",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/Server Side/utils.py",
+      "copy": "gyro-pulse/server/utils.py",
+      "source_sha256": "1a6ec27d8514f01dafc1dcd9ff75e9415e22a50987041b80e2f2132defa1343c",
+      "copy_sha256": "1a6ec27d8514f01dafc1dcd9ff75e9415e22a50987041b80e2f2132defa1343c",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/.env.example",
+      "copy": "gyro-pulse/android/.env.example",
+      "source_sha256": "2f8e863b4e6d55e37278571ebef41976b7df793d75b385ccf7a6f469841473b4",
+      "copy_sha256": "2f8e863b4e6d55e37278571ebef41976b7df793d75b385ccf7a6f469841473b4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/.gitignore",
+      "copy": "gyro-pulse/android/.gitignore",
+      "source_sha256": "da91b936c6f9f6050067712ab64aa13281d90717f8d1b9a596ef09170f1afdd6",
+      "copy_sha256": "da91b936c6f9f6050067712ab64aa13281d90717f8d1b9a596ef09170f1afdd6",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/README.md",
+      "copy": "gyro-pulse/android/README.md",
+      "source_sha256": "6248ec588e88f89e2c69de9cd347bc9ab4fdb3ad7a1aef17a6da3be620d56bb0",
+      "copy_sha256": "6248ec588e88f89e2c69de9cd347bc9ab4fdb3ad7a1aef17a6da3be620d56bb0",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/.gitignore",
+      "copy": "gyro-pulse/android/app/.gitignore",
+      "source_sha256": "5b46eb48d96e8571e8c93e4ef4f6ffbe6807b6d7350664a36a064e1167a32718",
+      "copy_sha256": "5b46eb48d96e8571e8c93e4ef4f6ffbe6807b6d7350664a36a064e1167a32718",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/build.gradle.kts",
+      "copy": "gyro-pulse/android/app/build.gradle.kts",
+      "source_sha256": "e98132476ca2eaf24636bb2cd79b16d9efac75cc5c05fa3422c9de58f8bf687c",
+      "copy_sha256": "e98132476ca2eaf24636bb2cd79b16d9efac75cc5c05fa3422c9de58f8bf687c",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/proguard-rules.pro",
+      "copy": "gyro-pulse/android/app/proguard-rules.pro",
+      "source_sha256": "1cf8c57e8f79c250b0af9c1a5a4edad71a5c348a79ab70243b6bae086c150ad2",
+      "copy_sha256": "1cf8c57e8f79c250b0af9c1a5a4edad71a5c348a79ab70243b6bae086c150ad2",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/androidTest/java/com/example/ExampleInstrumentedTest.kt",
+      "copy": "gyro-pulse/android/app/src/androidTest/java/com/example/ExampleInstrumentedTest.kt",
+      "source_sha256": "af79227e88d1ea0ae10279e9dd2a16f0e290766cd9d90620f4339449cb28067e",
+      "copy_sha256": "af79227e88d1ea0ae10279e9dd2a16f0e290766cd9d90620f4339449cb28067e",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/AndroidManifest.xml",
+      "copy": "gyro-pulse/android/app/src/main/AndroidManifest.xml",
+      "source_sha256": "6db97861979c52e19d9aa0616c3b0202cbd30e6df7460a47ff8bbfeee431e3b4",
+      "copy_sha256": "6db97861979c52e19d9aa0616c3b0202cbd30e6df7460a47ff8bbfeee431e3b4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/MainActivity.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/MainActivity.kt",
+      "source_sha256": "bd735e171a8fbca640aa07fb5a19e07e84434c03cda1683d06a9dfdc4368a170",
+      "copy_sha256": "bd735e171a8fbca640aa07fb5a19e07e84434c03cda1683d06a9dfdc4368a170",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/AppDatabase.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/AppDatabase.kt",
+      "source_sha256": "ff9f0efe1901649db2890c18637850a882aabb1bbfef41847b8a4e401dd9781a",
+      "copy_sha256": "ff9f0efe1901649db2890c18637850a882aabb1bbfef41847b8a4e401dd9781a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/GyroPulsePreferences.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/GyroPulsePreferences.kt",
+      "source_sha256": "7bd854be5da9f157c948df47623e48f8d29eb22eddcabf6f9d43dccbcaaf66ec",
+      "copy_sha256": "7bd854be5da9f157c948df47623e48f8d29eb22eddcabf6f9d43dccbcaaf66ec",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/InboxMessageDao.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/InboxMessageDao.kt",
+      "source_sha256": "017ec37d5635787a8a6e81c14e6e110317440afaa9fa865ddb096cc00bd1d598",
+      "copy_sha256": "017ec37d5635787a8a6e81c14e6e110317440afaa9fa865ddb096cc00bd1d598",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/InboxMessageEntity.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/InboxMessageEntity.kt",
+      "source_sha256": "763fe0835fd405c51d39f8648868945a9ded1b30419815d8bdb6201f75d3541a",
+      "copy_sha256": "763fe0835fd405c51d39f8648868945a9ded1b30419815d8bdb6201f75d3541a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/Message.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/Message.kt",
+      "source_sha256": "9e1b64bb983ed2eaf8c4d62f5f604d8b5942357b9aad1355085b50375e1b0168",
+      "copy_sha256": "9e1b64bb983ed2eaf8c4d62f5f604d8b5942357b9aad1355085b50375e1b0168",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/MessageDao.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/MessageDao.kt",
+      "source_sha256": "29a91d77ab9dbcd64bdcd82fad755745faf6c697c7675f27df574d9bf75d1d42",
+      "copy_sha256": "29a91d77ab9dbcd64bdcd82fad755745faf6c697c7675f27df574d9bf75d1d42",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/local/OrderOutbox.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/local/OrderOutbox.kt",
+      "source_sha256": "3df6158eb0178f5ebc590ebe0267bd6168a25c35c6835fdeb49b665f97df3b28",
+      "copy_sha256": "3df6158eb0178f5ebc590ebe0267bd6168a25c35c6835fdeb49b665f97df3b28",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/remote/GyroPulseApi.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/remote/GyroPulseApi.kt",
+      "source_sha256": "387ca7136aa3ecb0f936c72dde57693ee91758bd56beab8a479f1f1a0667aa56",
+      "copy_sha256": "387ca7136aa3ecb0f936c72dde57693ee91758bd56beab8a479f1f1a0667aa56",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/remote/NetworkModels.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/remote/NetworkModels.kt",
+      "source_sha256": "f2961e370f416b36c42c953a3caa95f7b2a12b34238b584e84091f8f5dd76435",
+      "copy_sha256": "f2961e370f416b36c42c953a3caa95f7b2a12b34238b584e84091f8f5dd76435",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/remote/RetrofitClient.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/remote/RetrofitClient.kt",
+      "source_sha256": "b7988722e907b33b168f894e09013f590f230ffc1e5d470e5d7eea49b111a1c9",
+      "copy_sha256": "b7988722e907b33b168f894e09013f590f230ffc1e5d470e5d7eea49b111a1c9",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/data/repository/GyroPulseRepository.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/data/repository/GyroPulseRepository.kt",
+      "source_sha256": "d8c1e5f4caf674629a255f303c7dd30b187a3239cacf68e0c82f78cdb8429d77",
+      "copy_sha256": "d8c1e5f4caf674629a255f303c7dd30b187a3239cacf68e0c82f78cdb8429d77",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/sync/SyncWorker.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/sync/SyncWorker.kt",
+      "source_sha256": "26dc2ff6379fe4dc8e2bbe2aad02db5adfe6a91d126561e192041e16065dcc8f",
+      "copy_sha256": "26dc2ff6379fe4dc8e2bbe2aad02db5adfe6a91d126561e192041e16065dcc8f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/scanner/BarcodeScannerView.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/scanner/BarcodeScannerView.kt",
+      "source_sha256": "7b9ff91d22f64ed7f3786d450f7bf11c609739618a6311da76fc2db0cc764f15",
+      "copy_sha256": "7b9ff91d22f64ed7f3786d450f7bf11c609739618a6311da76fc2db0cc764f15",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/CartScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/CartScreen.kt",
+      "source_sha256": "c02d2093341b24cd4dde28d7067d660369c309f0ae0df121363b6ffd18c55151",
+      "copy_sha256": "c02d2093341b24cd4dde28d7067d660369c309f0ae0df121363b6ffd18c55151",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/ExportScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/ExportScreen.kt",
+      "source_sha256": "b4ea5c56deb9f98a22148a51950dadd5b16ca162b9cd275cf9caeb3b47009cf4",
+      "copy_sha256": "b4ea5c56deb9f98a22148a51950dadd5b16ca162b9cd275cf9caeb3b47009cf4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/GyroPulseApp.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/GyroPulseApp.kt",
+      "source_sha256": "a737d40be0f2664e8e375608a8fd49f71fddd032cb8a2e05580cb993186c7a2a",
+      "copy_sha256": "a737d40be0f2664e8e375608a8fd49f71fddd032cb8a2e05580cb993186c7a2a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/LoginScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/LoginScreen.kt",
+      "source_sha256": "d22b7fb430a4ab371c79227529e63ac1b1aadeb671d91c2c2576f4f459142376",
+      "copy_sha256": "d22b7fb430a4ab371c79227529e63ac1b1aadeb671d91c2c2576f4f459142376",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/OrderFormScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/OrderFormScreen.kt",
+      "source_sha256": "7b662d26bcdbb7886e8c98bbff23ca9718ba87b194f5687e2c08f7b18b930fde",
+      "copy_sha256": "7b662d26bcdbb7886e8c98bbff23ca9718ba87b194f5687e2c08f7b18b930fde",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/SalesDashboardScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/SalesDashboardScreen.kt",
+      "source_sha256": "6c3304c206eea6ab1ab98d6f554ac835d9cb623a6d70901928f5a351f7d1ae7a",
+      "copy_sha256": "6c3304c206eea6ab1ab98d6f554ac835d9cb623a6d70901928f5a351f7d1ae7a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/screens/SettingsScreen.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/screens/SettingsScreen.kt",
+      "source_sha256": "e933e12f9cfcce8ef84f019a82444572de20c48e41f6e7425833cf6ffaa15164",
+      "copy_sha256": "e933e12f9cfcce8ef84f019a82444572de20c48e41f6e7425833cf6ffaa15164",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/theme/Color.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/theme/Color.kt",
+      "source_sha256": "35b7c4ada236bc8eb7c7d8df17b67f61e3ef18b4acd29ea82686ae1d27205e43",
+      "copy_sha256": "35b7c4ada236bc8eb7c7d8df17b67f61e3ef18b4acd29ea82686ae1d27205e43",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/theme/Theme.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/theme/Theme.kt",
+      "source_sha256": "f9407c648af686e52e3e160509d110e8e41440bc3f3d87345a031283a2b395a5",
+      "copy_sha256": "f9407c648af686e52e3e160509d110e8e41440bc3f3d87345a031283a2b395a5",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/theme/Type.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/theme/Type.kt",
+      "source_sha256": "3e722609ef323dd3600ff6a73b432a24b434a81f41673df7686f332f03d1b4dd",
+      "copy_sha256": "3e722609ef323dd3600ff6a73b432a24b434a81f41673df7686f332f03d1b4dd",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/ui/viewmodel/GyroPulseViewModel.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/ui/viewmodel/GyroPulseViewModel.kt",
+      "source_sha256": "d557b8a16fd832329aa27f50f8a53cb627b58ea8386e5b24990a01e37966872b",
+      "copy_sha256": "d557b8a16fd832329aa27f50f8a53cb627b58ea8386e5b24990a01e37966872b",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/util/BackupManager.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/util/BackupManager.kt",
+      "source_sha256": "eaee54510d58f2582424efc012442d52547f19b3dcf96febd97981ce6e97ee90",
+      "copy_sha256": "eaee54510d58f2582424efc012442d52547f19b3dcf96febd97981ce6e97ee90",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/util/BarcodeAnalyzer.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/util/BarcodeAnalyzer.kt",
+      "source_sha256": "dfe371dccefecd514359aaedb35fcddbe8c81f96ab67c489cf89003d6c398cdb",
+      "copy_sha256": "dfe371dccefecd514359aaedb35fcddbe8c81f96ab67c489cf89003d6c398cdb",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/util/ConfigManager.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/util/ConfigManager.kt",
+      "source_sha256": "d9b146d67d38daf3949efed8735d6e7f9e9f515581597419ce7bcf24583ce75d",
+      "copy_sha256": "d9b146d67d38daf3949efed8735d6e7f9e9f515581597419ce7bcf24583ce75d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/java/com/example/util/GpcCryptoService.kt",
+      "copy": "gyro-pulse/android/app/src/main/java/com/example/util/GpcCryptoService.kt",
+      "source_sha256": "018e0c7679d30b5634831d5661e8758e35998771bcc9f68eb4a00aa8319435e9",
+      "copy_sha256": "018e0c7679d30b5634831d5661e8758e35998771bcc9f68eb4a00aa8319435e9",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/drawable/ic_launcher_background.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/drawable/ic_launcher_background.xml",
+      "source_sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+      "copy_sha256": "ed423c73a6f40a4d2909f0901e60527b3a807cd59e1b5593bcaae1808b1c6321",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "source_sha256": "b27d486b9529d35fe31bda300ab1c2323407e848e88f7a713e105f6fd2c7d7ef",
+      "copy_sha256": "b27d486b9529d35fe31bda300ab1c2323407e848e88f7a713e105f6fd2c7d7ef",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "source_sha256": "6d0988175971f41bdc83eadb144af3d84c40052fa125e90edbe7d89227be4b25",
+      "copy_sha256": "6d0988175971f41bdc83eadb144af3d84c40052fa125e90edbe7d89227be4b25",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "source_sha256": "6d0988175971f41bdc83eadb144af3d84c40052fa125e90edbe7d89227be4b25",
+      "copy_sha256": "6d0988175971f41bdc83eadb144af3d84c40052fa125e90edbe7d89227be4b25",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-hdpi/ic_launcher.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp",
+      "source_sha256": "99221f2905af79868986b0dd1701ea91a5387146ba701c18b2ee2252a67be481",
+      "copy_sha256": "99221f2905af79868986b0dd1701ea91a5387146ba701c18b2ee2252a67be481",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp",
+      "source_sha256": "7c93f81de792b7216b0db55c1471abe5fccbbcde8278a25264d83ebf8464f498",
+      "copy_sha256": "7c93f81de792b7216b0db55c1471abe5fccbbcde8278a25264d83ebf8464f498",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-mdpi/ic_launcher.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp",
+      "source_sha256": "b9089fe59f9049e993f92646161e0723496224a44436a2500087e2d05409e8f7",
+      "copy_sha256": "b9089fe59f9049e993f92646161e0723496224a44436a2500087e2d05409e8f7",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp",
+      "source_sha256": "943bd647827e0e7f0fa51be8164f9f1835202d90af6d95ffae44dbb094f44060",
+      "copy_sha256": "943bd647827e0e7f0fa51be8164f9f1835202d90af6d95ffae44dbb094f44060",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xhdpi/ic_launcher.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp",
+      "source_sha256": "b3a0802c4fc82b3fd796cc2d57c0c1ea93e64fdfc46aab1e74a0bfa45fcef4f4",
+      "copy_sha256": "b3a0802c4fc82b3fd796cc2d57c0c1ea93e64fdfc46aab1e74a0bfa45fcef4f4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp",
+      "source_sha256": "2df674233ecc4e9fe6c8d4dfceb6c3257995e6613b0447b93c4a4893ff61c675",
+      "copy_sha256": "2df674233ecc4e9fe6c8d4dfceb6c3257995e6613b0447b93c4a4893ff61c675",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp",
+      "source_sha256": "b479b07551ee8fd8ba4f96dc0e5d34ae675d485d8a341c369443b397a2defdbf",
+      "copy_sha256": "b479b07551ee8fd8ba4f96dc0e5d34ae675d485d8a341c369443b397a2defdbf",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp",
+      "source_sha256": "cb1b8197fa5009f511a5e9aea71e2eff952355cadaf776a83ab99db28fadb24f",
+      "copy_sha256": "cb1b8197fa5009f511a5e9aea71e2eff952355cadaf776a83ab99db28fadb24f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp",
+      "source_sha256": "fe039e8aff6718652748d5d2daa5743cbf38759392a7feb723e7c032349b6e81",
+      "copy_sha256": "fe039e8aff6718652748d5d2daa5743cbf38759392a7feb723e7c032349b6e81",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp",
+      "copy": "gyro-pulse/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp",
+      "source_sha256": "4d95c8cb035a1827eef9c0cf065e4be0f8fc0b86d6c420e9f3bccc366fba921d",
+      "copy_sha256": "4d95c8cb035a1827eef9c0cf065e4be0f8fc0b86d6c420e9f3bccc366fba921d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/values/colors.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/values/colors.xml",
+      "source_sha256": "57681038afd005dcd260eabdd6d16619709c4a3fe20324362ea00e093e85b5fd",
+      "copy_sha256": "57681038afd005dcd260eabdd6d16619709c4a3fe20324362ea00e093e85b5fd",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/values/strings.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/values/strings.xml",
+      "source_sha256": "a5066f7ed6f1e05d6bf61676b5de05a57a073f5afd276a72f9a5c05484ca6c00",
+      "copy_sha256": "a5066f7ed6f1e05d6bf61676b5de05a57a073f5afd276a72f9a5c05484ca6c00",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/values/themes.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/values/themes.xml",
+      "source_sha256": "e8288b65767f4f28854d168c7b19c308579d3703bdf3fc26c2b266e19148f465",
+      "copy_sha256": "e8288b65767f4f28854d168c7b19c308579d3703bdf3fc26c2b266e19148f465",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/xml/backup_rules.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/xml/backup_rules.xml",
+      "source_sha256": "173c90cbeb773e6a65b430581a85720dc5c7ddba17d543cfefe3d2aed9b9a7a4",
+      "copy_sha256": "173c90cbeb773e6a65b430581a85720dc5c7ddba17d543cfefe3d2aed9b9a7a4",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/xml/data_extraction_rules.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/xml/data_extraction_rules.xml",
+      "source_sha256": "30ae995624fd57d839bf0d638900f8d2c17c703d6e7d6c8640708a8a7cac2402",
+      "copy_sha256": "30ae995624fd57d839bf0d638900f8d2c17c703d6e7d6c8640708a8a7cac2402",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/xml/file_paths.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/xml/file_paths.xml",
+      "source_sha256": "19019abd38d1014876e48bb523b39f6cb0be4b7c66e525c2c4542e61f368a24f",
+      "copy_sha256": "19019abd38d1014876e48bb523b39f6cb0be4b7c66e525c2c4542e61f368a24f",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/main/res/xml/network_security_config.xml",
+      "copy": "gyro-pulse/android/app/src/main/res/xml/network_security_config.xml",
+      "source_sha256": "1c581d8383869cb5f2cf7368fcca7a9d66a90ae25ea323285ca818223ab69259",
+      "copy_sha256": "1c581d8383869cb5f2cf7368fcca7a9d66a90ae25ea323285ca818223ab69259",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/test/java/com/example/ExampleRobolectricTest.kt",
+      "copy": "gyro-pulse/android/app/src/test/java/com/example/ExampleRobolectricTest.kt",
+      "source_sha256": "4628b89f9cab2d21e3c70063a1bf71225d4684ae3b96cda71e7189f79dd8d03d",
+      "copy_sha256": "4628b89f9cab2d21e3c70063a1bf71225d4684ae3b96cda71e7189f79dd8d03d",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/test/java/com/example/ExampleUnitTest.kt",
+      "copy": "gyro-pulse/android/app/src/test/java/com/example/ExampleUnitTest.kt",
+      "source_sha256": "23f42e47e120caa28734bae3302e7277bbd805e597302f7cb79354641d441cdb",
+      "copy_sha256": "23f42e47e120caa28734bae3302e7277bbd805e597302f7cb79354641d441cdb",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/test/java/com/example/GreetingScreenshotTest.kt",
+      "copy": "gyro-pulse/android/app/src/test/java/com/example/GreetingScreenshotTest.kt",
+      "source_sha256": "a57d725b8555716f0830a5b1e5b98a288d0f4659778bd3f0997784df213e446a",
+      "copy_sha256": "a57d725b8555716f0830a5b1e5b98a288d0f4659778bd3f0997784df213e446a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/app/src/test/screenshots/greeting.png",
+      "copy": "gyro-pulse/android/app/src/test/screenshots/greeting.png",
+      "source_sha256": "08b77a026d9f6bc52b9404021e164eaf16d033701ddc0cdb1caabe6f5e7ed01b",
+      "copy_sha256": "08b77a026d9f6bc52b9404021e164eaf16d033701ddc0cdb1caabe6f5e7ed01b",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/build.gradle.kts",
+      "copy": "gyro-pulse/android/build.gradle.kts",
+      "source_sha256": "2d3c2b9e7e2cf6a7eede8c67899769ff7d5c1810d29797b74d584f0253df851a",
+      "copy_sha256": "2d3c2b9e7e2cf6a7eede8c67899769ff7d5c1810d29797b74d584f0253df851a",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/gradle.properties",
+      "copy": "gyro-pulse/android/gradle.properties",
+      "source_sha256": "f46953b0506c51c9af9d2bba4e41d36a11f6b2e4e76cc064b73a794a61b248a5",
+      "copy_sha256": "f46953b0506c51c9af9d2bba4e41d36a11f6b2e4e76cc064b73a794a61b248a5",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/gradle/libs.versions.toml",
+      "copy": "gyro-pulse/android/gradle/libs.versions.toml",
+      "source_sha256": "9a324efe2a7def48302d1e895c5fd4d7dffd28860cf0a8ed90fcf1513700da84",
+      "copy_sha256": "9a324efe2a7def48302d1e895c5fd4d7dffd28860cf0a8ed90fcf1513700da84",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/metadata.json",
+      "copy": "gyro-pulse/android/metadata.json",
+      "source_sha256": "4477c6dcdda76de515658671638a623a54c8c8ea67515be2df28915d2ae377c5",
+      "copy_sha256": "4477c6dcdda76de515658671638a623a54c8c8ea67515be2df28915d2ae377c5",
+      "adapted": false
+    },
+    {
+      "source": "gyro-pulse/gyro app/gyro-pulse-sales-app/settings.gradle.kts",
+      "copy": "gyro-pulse/android/settings.gradle.kts",
+      "source_sha256": "4f5a3bf6b50b8ecfe838045e72846bd2ae6a14b5b5ab7241cd2147a3d92dfcae",
+      "copy_sha256": "4f5a3bf6b50b8ecfe838045e72846bd2ae6a14b5b5ab7241cd2147a3d92dfcae",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/backups/__init__.py",
+      "copy": "retail-genie/retail_genie/backups/__init__.py",
+      "source_sha256": "e0e6b4dcae289f2081241a7c19f38da291b2cbcdb7f9f8be65965d29268ae224",
+      "copy_sha256": "e0e6b4dcae289f2081241a7c19f38da291b2cbcdb7f9f8be65965d29268ae224",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/backups/scheduler.py",
+      "copy": "retail-genie/retail_genie/backups/scheduler.py",
+      "source_sha256": "e39d56aba02f1e860dc5ed8b41713fd1e9564a527f9fd068da8d9e96627e3523",
+      "copy_sha256": "e39d56aba02f1e860dc5ed8b41713fd1e9564a527f9fd068da8d9e96627e3523",
+      "adapted": false
+    },
+    {
+      "source": "Retail Genie Final/retail_genie/backups/service.py",
+      "copy": "retail-genie/retail_genie/backups/service.py",
+      "source_sha256": "5300e6f3e946b4ea0d3665fce71b53336473f4b4c3cbb3aa8d3447e8675280fd",
+      "copy_sha256": "5300e6f3e946b4ea0d3665fce71b53336473f4b4c3cbb3aa8d3447e8675280fd",
+      "adapted": false
+    }
+  ],
+  "excluded": "Runtime env/secrets, databases, backups, uploads, preview images, caches and build outputs. .env.example templates are included."
+}

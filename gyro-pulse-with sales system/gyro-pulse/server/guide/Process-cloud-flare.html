@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooliport – Complete Setup Blueprint</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: #f0f4f9;
+            color: #1e293b;
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 40px 50px;
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #f38020;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #64748b;
+            margin-left: auto;
+        }
+        .subhead {
+            color: #475569;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0 20px 0;
+        }
+        .badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge.orange {
+            background: #fff5ed;
+            color: #f38020;
+        }
+        .badge.green {
+            background: #e6f7ec;
+            color: #0e7b3a;
+        }
+
+        /* Architecture diagram */
+        .arch {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 25px 20px;
+            margin: 30px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+        }
+        .arch .node {
+            text-align: center;
+            padding: 12px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #cbd5e1;
+            font-weight: 600;
+            min-width: 100px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .arch .node.active {
+            border-color: #f38020;
+            background: #fffaf5;
+        }
+        .arch .arrow {
+            font-size: 24px;
+            color: #94a3b8;
+            padding: 0 10px;
+        }
+        .arch .label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #64748b;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Progress tracker */
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0 30px;
+            position: relative;
+        }
+        .progress::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            right: 5%;
+            height: 3px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .progress .step-dot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            flex: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .progress .step-dot .circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e2e8f0;
+            transition: all 0.2s;
+        }
+        .progress .step-dot.active .circle {
+            background: #f38020;
+            color: white;
+            box-shadow: 0 0 0 3px #f38020;
+        }
+        .progress .step-dot.done .circle {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 0 0 3px #10b981;
+        }
+        .progress .step-dot .label {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            text-align: center;
+        }
+
+        /* Steps */
+        .step-group {
+            margin: 30px 0;
+        }
+        .step-item {
+            background: #f8fafc;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .step-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 24px;
+            cursor: pointer;
+            background: white;
+            transition: background 0.15s;
+        }
+        .step-header:hover {
+            background: #f1f5f9;
+        }
+        .step-header .num {
+            background: #e2e8f0;
+            color: #1e293b;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .step-header .num.active {
+            background: #f38020;
+            color: white;
+        }
+        .step-header .title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            flex: 1;
+        }
+        .step-header .icon {
+            font-size: 1.4rem;
+            transition: transform 0.25s;
+        }
+        .step-header .icon.open {
+            transform: rotate(180deg);
+        }
+        .step-body {
+            padding: 0 24px 24px 24px;
+            display: none;
+        }
+        .step-body.open {
+            display: block;
+            animation: fadeSlide 0.25s ease-out;
+        }
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .step-body ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+        }
+        .step-body li {
+            padding: 6px 0 6px 28px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23f38020" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>') left center no-repeat;
+            background-size: 18px;
+            margin-bottom: 4px;
+        }
+        .step-body code {
+            background: #eef2f6;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'Menlo', 'Cascadia Code', monospace;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+        .step-body pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 12px 0 8px 0;
+            position: relative;
+        }
+        .step-body pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 0.9rem;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: rgba(255,255,255,0.1);
+            color: #cbd5e1;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .step-body .cmd {
+            background: #2d3748;
+            color: #f8f8f8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 4px 0;
+        }
+        .warning-box {
+            background: #fef9e7;
+            border-left: 4px solid #f59e0b;
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 40px 0;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .container { padding: 25px 20px; }
+            h1 { font-size: 1.6rem; flex-wrap: wrap; }
+            .progress { flex-wrap: wrap; gap: 10px; justify-content: center; }
+            .progress::before { display: none; }
+            .arch { flex-direction: column; gap: 12px; }
+            .arch .arrow { transform: rotate(90deg); }
+            .step-header { padding: 14px 18px; }
+            .step-body { padding: 0 18px 18px 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🔧 Tooliport
+        <small>Zero‑trust tunnel setup</small>
+    </h1>
+    <div class="subhead">
+        From absolute zero to a fully secure server – and how to shut it down cleanly.
+    </div>
+    <div class="badge-group">
+        <span class="badge orange">🚀 Go server</span>
+        <span class="badge">☁️ Cloudflare Tunnel</span>
+        <span class="badge green">🔒 No open ports</span>
+        <span class="badge">🖥️ Windows / Linux / macOS</span>
+    </div>
+
+    <!-- Architecture diagram -->
+    <div class="arch">
+        <div class="node">📱 Mobile / Web App</div>
+        <div class="arrow">➔</div>
+        <div class="node active">☁️ Cloudflare Edge<br><span class="label">api.tooliport.com</span></div>
+        <div class="arrow">➔</div>
+        <div class="node">💻 Your Local PC<br><span class="label">127.0.0.1:5000</span></div>
+    </div>
+
+    <!-- Progress tracker -->
+    <div class="progress" id="progressTracker">
+        <div class="step-dot active" data-target="step1"><div class="circle">1</div><span class="label">Domain</span></div>
+        <div class="step-dot" data-target="step2"><div class="circle">2</div><span class="label">Tunnel</span></div>
+        <div class="step-dot" data-target="step3"><div class="circle">3</div><span class="label">Route</span></div>
+        <div class="step-dot" data-target="step4"><div class="circle">4</div><span class="label">Run</span></div>
+        <div class="step-dot" data-target="step5"><div class="circle">5</div><span class="label">Test</span></div>
+    </div>
+
+    <!-- ===== SETUP STEPS ===== -->
+    <div class="step-group">
+
+        <!-- Step 1 -->
+        <div class="step-item" id="step1">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num active">1</span>
+                <span class="title">Bind domain to Cloudflare</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body open">
+                <ul>
+                    <li>In your <strong>Cloudflare Dashboard</strong>, click <em>Add a site</em> and enter <code>tooliport.com</code> (select the <strong>Free</strong> plan).</li>
+                    <li>Cloudflare will scan your DNS and provide two nameservers (e.g. <code>ashley.ns.cloudflare.com</code> and <code>tom.ns.cloudflare.com</code>).</li>
+                    <li>Log into <strong>Namecheap</strong> (or your registrar), find your domain, change <em>Nameservers</em> to <strong>Custom DNS</strong>, and paste the two Cloudflare nameservers. Save.</li>
+                </ul>
+                <div style="margin-top:10px; font-size:0.9rem; color:#64748b;">⏳ DNS propagation may take a few minutes.</div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-item" id="step2">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num">2</span>
+                <span class="title">Establish the local tunnel (Windows)</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>Go to <strong>Cloudflare Zero Trust</strong> → <em>Networks → Tunnels</em> → <strong>Create a tunnel</strong>.</li>
+                    <li>Choose <em>Cloudflared</em>, name it <code>home-pc-server</code>, and save.</li>
+                    <li>Select <strong>Windows 64‑bit</strong> and download <code>cloudflared.exe</code>.</li>
+                    <li>Move the file to a permanent location, e.g. <code>C:\Users\YourName\</code>.</li>
+                    <li>Open <strong>Command Prompt</strong> as <strong>Administrator</strong> and paste the exact command shown on the Cloudflare page (it will look similar to):</li>
+                </ul>
+                <pre><code>cloudflared.exe service install eyJhIjoiZTU3... </code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                <ul>
+                    <li>Press Enter – you should see a success message. The tunnel status in the browser will turn <strong>green</strong>. Click <em>Next</em>.</li>
+                </ul>
+                <div class="warning-box">💡 For Linux/macOS, the command is similar but uses <code>./cloudflared service install</code>.</div>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-item" id="step3">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num">3</span>
+                <span class="title">Publish your application route</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>In the <strong>Public Hostname</strong> form:</li>
+                    <li><strong>Subdomain:</strong> <code>api</code></li>
+                    <li><strong>Domain:</strong> <code>tooliport.com</code></li>
+                    <li><strong>Path:</strong> (leave empty)</li>
+                    <li><strong>Service:</strong> Type = <code>HTTP</code>, URL = <code>127.0.0.1:5000</code></li>
+                    <li>Click <strong>Save tunnel</strong>.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-item" id="step4">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num">4</span>
+                <span class="title">Fire up the Go server</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>Open a terminal (non‑admin) in your Go project folder.</li>
+                    <li>Run the server with:</li>
+                </ul>
+                <pre><code>go run main.go</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                <ul>
+                    <li>You should see <em>“Starting Tooliport API Server on 127.0.0.1:5000”</em>.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-item" id="step5">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num">5</span>
+                <span class="title">Test the live endpoint</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>From a device <strong>outside your home network</strong> (e.g. smartphone on cellular), open:</li>
+                </ul>
+                <pre><code>https://api.tooliport.com/api</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                <ul>
+                    <li>You should see a JSON response with <code>"status": "working"</code> – <strong>success!</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- ===== CLEANUP ===== -->
+    <h2 style="margin-top:0;">🧹 How to Safely Stop & Clean Up</h2>
+
+    <div class="step-group">
+        <div class="step-item">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num" style="background:#e2e8f0;">1</span>
+                <span class="title">Stop the Go server</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>In the terminal where the server is running, press:</li>
+                </ul>
+                <pre><code>Ctrl + C</code></pre>
+            </div>
+        </div>
+
+        <div class="step-item">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num" style="background:#e2e8f0;">2</span>
+                <span class="title">Disable or uninstall the Cloudflare tunnel</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>Open <strong>Command Prompt</strong> as <strong>Administrator</strong>.</li>
+                    <li>To stop the tunnel (without removing it):</li>
+                </ul>
+                <pre><code>sc stop cloudflared</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+                <ul>
+                    <li>To completely uninstall the tunnel service:</li>
+                </ul>
+                <pre><code>cloudflared.exe service uninstall</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>
+            </div>
+        </div>
+
+        <div class="step-item">
+            <div class="step-header" onclick="toggleStep(this)">
+                <span class="num" style="background:#e2e8f0;">3</span>
+                <span class="title">Delete the tunnel configuration in Cloudflare</span>
+                <span class="icon">▾</span>
+            </div>
+            <div class="step-body">
+                <ul>
+                    <li>Go to <strong>Zero Trust Dashboard</strong> → <em>Networks → Tunnels</em>.</li>
+                    <li>Click the <strong>three dots (…)</strong> next to your tunnel and choose <strong>Delete</strong>.</li>
+                    <li>This permanently removes the link between Cloudflare and your machine.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        ⚠️ <strong>Important:</strong> The Go server and the tunnel are independent. You can stop the server without removing the tunnel, and vice versa. Always stop the server first if you plan to keep the tunnel.
+    </div>
+
+    <div class="footer">
+        <span>✅ Your secure tunnel is ready – all endpoints are protected by Cloudflare’s edge.</span>
+        <span style="color:#f38020;">🚀 Next: Build your frontend!</span>
+    </div>
+
+</div>
+
+<script>
+    // Toggle step body
+    function toggleStep(header) {
+        const body = header.nextElementSibling;
+        const icon = header.querySelector('.icon');
+        const num = header.querySelector('.num');
+        const isOpen = body.classList.contains('open');
+
+        // Close all other steps (optional – only if you want accordion behaviour)
+        // For a cleaner UX, we'll allow multiple open.
+        // If you prefer accordion, uncomment the lines below:
+        /*
+        document.querySelectorAll('.step-body').forEach(b => b.classList.remove('open'));
+        document.querySelectorAll('.step-header .icon').forEach(i => i.classList.remove('open'));
+        document.querySelectorAll('.step-header .num').forEach(n => n.classList.remove('active'));
+        */
+
+        if (isOpen) {
+            body.classList.remove('open');
+            icon.classList.remove('open');
+            num.classList.remove('active');
+        } else {
+            body.classList.add('open');
+            icon.classList.add('open');
+            num.classList.add('active');
+        }
+
+        updateProgress();
+    }
+
+    // Copy code button
+    function copyCode(btn) {
+        const pre = btn.closest('pre');
+        const code = pre.querySelector('code');
+        const text = code.innerText;
+        navigator.clipboard?.writeText(text).then(() => {
+            const orig = btn.innerText;
+            btn.innerText = '✅ Copied!';
+            setTimeout(() => btn.innerText = orig, 1500);
+        }).catch(() => {
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            const orig = btn.innerText;
+            btn.innerText = '✅ Copied!';
+            setTimeout(() => btn.innerText = orig, 1500);
+        });
+    }
+
+    // Update progress dots based on which steps are open
+    function updateProgress() {
+        const steps = document.querySelectorAll('.step-item');
+        const dots = document.querySelectorAll('.step-dot');
+        // We'll mark a step as done if its body is open (or we can track by visibility)
+        // For simplicity, we'll mark active if the step is open
+        steps.forEach((step, index) => {
+            const body = step.querySelector('.step-body');
+            const dot = dots[index];
+            if (body.classList.contains('open')) {
+                dot.classList.add('active');
+                dot.classList.remove('done');
+            } else {
+                dot.classList.remove('active');
+                // Optionally mark as done if previously completed? We'll just keep it simple.
+            }
+        });
+        // Also check if all steps are open -> mark all done? Not necessary.
+    }
+
+    // Click on progress dot to open corresponding step
+    document.querySelectorAll('.step-dot').forEach(dot => {
+        dot.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const stepItem = document.getElementById(targetId);
+            if (stepItem) {
+                const header = stepItem.querySelector('.step-header');
+                const body = stepItem.querySelector('.step-body');
+                if (!body.classList.contains('open')) {
+                    toggleStep(header);
+                }
+                // Scroll to it
+                stepItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
+
+    // Initially open first step (already open) – but ensure progress dot active
+    document.addEventListener('DOMContentLoaded', function() {
+        // The first step is open by default (class "open" on body). We'll mark its dot as active.
+        const firstStep = document.querySelector('.step-item');
+        if (firstStep) {
+            const dot = document.querySelector('.step-dot[data-target="step1"]');
+            if (dot) dot.classList.add('active');
+        }
+        updateProgress();
+    });
+</script>
+
+</body>
+</html>

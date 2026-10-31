@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyro Pulse – Complete Fresh Setup & Data Import Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f4f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 40px 50px;
+        }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 4px solid #f38020;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #64748b;
+            margin-left: auto;
+        }
+        .badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0 30px 0;
+        }
+        .badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge.orange { background: #fff5ed; color: #f38020; }
+        .badge.green { background: #e6f7ec; color: #0e7b3a; }
+        
+        .step {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin: 24px 0;
+            border-left: 6px solid #f38020;
+            transition: box-shadow 0.2s;
+        }
+        .step:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .step h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .step h2 .step-num {
+            background: #1e293b;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .step ul, .step ol {
+            padding-left: 24px;
+            line-height: 1.8;
+        }
+        .step li {
+            margin-bottom: 6px;
+        }
+        .step code {
+            background: #e9edf2;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+            font-size: 0.9rem;
+            color: #0b3b5c;
+        }
+        .cmd-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin: 12px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+        }
+        .cmd-block .prompt { color: #94a3b8; }
+        .cmd-block .highlight { color: #facc15; }
+        .note {
+            background: #fef9e7;
+            border-left: 4px solid #facc15;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .note strong { color: #b45309; }
+        .success {
+            background: #e6f7e6;
+            border-left: 4px solid #22c55e;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: rgba(255,255,255,0.1);
+            color: #cbd5e1;
+            border: none;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        hr {
+            border: none;
+            border-top: 2px dashed #e2e8f0;
+            margin: 40px 0;
+        }
+        .toc {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 28px;
+            margin-bottom: 30px;
+        }
+        .toc h3 { margin-bottom: 10px; }
+        .toc a { color: #f38020; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .footer {
+            text-align: center;
+            color: #64748b;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.6rem; flex-wrap: wrap; }
+            .step { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🚀 Gyro Pulse Setup Guide
+        <small>Fresh Windows Install</small>
+    </h1>
+    <div class="badge-group">
+        <span class="badge orange">🖥️ Windows 10/11</span>
+        <span class="badge green">🐍 Python 3.10+</span>
+        <span class="badge">🐬 MySQL 8.0</span>
+        <span class="badge">📦 Data Import</span>
+    </div>
+
+    <div class="toc">
+        <h3>📋 Quick Navigation</h3>
+        <ul style="padding-left:20px; line-height:2;">
+            <li><a href="#step1">1. Install MySQL & Python</a></li>
+            <li><a href="#step2">2. Fix 'mysql' command (Add to PATH)</a></li>
+            <li><a href="#step3">3. Import Database (dump.sql)</a></li>
+            <li><a href="#step4">4. Create Application User</a></li>
+            <li><a href="#step5">5. Setup Python Environment</a></li>
+            <li><a href="#step6">6. Run the Application</a></li>
+        </ul>
+    </div>
+
+    <!-- ===================== STEP 1 ===================== -->
+    <div class="step" id="step1">
+        <h2><span class="step-num">1</span> Install Prerequisites</h2>
+        <ul>
+            <li><strong>Python 3.10+</strong> – <a href="https://www.python.org/downloads/windows/" target="_blank">Download</a><br>
+                <span style="font-size:0.9rem; color:#475569;">✔ During installation, <strong>check</strong> “Add Python to PATH”.</span>
+            </li>
+            <li><strong>MySQL Community Server 8.0</strong> – <a href="https://dev.mysql.com/downloads/mysql/" target="_blank">Download (MSI Installer)</a><br>
+                <span style="font-size:0.9rem; color:#475569;">✔ Select <strong>Developer Computer</strong> (uses less RAM).</span><br>
+                <span style="font-size:0.9rem; color:#475569;">✔ Keep ports <strong>3306</strong> and <strong>33060</strong> default.</span><br>
+                <span style="font-size:0.9rem; color:#dc2626;">🔑 <strong>CRITICAL:</strong> Set a <strong>Root Password</strong> (e.g., <code>MyRootPass123!</code>) and <strong>write it down</strong>.</span>
+            </li>
+        </ul>
+        <div class="note">
+            <strong>💡 Tip:</strong> If MySQL setup asks for "Windows Service", keep the default settings (MySQL80) and check "Start the MySQL Server at System Startup".
+        </div>
+    </div>
+
+    <!-- ===================== STEP 2 ===================== -->
+    <div class="step" id="step2">
+        <h2><span class="step-num">2</span> Fix 'mysql' not recognized</h2>
+        <p>If you get <code>'mysql' is not recognized</code> in CMD, it means MySQL is not in your system PATH. Here are 3 fixes:</p>
+        <ol>
+            <li><strong>Option A (Recommended):</strong> Use the <strong>full path</strong> every time. Instead of <code>mysql</code>, type:<br>
+                <code>C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql</code>
+            </li>
+            <li><strong>Option B (Permanent fix):</strong> Add MySQL to PATH.
+                <ul>
+                    <li>Press <strong>Win + R</strong>, type <code>sysdm.cpl</code> → Advanced → Environment Variables.</li>
+                    <li>Under "System variables", find <strong>Path</strong> → Edit → New.</li>
+                    <li>Paste: <code>C:\Program Files\MySQL\MySQL Server 8.0\bin</code> → OK.</li>
+                    <li>Restart your Command Prompt.</li>
+                </ul>
+            </li>
+            <li><strong>Option C (Quick):</strong> Use the <strong>MySQL Command Line Client</strong> from the Start Menu.</li>
+        </ul>
+        <div class="success">
+            ✅ After fixing, test by typing <code>mysql --version</code> in CMD. It should show the version.
+        </div>
+    </div>
+
+    <!-- ===================== STEP 3 ===================== -->
+    <div class="step" id="step3">
+        <h2><span class="step-num">3</span> Import Old Database (dump.sql)</h2>
+        <p><strong>Prerequisite:</strong> Copy your <code>dump.sql</code> file to the current folder (e.g., <code>C:\Users\YourName\Desktop</code>).</p>
+        <p><strong>Method:</strong> Open <strong>Command Prompt (CMD)</strong> (NOT PowerShell, as <code>&lt;</code> doesn't work there). Navigate to the folder containing <code>dump.sql</code> and run:</p>
+        
+        <div class="cmd-block">
+            <span class="prompt">mysql -u root -p gyropulse &lt; dump.sql</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <ul>
+            <li><strong>Explanation:</strong> <code>-u root</code> (root user), <code>-p</code> (asks for password), <code>gyropulse</code> (database name), <code>&lt; dump.sql</code> (import file).</li>
+            <li>Enter your <strong>Root Password</strong> when prompted.</li>
+        </ul>
+        
+        <div class="warning">
+            <strong>⚠️ If the import fails with "Unknown database 'gyropulse'":</strong><br>
+            First, create the empty database manually:
+            <div class="cmd-block" style="margin-top:10px; background:#333;">
+                mysql -u root -p -e "CREATE DATABASE gyropulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            </div>
+            Then run the import command again.
+        </div>
+        <div class="note">
+            <strong>🔑 If you used a different username:</strong> Replace <code>root</code> with your MySQL username. If you are using <code>aliahsan_admin</code>, make sure that user exists (see Step 4) or use <code>root</code> for import.
+        </div>
+    </div>
+
+    <!-- ===================== STEP 4 ===================== -->
+    <div class="step" id="step4">
+        <h2><span class="step-num">4</span> Create Application User</h2>
+        <p>Your Flask app (<code>.env</code> file) uses <code>aliahsan_admin</code> to connect. We need to create this user in MySQL.</p>
+        <ol>
+            <li>Log into MySQL as <strong>root</strong>:
+                <div class="cmd-block">mysql -u root -p</div>
+            </li>
+            <li>Run these SQL commands <strong>exactly</strong>:
+                <div class="cmd-block">
+CREATE USER 'aliahsan_admin'@'localhost' IDENTIFIED BY 'Ahsan01_@li';
+GRANT ALL PRIVILEGES ON gyropulse.* TO 'aliahsan_admin'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+                </div>
+            </li>
+        </ol>
+        <div class="success">
+            ✅ Now your app will be able to connect using the credentials from <code>.env</code>.
+        </div>
+        <div class="note">
+            <strong>📝 Note for .env:</strong> In the <code>.env</code> file, the password must be URL-encoded. Since the password contains <code>@</code>, write it as <code>Ahsan01_%40li</code>.
+        </div>
+    </div>
+
+    <!-- ===================== STEP 5 ===================== -->
+    <div class="step" id="step5">
+        <h2><span class="step-num">5</span> Setup Python Environment</h2>
+        <ol>
+            <li>Copy your project folder (containing <code>app.py</code>, <code>requirements.txt</code>, <code>.env</code>) to the new computer.</li>
+            <li>Open CMD in that project folder.</li>
+            <li>Create a Virtual Environment:
+                <div class="cmd-block">python -m venv venv</div>
+            </li>
+            <li>Activate it:
+                <div class="cmd-block">venv\Scripts\activate</div>
+                <span style="font-size:0.9rem; color:#475569;">(You will see <code>(venv)</code> at the start of your prompt).</span>
+            </li>
+            <li>Install dependencies:
+                <div class="cmd-block">pip install -r requirements.txt</div>
+            </li>
+            <li>Verify your <strong><code>.env</code></strong> file looks like this:
+                <div class="cmd-block" style="background:#2d3748;">
+DATABASE_URL=mysql+pymysql://aliahsan_admin:Ahsan01_%40li@localhost:3306/gyropulse
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-key
+UPLOAD_DIR=./uploads
+BACKUP_FOLDER=./backups
+                </div>
+            </li>
+        </ol>
+        <div class="warning">
+            <strong>⚠️ Security Alert:</strong> The <code>.env</code> file contains passwords. Never share it publicly.
+        </div>
+    </div>
+
+    <!-- ===================== STEP 6 ===================== -->
+    <div class="step" id="step6">
+        <h2><span class="step-num">6</span> Run the Application</h2>
+        <p>Make sure your Virtual Environment is active (<code>(venv)</code> visible). Then run:</p>
+        <div class="cmd-block">
+            <span class="prompt">python app.py</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <p>You will see output like:</p>
+        <div class="cmd-block" style="color:#b0c4de;">
+ * Serving Flask app 'app'
+ * Debug mode: on
+ * Running on http://localhost:5000
+        </div>
+        <ul>
+            <li>Open your browser and visit: <a href="http://localhost:5000" target="_blank">http://localhost:5000</a></li>
+            <li>Login with: <strong>Username:</strong> <code>admin</code> | <strong>Password:</strong> <code>admin123</code></li>
+        </ul>
+        <div class="success">
+            ✅ You should see your Dashboard with all your imported data!
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ===================== TROUBLESHOOTING ===================== -->
+    <h2 style="margin-bottom: 20px;">🛠️ Common Issues & Solutions</h2>
+
+    <div class="step" style="border-left-color: #ef4444;">
+        <h3>❌ ERROR 1045: Access denied for user</h3>
+        <p><strong>Cause:</strong> Wrong password, or the user doesn't exist.</p>
+        <p><strong>Fix:</strong> Log in as <code>root</code> and run the <code>CREATE USER</code> and <code>GRANT</code> commands from <strong>Step 4</strong> again.</p>
+    </div>
+
+    <div class="step" style="border-left-color: #ef4444;">
+        <h3>❌ 'mysql' is not recognized</h3>
+        <p><strong>Fix:</strong> Use the full path: <code>"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql"</code> or add MySQL to your system <strong>PATH</strong> (see Step 2).</p>
+    </div>
+
+    <div class="step" style="border-left-color: #ef4444;">
+        <h3>❌ The '<' operator is reserved for future use</h3>
+        <p><strong>Cause:</strong> You are using <strong>PowerShell</strong>.</p>
+        <p><strong>Fix:</strong> Switch to classic <strong>Command Prompt (CMD)</strong> by typing <code>cmd</code> in PowerShell and pressing Enter, or use <code>Get-Content dump.sql | mysql -u root -p gyropulse</code>.</p>
+    </div>
+
+    <div class="step" style="border-left-color: #facc15;">
+        <h3>⚠️ Port 5000 already in use</h3>
+        <p><strong>Fix:</strong> Kill the process using the port, or change the port in <code>config.json</code>.</p>
+    </div>
+
+    <!-- ===================== FOOTER ===================== -->
+    <div class="footer">
+        <p>🔒 All data is safe. Follow the steps in order for a flawless migration.</p>
+        <p>© 2026 Gyro Pulse – Complete Setup Guide for Windows</p>
+    </div>
+
+</div>
+
+<script>
+    // Copy to clipboard functionality for cmd blocks
+    function copyCode(btn) {
+        const pre = btn.closest('.cmd-block');
+        let text = pre.innerText;
+        // Remove the "Copy" button text itself if it's included
+        text = text.replace('Copy', '').trim();
+        navigator.clipboard.writeText(text).then(() => {
+            const orig = btn.innerText;
+            btn.innerText = '✅ Copied!';
+            setTimeout(() => btn.innerText = orig, 1500);
+        }).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            const orig = btn.innerText;
+            btn.innerText = '✅ Copied!';
+            setTimeout(() => btn.innerText = orig, 1500);
+        });
+    }
+</script>
+
+</body>
+</html>

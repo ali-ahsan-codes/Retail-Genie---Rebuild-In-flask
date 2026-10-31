@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Plan requests · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">PLATFORM ADMINISTRATION</p><h1>Tenant plan requests</h1><p class="muted">Approve or reject tenant-submitted changes; approvals are quota-checked and audited.</p></div></section>
+<section class="panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Tenant</th><th>Requested plan</th><th>Requested by</th><th>Submitted</th><th>Status</th><th>Review</th></tr></thead><tbody>
+{% for item in requests %}<tr><td>{{ tenants.get(item.tenant_container_id).name if tenants.get(item.tenant_container_id) else item.tenant_container_id }}</td><td>{{ plans.get(item.requested_plan_id).name if plans.get(item.requested_plan_id) else 'Archived plan' }}<small class="table-subtext">{{ item.request_note or 'No note' }}</small></td><td>{{ item.requested_by_user_id }}</td><td>{{ item.created_at }}</td><td>{{ item.status|title }}{% if item.review_note %}<small class="table-subtext">{{ item.review_note }}</small>{% endif %}</td><td>{% if item.status=='pending' %}<form method="post" action="{{ url_for('saas.review_request', request_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select class="form-control" name="decision"><option value="approve">Approve</option><option value="reject">Reject</option></select><input class="form-control" name="review_note" maxlength="500" placeholder="Review note"><button class="button button-secondary" type="submit">Submit review</button></form>{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="6">No plan requests.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

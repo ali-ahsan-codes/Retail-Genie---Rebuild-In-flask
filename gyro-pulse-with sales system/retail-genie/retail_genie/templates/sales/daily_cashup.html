@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Daily cashup · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">{{ company.name if company else 'PLATFORM' }} · END-OF-DAY</p><h1>Daily cash / bank closeout</h1><p class="muted">Managers submit counted collections by store. Expected amounts are calculated from recorded payments; a Company Admin or Main Admin reviews the closeout.</p></div><span class="pill">Audited closeout</span></section>
+{% if current_user.is_super_admin and not company %}
+  <section class="card company-picker-card"><h2>Select company</h2><div class="company-choice-list">{% for item in companies %}<a class="button button-secondary" href="{{ url_for('sales.daily_cashup_page', company_id=item.id) }}">{{ item.name }}</a>{% else %}<p class="empty-state">No active companies exist yet.</p>{% endfor %}</div></section>
+{% elif not company %}
+  <section class="card empty-state">This account is not associated with an active company.</section>
+{% elif not stores %}
+  <section class="card empty-state">No active store is assigned to this account.</section>
+{% else %}
+  <div id="cashup-app" data-company-id="{{ company.id if current_user.is_super_admin else '' }}" data-can-review="{{ 'true' if can_review else 'false' }}">
+    <input type="hidden" id="cashup-csrf-token" value="{{ csrf_token() }}">
+    <div class="cashup-columns">
+      <section class="card cashup-form-card">
+        <div class="card-heading"><p class="eyebrow">MANAGER SUBMISSION</p><h2>Submit closeout</h2><p class="muted">Rejection allows the manager to correct and resubmit the same store/date.</p></div>
+        <label class="field"><span>Store</span><select id="cashup-store-id" class="control">{% for store in stores %}<option value="{{ store.id }}">{{ store.code }} — {{ store.name }}</option>{% endfor %}</select></label>
+        <label class="field"><span>Business date</span><input id="cashup-date" class="control" type="date" max="{{ today }}" value="{{ today }}"></label>
+        <div class="cashup-count-grid">
+          <label class="field"><span>Cash counted (OMR)</span><input id="counted-cash" class="control" type="number" min="0" step="0.001" value="0.000"></label>
+          <label class="field"><span>Bank counted (OMR)</span><input id="counted-bank" class="control" type="number" min="0" step="0.001" value="0.000"></label>
+          <label class="field"><span>Bank Transfer counted (OMR)</span><input id="counted-bank_transfer" class="control" type="number" min="0" step="0.001" value="0.000"></label>
+          <label class="field"><span>Other counted (OMR)</span><input id="counted-other" class="control" type="number" min="0" step="0.001" value="0.000"></label>
+        </div>
+        <label class="field"><span>Notes (optional)</span><textarea id="cashup-notes" class="control" rows="3" maxlength="2000"></textarea></label>
+        <button id="submit-cashup" class="button button-primary button-full" type="button">Submit for approval</button>
+        <div id="cashup-message" class="approval-message" aria-live="polite"></div>
+      </section>
+      <section class="card cashup-history-card">
+        <div class="panel-heading"><div><p class="eyebrow">CLOSEOUT HISTORY</p><h2>Daily submissions</h2><p class="muted">{% if can_review %}Review submitted cashups for this company.{% else %}Your assigned stores' closeouts are listed here.{% endif %}</p></div><button id="refresh-cashups" class="button button-secondary" type="button">Refresh</button></div>
+        {% if can_review %}<label class="field approval-store-filter"><span>Filter by store</span><select id="cashup-filter-store" class="control"><option value="">All stores</option>{% for store in stores %}<option value="{{ store.id }}">{{ store.code }} — {{ store.name }}</option>{% endfor %}</select></label>{% endif %}
+        <div id="cashup-list" class="cashup-list"><p class="empty-state">Loading closeouts…</p></div>
+      </section>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/cashup.js') }}" defer></script>{% endblock %}

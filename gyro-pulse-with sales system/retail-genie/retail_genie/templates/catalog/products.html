@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Products & Inventory · Retail Genie{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Phase 3 · Products & inventory</p>
+    <h1>Product catalog</h1>
+    <p class="muted">Company-owned products with stock balances and an auditable movement history for each authorized store.</p>
+  </div>
+  {% if selected_store %}<div class="button-row"><a class="button button-secondary" href="{{ url_for('catalog.categories_page', company_id=selected_store.company_id) }}">Manage categories</a>{% if current_user.is_admin or current_user.has_permission('manage_labels') %}<a class="button button-secondary" href="{{ url_for('catalog.label_printing_page', company_id=selected_store.company_id) }}">Print labels</a>{% endif %}</div>{% endif %}
+</section>
+
+{% if not stores %}
+  <section class="panel empty-state">
+    <h2>No store access</h2>
+    <p>Your account has no active store assignment in the selected tenant. Ask a Company Admin or Main Admin to grant access.</p>
+  </section>
+{% else %}
+  <section class="panel catalog-toolbar">
+    <form method="get" action="{{ url_for('catalog.products_page') }}" class="catalog-filter-form">
+      <label for="store-filter">Store</label>
+      <select id="store-filter" name="store_id">
+        {% for store in stores %}
+          <option value="{{ store.id }}" {% if selected_store and selected_store.id == store.id %}selected{% endif %}>{{ store.name }} · {{ store.code }}</option>
+        {% endfor %}
+      </select>
+      <label for="catalog-search">Search</label>
+      <input id="catalog-search" type="search" name="q" value="{{ search }}" maxlength="100" placeholder="Name, SKU, scan barcode, category">
+      <button class="button button-primary" type="submit">Find products</button>
+    </form>
+    {% if selected_store %}
+      <div class="catalog-file-actions">
+        <a class="button button-secondary" href="{{ url_for('catalog.export_products_csv', store_id=selected_store.id, q=search) }}">Export CSV</a>
+        {% if can_add_product or can_edit_product %}
+          <form method="post" enctype="multipart/form-data" action="{{ url_for('catalog.import_products_csv_page') }}" class="catalog-import-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="store_id" value="{{ selected_store.id }}">
+            <label class="visually-hidden" for="catalog-csv-file">Import product CSV</label>
+            <input id="catalog-csv-file" type="file" name="file" accept=".csv,text/csv" required>
+            <button class="button button-secondary" type="submit">Import CSV</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  {% if can_add_product %}
+    <section class="panel catalog-create-panel">
+      <div class="section-heading">
+        <div>
+          <h2>Add a product</h2>
+          <p class="muted">The product belongs to the selected store’s company; stock is managed separately below.</p>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('catalog.products_page') }}" class="catalog-create-form">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+          <div class="form-field">
+            {{ form.store_id.label }}
+            {{ form.store_id(class_='form-control') }}
+          </div>
+          <div class="form-field">
+            {{ form.name.label }}
+            {{ form.name(class_='form-control', placeholder='Product name') }}
+          </div>
+          <div class="form-field">
+            {{ form.sku.label }}
+            {{ form.sku(class_='form-control', placeholder='Optional SKU') }}
+          </div>
+          <div class="form-field">
+            {{ form.barcode.label }}
+            {{ form.barcode(class_='form-control', placeholder='Optional barcode') }}
+          </div>
+          <div class="form-field">
+            {{ form.category.label }}
+            {{ form.category(class_='form-control', placeholder='Optional category') }}
+          </div>
+          <div class="form-field">
+            {{ form.price.label }}
+            {{ form.price(class_='form-control', placeholder='e.g. 4.500', step='0.001') }}
+          </div>
+          <div class="form-field">
+            {{ form.low_stock_price.label }}
+            {{ form.low_stock_price(class_='form-control', placeholder='Optional alert price', step='0.001') }}
+          </div>
+          <div class="form-field">
+            {{ form.expiry_date.label }}
+            {{ form.expiry_date(class_='form-control', type='date') }}
+          </div>
+          {% if can_set_low_stock_threshold %}
+            <div class="form-field">
+              {{ form.low_stock_threshold.label }}
+              {{ form.low_stock_threshold(class_='form-control', min='0', step='1', placeholder='Optional') }}
+            </div>
+          {% endif %}
+          <div class="form-field form-checkbox-field">
+            {{ form.is_demand_notice_product() }}
+            {{ form.is_demand_notice_product.label }}
+          </div>
+        </div>
+        {% if form.errors %}
+          <div class="form-errors" role="alert">
+            {% for field_errors in form.errors.values() %}
+              {% for error in field_errors %}<p>{{ error }}</p>{% endfor %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        {{ form.submit(class_='button button-primary') }}
+      </form>
+    </section>
+  {% endif %}
+
+  <section
+    class="panel catalog-list-panel"
+    data-realtime-store="{{ selected_store.id if selected_store and can_view_inventory else '' }}"
+    data-stock-adjust-store="{{ selected_store.id if selected_store and can_adjust_inventory else '' }}"
+    data-tenant-container="{{ selected_store.tenant_container_id if selected_store else '' }}"
+    data-user-id="{{ current_user.id if current_user.is_authenticated else '' }}"
+    data-realtime-cursor="{{ realtime_cursor }}"
+  >
+    <div class="section-heading">
+      <div>
+        <h2>{{ products|length }} product{% if products|length != 1 %}s{% endif %}</h2>
+        <p class="muted">{{ selected_store.name if selected_store else '' }}{% if not can_view_inventory %} · Inventory details are not available to your account.{% endif %}</p>
+        {% if can_view_inventory %}<p class="realtime-status" data-realtime-status aria-live="polite">Connecting to live inventory…</p>{% endif %}
+      </div>
+    </div>
+    {% if products %}
+      <div class="table-scroll">
+        <table class="data-table catalog-table">
+          <thead>
+            <tr>
+              <th>SKU / barcode</th>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Expiry / flags</th>
+              <th>Price (OMR)</th>
+              {% if can_view_inventory %}<th>On hand</th>{% endif %}
+              {% if can_adjust_inventory %}<th>Stock adjustment</th>{% endif %}
+              {% if can_transfer_inventory %}<th>Store transfer</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in products %}
+              <tr data-product-id="{{ row.product.id }}">
+                <td><strong>{{ row.product.sku or '—' }}</strong><small class="table-subtext">{{ row.product.barcode or '' }}</small></td>
+                <td>{{ row.product.name }}</td>
+                <td>{{ row.product.category or '—' }}</td>
+                <td>
+                  {% if row.product.expiry_date %}<span>{{ row.product.expiry_date|string|truncate(10, True, '') }}</span>{% endif %}
+                  {% if row.product.is_demand_notice_product %}<small class="table-subtext">Demand notice</small>{% endif %}
+                  {% if not row.product.expiry_date and not row.product.is_demand_notice_product %}—{% endif %}
+                </td>
+                <td>
+                  {{ '%.3f'|format(row.product.price) if row.product.price is not none else '—' }}
+                  {% if row.product.low_stock_price is not none %}<small class="table-subtext">Alert: {{ '%.3f'|format(row.product.low_stock_price) }} OMR</small>{% endif %}
+                </td>
+                {% if can_view_inventory %}
+                  <td data-stock-value data-low-stock-threshold="{{ row.low_stock_threshold if row.low_stock_threshold is not none else '' }}">
+                    <strong>{{ row.stock_quantity if row.stock_quantity is not none else '—' }}</strong>
+                    {% if row.is_low_stock %}<small class="stock-warning">Low stock</small>{% endif %}
+                  </td>
+                {% endif %}
+                {% if can_adjust_inventory %}
+                  <td>
+                    <form method="post" action="{{ url_for('catalog.adjust_inventory_page', product_id=row.product.id) }}" data-api-url="{{ url_for('catalog.adjust_inventory_api', product_id=row.product.id) }}" class="stock-adjust-form">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="store_id" value="{{ selected_store.id }}">
+                      <label class="visually-hidden" for="delta-{{ row.product.id }}">Quantity change for {{ row.product.name }}</label>
+                      <input id="delta-{{ row.product.id }}" type="number" name="delta" min="-2147483647" max="2147483647" step="1" required placeholder="±qty">
+                      <label class="visually-hidden" for="reason-{{ row.product.id }}">Reason for changing {{ row.product.name }} stock</label>
+                      <input id="reason-{{ row.product.id }}" type="text" name="reason" maxlength="500" required placeholder="Reason">
+                      <button class="button button-small button-secondary" type="submit">Update</button>
+                      <small class="stock-sync-status" aria-live="polite"></small>
+                    </form>
+                  </td>
+                {% endif %}
+                {% if can_transfer_inventory %}
+                  <td>
+                    <form method="post" action="{{ url_for('catalog.transfer_inventory_page', product_id=row.product.id) }}" class="stock-transfer-form">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="source_store_id" value="{{ selected_store.id }}">
+                      <label class="visually-hidden" for="transfer-destination-{{ row.product.id }}">Destination store for {{ row.product.name }}</label>
+                      <select id="transfer-destination-{{ row.product.id }}" name="destination_store_id" required>
+                        {% for target_store in transfer_stores %}
+                          <option value="{{ target_store.id }}">{{ target_store.name }} · {{ target_store.code }}</option>
+                        {% endfor %}
+                      </select>
+                      <label class="visually-hidden" for="transfer-quantity-{{ row.product.id }}">Transfer quantity for {{ row.product.name }}</label>
+                      <input id="transfer-quantity-{{ row.product.id }}" type="number" name="quantity" min="1" step="1" required placeholder="Units">
+                      <label class="visually-hidden" for="transfer-reason-{{ row.product.id }}">Transfer reason for {{ row.product.name }}</label>
+                      <input id="transfer-reason-{{ row.product.id }}" type="text" name="reason" maxlength="400" required placeholder="Reason">
+                      <button class="button button-small button-secondary" type="submit">Transfer</button>
+                    </form>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No matching products</h3>
+        <p>Add a product to the catalog or adjust your search to find existing products.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% if selected_store and can_view_inventory %}
+    <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/catalog-realtime.js') }}" defer></script>
+  {% endif %}
+  {% if selected_store and can_adjust_inventory %}
+    <script src="{{ url_for('static', filename='js/catalog-offline-stock.js') }}" defer></script>
+  {% endif %}
+{% endblock %}

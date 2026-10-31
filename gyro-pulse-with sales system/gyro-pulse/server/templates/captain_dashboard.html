@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Gyro Pulse – Captain</title>
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <!-- Manrope Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <style>
+        :root {
+            --brand-primary: #0052FF;
+            --brand-surface: #f7f9fb;
+            --brand-text: #1e293b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--brand-surface);
+            color: var(--brand-text);
+            overflow-x: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .nav-link-custom {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px 12px;
+        }
+        .nav-link-custom:hover, .nav-link-custom.active {
+            background: #f1f5f9;
+            color: var(--brand-primary);
+        }
+        .nav-link-custom.active .material-symbols-outlined { color: var(--brand-primary); }
+        .data-table-container {
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px;
+        }
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+        }
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-brand:hover {
+            background-color: #0041cc;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #dbeafe; color: #2563eb; }
+        .badge-ready { background: #d1fae5; color: #059669; }
+        .badge-transit { background: #cffafe; color: #0891b2; }
+        .badge-delivered { background: #ede9fe; color: #7c3aed; }
+        .badge-closed { background: #f1f5f9; color: #475569; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .badge-picked { background: #fce7f3; color: #db2777; }
+        .badge-packed { background: #d1fae5; color: #059669; }
+        .badge-dispatched { background: #cffafe; color: #0891b2; }
+        .report-chart { height: 250px; }
+        .view-only-badge {
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.5s ease;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--brand-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-weight: 600;
+            color: var(--brand-text);
+            font-size: 1.1rem;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media (max-width: 768px) {
+            .sidebar { left: -260px; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading dashboard…</div>
+</div>
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-[#0052FF] rounded-lg flex items-center justify-center text-white">
+                <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <h1 class="text-xl font-extrabold tracking-tight text-slate-800">Gyro Pulse</h1>
+        </div>
+        <nav class="space-y-1">
+            <a class="nav-link-custom active" data-tab-trigger="orders" href="#orders">
+                <span class="material-symbols-outlined mr-3">receipt_long</span> Orders
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="deliveries" href="#deliveries">
+                <span class="material-symbols-outlined mr-3">local_shipping</span> Deliveries
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="transfers" href="#transfers">
+                <span class="material-symbols-outlined mr-3">sync_alt</span> Transfers
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="performance" href="#performance">
+                <span class="material-symbols-outlined mr-3">trending_up</span> Performance
+            </a>
+            <a class="nav-link-custom" data-tab-trigger="audit" href="#audit">
+                <span class="material-symbols-outlined mr-3">rule</span> Audit Logs
+            </a>
+            <!-- NEW: Device Management (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="devices" href="#devices">
+                <span class="material-symbols-outlined mr-3">devices</span> Device Keys
+            </a>
+            <!-- NEW: Token Pool (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="tokens" href="#tokens">
+                <span class="material-symbols-outlined mr-3">token</span> Token Pool
+            </a>
+            <!-- NEW: GPC Management (View Only) -->
+            <a class="nav-link-custom" data-tab-trigger="gpc" href="#gpc">
+                <span class="material-symbols-outlined mr-3">file_open</span> GPC Files
+            </a>
+            <div class="pt-4 pb-2 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Settings</div>
+            <a class="nav-link-custom" data-tab-trigger="settings" href="#settings">
+                <span class="material-symbols-outlined mr-3">settings</span> Settings
+            </a>
+        </nav>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Top Bar -->
+    <header class="h-16 border-b border-slate-200 bg-white sticky top-0 z-50 flex items-center justify-between px-8">
+        <div class="flex items-center gap-4">
+            <span class="text-slate-500 font-medium">Hello,</span>
+            <span class="font-bold text-slate-800">{{ current_user.username }}</span>
+            {% if current_user.city_id %}
+                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold uppercase tracking-tight">{{ current_user.city.name }}</span>
+            {% endif %}
+            <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold">Captain</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <button class="relative text-slate-500 hover:text-slate-700">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <a class="flex items-center gap-2 text-slate-600 font-semibold hover:text-[#0052FF]" href="{{ url_for('auth.logout') }}">
+                <span class="material-symbols-outlined">logout</span> Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="p-8">
+        <!-- Toast -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3 z-[1060]">
+            <div aria-atomic="true" aria-live="assertive" class="toast glass-card !border-slate-200 shadow-xl" id="orderToast" role="alert">
+                <div class="toast-header bg-transparent border-b border-slate-100">
+                    <span class="material-symbols-outlined text-green-500 mr-2">shopping_bag</span>
+                    <strong class="me-auto text-slate-800">New Order</strong>
+                    <small class="text-slate-500">just now</small>
+                    <button class="btn-close" data-bs-dismiss="toast" type="button"></button>
+                </div>
+                <div class="toast-body text-slate-600 font-medium" id="toastBody">Order received!</div>
+            </div>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="tab-container">
+            <!-- ORDERS TAB -->
+            <div class="tab-content-item block" id="orders">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">All Orders</h2>
+                        <p class="text-slate-500">Review, approve, and manage order lifecycle.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchOrders()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Warehouse</th>
+                                <th>Sales Person</th>
+                                <th>Items</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersBody">
+                            <tr><td class="text-center py-8" colspan="8">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DELIVERIES TAB -->
+            <div class="tab-content-item hidden" id="deliveries">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Delivery Management</h2>
+                        <p class="text-slate-500">Assign and monitor delivery tasks.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#assignDeliveryModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">add</span> Assign Delivery
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="deliveriesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Scheduled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveriesBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading deliveries...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- STOCK TRANSFERS TAB -->
+            <div class="tab-content-item hidden" id="transfers">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Stock Transfers</h2>
+                        <p class="text-slate-500">Create and track inventory transfers between personnel.</p>
+                    </div>
+                    <button class="btn-brand flex items-center gap-2" data-bs-target="#createTransferModal" data-bs-toggle="modal">
+                        <span class="material-symbols-outlined">swap_horiz</span> Create Transfer
+                    </button>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="transfersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Status</th>
+                                <th>Meeting Point</th>
+                                <th>Scheduled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfersBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading transfers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE TAB -->
+            <div class="tab-content-item hidden" id="performance">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Performance Dashboard</h2>
+                    <p class="text-slate-500">Key metrics and trends for your city operations.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="performanceStats">
+                    <div class="glass-card p-6 bg-white border-l-4 border-orange-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Pending Orders</p>
+                        <h2 class="text-3xl font-bold text-orange-600" id="pendingOrders">-</h2>
+                    </div>
+                    <div class="glass-card p-6 bg-white border-l-4 border-blue-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Today's Sales</p>
+                        <h2 class="text-3xl font-bold text-blue-600" id="todaySales">-</h2>
+                    </div>
+                    <div class="glass-card p-6 bg-white border-l-4 border-green-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Delivered Today</p>
+                        <h2 class="text-3xl font-bold text-green-600" id="deliveredToday">-</h2>
+                    </div>
+                    <div class="glass-card p-6 bg-white border-l-4 border-purple-500">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">On‑Time %</p>
+                        <h2 class="text-3xl font-bold text-purple-600" id="ontimePercent">-</h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-card p-6 bg-white">
+                        <h4 class="font-bold text-slate-800 mb-6">Sales Trend (Last 7 Days)</h4>
+                        <div class="h-[250px]"><canvas id="captainSalesChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-6 bg-white">
+                        <h4 class="font-bold text-slate-800 mb-6">Delivery Status Distribution</h4>
+                        <div class="h-[250px]"><canvas id="captainDeliveryPie"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUDIT LOGS TAB -->
+            <div class="tab-content-item hidden" id="audit">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Order Audit Logs</h2>
+                    <p class="text-slate-500">Complete history of order actions and changes.</p>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="captainAuditTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Order ID</th>
+                                <th>Old Value</th>
+                                <th>New Value</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="captainAuditBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading audit logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: DEVICE MANAGEMENT (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="devices">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Device API Keys</h2>
+                        <p class="text-slate-500">View hardware-bound API keys for mobile devices. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="apiKeysTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Device UUID</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Used</th>
+                                <th>Expires</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiKeysBody">
+                            <tr><td class="text-center py-8" colspan="7">Loading API keys...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: TOKEN POOL (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="tokens">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Token Pool Viewer</h2>
+                        <p class="text-slate-500">View one-time cipher tokens assigned to each user. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="flex items-center gap-3 mb-6">
+                    <label class="text-sm font-semibold text-slate-600">User:</label>
+                    <select id="tokenUserSelect" class="form-select rounded-lg border-slate-200 text-sm focus:ring-[#0052FF]" onchange="fetchTokenPool()">
+                        <option value="">Select User</option>
+                    </select>
+                    <button class="btn-brand flex items-center gap-2" onclick="fetchTokenPool()">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Refresh
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="tokenStats">
+                    <div class="glass-card p-4 bg-white border-l-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                        <h3 class="text-2xl font-bold text-blue-600" id="tokenTotal">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Unused</p>
+                        <h3 class="text-2xl font-bold text-green-600" id="tokenUnused">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Used</p>
+                        <h3 class="text-2xl font-bold text-orange-600" id="tokenUsed">-</h3>
+                    </div>
+                    <div class="glass-card p-4 bg-white border-l-4 border-red-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Expired</p>
+                        <h3 class="text-2xl font-bold text-red-600" id="tokenExpired">-</h3>
+                    </div>
+                </div>
+                <div class="data-table-container glass-card">
+                    <table class="table mb-0" id="tokenTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Session ID</th>
+                                <th>Cipher Token (masked)</th>
+                                <th>Status</th>
+                                <th>Expiry</th>
+                                <th>Created</th>
+                                <th>Used At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenBody">
+                            <tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ======================== NEW: GPC FILES (View Only) ======================== -->
+            <div class="tab-content-item hidden" id="gpc">
+                <div class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">GPC File Management</h2>
+                        <p class="text-slate-500">View encrypted login files (.gpc) and upload export files. (Read-only)</p>
+                    </div>
+                    <span class="view-only-badge">View Only</span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Generate Login File (Read-only) -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">download</span> Generate Login File
+                        </h4>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">User</label>
+                            <select class="form-select rounded-lg bg-slate-50" id="gpcUserSelect" disabled>
+                                <option value="">Select User</option>
+                            </select>
+                            <p class="text-xs text-slate-400 mt-1">Contact admin to generate .gpc files</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Expiry Days</label>
+                            <input type="number" class="form-control rounded-lg bg-slate-50" id="gpcExpiryDays" value="7" disabled>
+                        </div>
+                        <div class="mb-3 form-check flex items-center gap-2">
+                            <input type="checkbox" class="form-check-input h-5 w-5" id="gpcShowStock" checked disabled>
+                            <label class="form-check-label text-sm font-medium text-slate-700">Show Stock Quantities</label>
+                        </div>
+                        <button type="button" class="btn-brand w-100 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <span class="material-symbols-outlined">file_download</span> Generate .gpc
+                        </button>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Only administrators can generate GPC files</p>
+                    </div>
+                    <!-- Upload Export File (Read-only) -->
+                    <div class="glass-card bg-white p-6">
+                        <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#0052FF]">upload</span> Upload Export File
+                        </h4>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select .gpc file</label>
+                            <input type="file" class="form-control rounded-lg bg-slate-50" disabled>
+                            <p class="text-xs text-slate-400 mt-1">Only administrators can upload GPC files</p>
+                        </div>
+                        <button type="button" class="btn-brand w-100 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <span class="material-symbols-outlined">cloud_upload</span> Upload & Process
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB (View Only, extended with token config) -->
+            <div class="tab-content-item hidden" id="settings">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">System Preferences</h2>
+                    <p class="text-slate-500">View global parameters and localization settings.</p>
+                </div>
+                <div class="glass-card p-8 bg-white max-w-4xl">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Currency Symbol</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="currencyInput" readonly type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Global Tax Rate (%)</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="taxRateInput" readonly step="0.01" type="number"/>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Tax Identifier Label</label>
+                            <input class="form-control rounded-lg bg-slate-50" id="taxLabelInput" readonly type="text"/>
+                        </div>
+                        <!-- Auto-approve settings – read-only for captain -->
+                        <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                            <h5 class="font-bold text-slate-800 mb-4">Auto‑Approval Settings (Read‑Only)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" class="form-check-input h-5 w-5" id="autoApproveEnabled" disabled>
+                                    <label class="text-sm font-bold text-slate-700">Enable Auto‑Approval</label>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Threshold (max quantity per request)</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveThreshold" value="10" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Time Window (days)</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveTimeWindow" value="1" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Max Total per Window</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="autoApproveMaxTotal" value="20" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW Token Configuration (Read-only) -->
+                        <div class="col-span-2 border-t border-slate-200 pt-6 mt-4">
+                            <h5 class="font-bold text-slate-800 mb-4">Cipher Token Configuration (Read‑Only)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Max Token Cap</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="maxTokenCap" value="15" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Renewal Threshold</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="tokenRenewalThreshold" value="2" disabled/>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Default Expiry Days</label>
+                                    <input type="number" class="form-control rounded-lg bg-slate-50" id="defaultExpiryDays" value="7" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-slate-100 flex justify-end">
+                        <span class="text-sm text-slate-400">Read‑only</span>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /tab-container -->
+    </div>
+</main>
+
+<!-- ========== MODALS ========== -->
+
+<!-- Approve Order Modal -->
+<div class="modal fade" id="approveOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Approve Order #<span id="approveOrderId"></span></h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <p><span class="text-xs font-bold text-slate-400 uppercase">Customer</span><br/><span class="font-semibold" id="approveCustomer"></span></p>
+                        <p><span class="text-xs font-bold text-slate-400 uppercase">Total</span><br/><span class="font-bold text-2xl text-[#0052FF]" id="approveTotal"></span></p>
+                        <p><span class="text-xs font-bold text-slate-400 uppercase">Items</span><br/><span id="approveItemsCount"></span></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select Warehouse</label>
+                        <select class="form-select rounded-lg" id="approveWarehouseSelect">
+                            <option value="">-- Auto‑select --</option>
+                        </select>
+                        <div class="mt-4 flex gap-2">
+                            <button class="btn-brand flex-grow" onclick="submitApprove()">✅ Approve</button>
+                            <button class="bg-slate-100 px-4 rounded-lg text-slate-600 font-bold" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4">
+                <h6 class="font-bold text-slate-700 mb-3">Order Items</h6>
+                <div class="overflow-x-auto max-h-[200px]">
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Qty</th><th>Price</th></tr></thead>
+                        <tbody id="approveItemsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Delivery Modal -->
+<div class="modal fade" id="assignDeliveryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Assign New Dispatch</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form class="space-y-4" id="assignDeliveryForm">
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Order #</label><input class="form-control rounded-lg" id="assignOrderId" required="" type="number"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">User ID (Personnel)</label><input class="form-control rounded-lg" id="assignToUser" required="" type="number"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Schedule</label><input class="form-control rounded-lg" id="assignScheduledDate" type="datetime-local"/></div>
+                    <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Notes</label><textarea class="form-control rounded-lg" id="assignNotes" rows="3"></textarea></div>
+                    <button class="btn-brand w-100 mt-4 py-3" type="submit">Assign Delivery</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Transfer Modal -->
+<div class="modal fade" id="createTransferModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Create Stock Transfer</h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="createTransferForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">From User ID</label>
+                            <input type="number" class="form-control rounded-lg" id="transferFromUser" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">To User ID</label>
+                            <input type="number" class="form-control rounded-lg" id="transferToUser" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Meeting Location</label>
+                            <input type="text" class="form-control rounded-lg" id="transferMeetingLocation">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Scheduled Time</label>
+                            <input type="datetime-local" class="form-control rounded-lg" id="transferScheduledTime">
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <h6 class="font-bold text-slate-700">Products</h6>
+                    <div id="transferItemsContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addTransferItemRow()">+ Add Item</button>
+                    <hr class="my-4">
+                    <button type="submit" class="btn-brand w-100">Create Transfer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Order Modal -->
+<div class="modal fade" id="editOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Edit Order #<span id="editOrderIdDisplay"></span></h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="editOrderForm">
+                    <input type="hidden" id="editOrderIdHidden">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Shipping Address</label>
+                        <input type="text" class="form-control rounded-lg" id="editShippingAddress" placeholder="Shipping address">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Payment Terms</label>
+                        <input type="text" class="form-control rounded-lg" id="editPaymentTerms" placeholder="e.g. Cash on Delivery">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Special Instructions</label>
+                        <textarea class="form-control rounded-lg" id="editInstructions" rows="2"></textarea>
+                    </div>
+                    <hr class="my-4">
+                    <h6 class="font-bold text-slate-700">Items</h6>
+                    <div id="editItemsContainer">
+                        <!-- Items will be loaded dynamically -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addEditItemRow()">+ Add Item</button>
+                    <hr class="my-4">
+                    <button type="submit" class="btn-brand w-100">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Detail Modal -->
+<div class="modal fade" id="transferDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card !border-slate-300">
+            <div class="modal-header border-b border-slate-100">
+                <h5 class="font-bold text-slate-800">Transfer #<span id="transferDetailId"></span></h5>
+                <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body p-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">From</span><p id="transferDetailFrom" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">To</span><p id="transferDetailTo" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">Status</span><p id="transferDetailStatus" class="font-semibold">-</p></div>
+                    <div><span class="text-xs font-bold text-slate-400 uppercase">Scheduled</span><p id="transferDetailScheduled" class="font-semibold">-</p></div>
+                </div>
+                <h6 class="font-bold text-slate-700 mb-3">Items</h6>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Requested</th><th>Transferred</th></tr></thead>
+                        <tbody id="transferDetailItemsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== SCRIPTS ========== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================================
+    // TAB SYSTEM
+    // ============================================================
+    document.querySelectorAll('[data-tab-trigger]').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = trigger.getAttribute('data-tab-trigger');
+            document.querySelectorAll('.nav-link-custom').forEach(l => l.classList.remove('active'));
+            trigger.classList.add('active');
+            document.querySelectorAll('.tab-content-item').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('block');
+            });
+            const content = document.getElementById(target);
+            content.classList.remove('hidden');
+            content.classList.add('block');
+            if (target === 'performance') fetchCaptainPerformance();
+            if (target === 'devices') fetchApiKeys();
+            if (target === 'tokens') populateTokenUserDropdown();
+        });
+    });
+
+    // ============================================================
+    // API HELPER
+    // ============================================================
+    function apiFetch(url, options = {}) {
+        options.credentials = 'same-origin';
+        if (!options.headers) options.headers = {};
+        if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(options.body);
+        }
+        return fetch(url, options)
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json();
+            });
+    }
+
+    // ============================================================
+    // ORDERS
+    // ============================================================
+    function fetchOrders() {
+        fetch('/api/orders')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.getElementById('ordersBody');
+                tbody.innerHTML = data.orders.length ? '' : '<tr><td colspan="8" class="text-center py-8">No orders found.</td></tr>';
+                data.orders.forEach(o => {
+                    const statusBadge = getStatusBadge(o.status);
+                    const warehouseName = o.warehouse_name || (o.warehouse_id ? '#'+o.warehouse_id : 'Not assigned');
+                    const actions = getActionButtons(o);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="font-bold text-slate-400">#${o.id}</td>
+                            <td class="font-bold">${o.customer_name}</td>
+                            <td>${statusBadge}</td>
+                            <td class="font-bold text-slate-800">${window.currency}${o.net_total.toFixed(2)}</td>
+                            <td>${warehouseName}</td>
+                            <td>${o.sales_person || 'Unknown'}</td>
+                            <td>${o.items.length}</td>
+                            <td>${actions}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => console.error('Failed to fetch orders:', err));
+    }
+
+    function getStatusBadge(status) {
+        const map = {
+            'pending': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-pending">Pending</span>',
+            'approved': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-approved">Approved</span>',
+            'picked': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-picked">Picked</span>',
+            'packed': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-packed">Packed</span>',
+            'ready': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-ready">Ready</span>',
+            'dispatched': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-dispatched">Dispatched</span>',
+            'in_transit': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-transit">In Transit</span>',
+            'delivered': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-delivered">Delivered</span>',
+            'closed': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-closed">Closed</span>',
+            'rejected': '<span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase badge-rejected">Rejected</span>'
+        };
+        return map[status] || status;
+    }
+
+    function getActionButtons(order) {
+        let buttons = '';
+        if (order.status === 'pending') {
+            buttons += `<button class="btn btn-sm btn-success me-1" onclick="openApproveModal(${order.id})">Approve</button>`;
+            buttons += `<button class="btn btn-sm btn-danger me-1" onclick="rejectOrder(${order.id})">Reject</button>`;
+        }
+        if (order.status === 'approved' || order.status === 'pending') {
+            buttons += `<button class="btn btn-sm btn-primary me-1" onclick="openEditOrder(${order.id})">Edit</button>`;
+        }
+        if (order.status === 'ready') {
+            buttons += `<button class="btn btn-sm btn-info me-1" onclick="transitOrder(${order.id})">In Transit</button>`;
+        }
+        if (order.status === 'in_transit') {
+            buttons += `<button class="btn btn-sm btn-success me-1" onclick="deliverOrder(${order.id})">Deliver</button>`;
+        }
+        if (order.status === 'delivered') {
+            buttons += `<button class="btn btn-sm btn-secondary" onclick="closeOrder(${order.id})">Close</button>`;
+        }
+        return buttons || '<span class="text-slate-400 text-sm">No actions</span>';
+    }
+
+    // ============================================================
+    // APPROVE ORDER
+    // ============================================================
+    let approveOrderId = null;
+    function openApproveModal(orderId) {
+        approveOrderId = orderId;
+        fetch(`/api/orders/${orderId}`)
+            .then(r => r.json())
+            .then(order => {
+                document.getElementById('approveOrderId').textContent = order.id;
+                document.getElementById('approveCustomer').textContent = order.customer_name;
+                document.getElementById('approveTotal').textContent = order.net_total.toFixed(2);
+                document.getElementById('approveItemsCount').textContent = order.items.length;
+                const tbody = document.getElementById('approveItemsBody');
+                tbody.innerHTML = '';
+                order.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.product_name}</td><td>${item.ordered_qty}</td><td>${window.currency}${item.unit_price.toFixed(2)}</td></tr>`;
+                });
+                apiFetch('/api/warehouses?city_id=' + (order.city_id || ''))
+                    .then(data => {
+                        const select = document.getElementById('approveWarehouseSelect');
+                        select.innerHTML = '<option value="">-- Auto-select --</option>';
+                        data.warehouses.forEach(w => {
+                            select.innerHTML += `<option value="${w.id}">${w.name} (${w.code})</option>`;
+                        });
+                    });
+                new bootstrap.Modal(document.getElementById('approveOrderModal')).show();
+            })
+            .catch(err => alert('Error loading order details: ' + err));
+    }
+
+    function submitApprove() {
+        const warehouseId = document.getElementById('approveWarehouseSelect').value;
+        const payload = {};
+        if (warehouseId) payload.warehouse_id = parseInt(warehouseId);
+        apiFetch(`/api/orders/${approveOrderId}/approve`, {
+            method: 'POST',
+            body: payload
+        })
+        .then(res => {
+            alert(res.message);
+            bootstrap.Modal.getInstance(document.getElementById('approveOrderModal')).hide();
+            fetchOrders();
+        })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // ORDER ACTIONS
+    // ============================================================
+    function rejectOrder(orderId) {
+        if (!confirm('Reject this order?')) return;
+        apiFetch(`/api/orders/${orderId}/reject`, { method: 'POST' })
+            .then(res => { alert(res.message); fetchOrders(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function transitOrder(orderId) {
+        if (!confirm('Mark order as In Transit?')) return;
+        apiFetch(`/api/orders/${orderId}/transit`, { method: 'PUT' })
+            .then(res => { alert(res.message); fetchOrders(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function closeOrder(orderId) {
+        if (!confirm('Close this order?')) return;
+        apiFetch(`/api/orders/${orderId}/close`, { method: 'PUT' })
+            .then(res => { alert(res.message); fetchOrders(); })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    function deliverOrder(orderId) {
+        if (!confirm('Mark this order as delivered? All items will be marked as delivered.')) return;
+        fetch(`/api/orders/${orderId}`)
+            .then(r => r.json())
+            .then(order => {
+                const items = order.items.map(item => ({
+                    order_item_id: item.id,
+                    delivered_qty: item.ordered_qty
+                }));
+                return apiFetch(`/api/orders/${orderId}/deliver`, {
+                    method: 'PUT',
+                    body: { items: items }
+                });
+            })
+            .then(res => {
+                alert(res.message);
+                fetchOrders();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // ============================================================
+    // EDIT ORDER
+    // ============================================================
+    let currentEditOrderId = null;
+
+    function openEditOrder(orderId) {
+        currentEditOrderId = orderId;
+        document.getElementById('editOrderIdDisplay').textContent = orderId;
+        document.getElementById('editOrderIdHidden').value = orderId;
+        fetch(`/api/orders/${orderId}`)
+            .then(r => r.json())
+            .then(order => {
+                document.getElementById('editShippingAddress').value = order.shipping_address || '';
+                document.getElementById('editPaymentTerms').value = order.payment_terms || '';
+                document.getElementById('editInstructions').value = order.special_instructions || '';
+                const container = document.getElementById('editItemsContainer');
+                container.innerHTML = '';
+                order.items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'row g-2 mb-2';
+                    row.innerHTML = `
+                        <div class="col-md-4">
+                            <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="editProductId" value="${item.product_id}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control rounded-lg" placeholder="Qty" name="editQty" value="${item.ordered_qty}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control rounded-lg" placeholder="Price" name="editPrice" step="0.01" value="${item.unit_price}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+                new bootstrap.Modal(document.getElementById('editOrderModal')).show();
+            })
+            .catch(err => alert('Error loading order details: ' + err));
+    }
+
+    function addEditItemRow() {
+        const container = document.getElementById('editItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2';
+        row.innerHTML = `
+            <div class="col-md-4">
+                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="editProductId" required>
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control rounded-lg" placeholder="Qty" name="editQty" required>
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control rounded-lg" placeholder="Price" name="editPrice" step="0.01" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    document.getElementById('editOrderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const orderId = document.getElementById('editOrderIdHidden').value;
+        const items = [];
+        const rows = document.querySelectorAll('#editItemsContainer .row');
+        rows.forEach(row => {
+            const productId = row.querySelector('[name="editProductId"]').value;
+            const qty = row.querySelector('[name="editQty"]').value;
+            const price = row.querySelector('[name="editPrice"]').value;
+            if (productId && qty && price) {
+                items.push({
+                    product_id: parseInt(productId),
+                    quantity: parseInt(qty),
+                    unit_price: parseFloat(price)
+                });
+            }
+        });
+        if (items.length === 0) {
+            alert('At least one item is required.');
+            return;
+        }
+        const data = {
+            shipping_address: document.getElementById('editShippingAddress').value,
+            payment_terms: document.getElementById('editPaymentTerms').value,
+            special_instructions: document.getElementById('editInstructions').value,
+            items: items
+        };
+        apiFetch(`/api/orders/${orderId}/edit`, {
+            method: 'PUT',
+            body: data
+        })
+        .then(res => {
+            alert(res.message);
+            bootstrap.Modal.getInstance(document.getElementById('editOrderModal')).hide();
+            fetchOrders();
+        })
+        .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // DELIVERIES
+    // ============================================================
+    function fetchDeliveries() {
+        apiFetch('/dashboard/api/deliveries').then(data => {
+            const tbody = document.getElementById('deliveriesBody');
+            tbody.innerHTML = data.deliveries.length ? '' : '<tr><td colspan="7" class="text-center py-8">No deliveries found.</td></tr>';
+            data.deliveries.forEach(d => {
+                const statusClass = d.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-bold text-slate-400">#${d.id}</td>
+                        <td>#${d.order_id}</td>
+                        <td class="font-bold">${d.customer_name || 'N/A'}</td>
+                        <td>${d.assigned_to || 'Unassigned'}</td>
+                        <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase ${statusClass}">${d.status}</span></td>
+                        <td class="text-slate-500">${d.scheduled_date ? new Date(d.scheduled_date).toLocaleDateString() : '-'}</td>
+                        <td>
+                            <button class="px-3 py-1 bg-slate-100 rounded text-xs font-bold" onclick="updateDeliveryStatus(${d.id}, 'in_transit')">Transit</button>
+                            <button class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold" onclick="viewDelivery(${d.id})">View</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    function updateDeliveryStatus(deliveryId, status) {
+        if (!confirm(`Mark delivery #${deliveryId} as '${status}'?`)) return;
+        apiFetch(`/dashboard/api/deliveries/${deliveryId}/status`, {
+            method: 'PUT',
+            body: { status }
+        })
+        .then(res => { alert(res.message); fetchDeliveries(); })
+        .catch(err => alert('Error: ' + err));
+    }
+
+    function viewDelivery(id) {
+        alert('Delivery detail view will open here.');
+    }
+
+    document.getElementById('assignDeliveryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            order_id: parseInt(document.getElementById('assignOrderId').value),
+            assigned_to_user_id: parseInt(document.getElementById('assignToUser').value),
+            scheduled_date: document.getElementById('assignScheduledDate').value,
+            notes: document.getElementById('assignNotes').value
+        };
+        apiFetch('/api/deliveries/assign', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('assignDeliveryModal')).hide();
+                fetchDeliveries();
+                this.reset();
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // STOCK TRANSFERS
+    // ============================================================
+    function fetchTransfers() {
+        apiFetch('/dashboard/api/stock-transfers').then(data => {
+            const tbody = document.getElementById('transfersBody');
+            tbody.innerHTML = data.transfers.length ? '' : '<tr><td colspan="7" class="text-center py-8">No stock transfers.</td></tr>';
+            data.transfers.forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${t.id}</td>
+                        <td>${t.from_user}</td>
+                        <td>${t.to_user}</td>
+                        <td><span class="px-2 py-1 rounded text-[10px] font-extrabold uppercase bg-${t.status === 'completed' ? 'green' : t.status === 'requested' ? 'yellow' : 'blue'}-100 text-${t.status === 'completed' ? 'green' : t.status === 'requested' ? 'yellow' : 'blue'}-700">${t.status}</span></td>
+                        <td>${t.meeting_location || '-'}</td>
+                        <td>${t.scheduled_time ? new Date(t.scheduled_time).toLocaleDateString() : '-'}</td>
+                        <td><button class="btn btn-sm btn-info" onclick="viewTransfer(${t.id})">View</button></td>
+                    </tr>
+                `;
+            });
+        });
+    }
+
+    function viewTransfer(id) {
+        apiFetch(`/api/stock-transfers/${id}`)
+            .then(data => {
+                document.getElementById('transferDetailId').textContent = data.id;
+                document.getElementById('transferDetailFrom').textContent = data.from_user;
+                document.getElementById('transferDetailTo').textContent = data.to_user;
+                document.getElementById('transferDetailStatus').textContent = data.status;
+                document.getElementById('transferDetailScheduled').textContent = data.scheduled_time ? new Date(data.scheduled_time).toLocaleString() : 'N/A';
+                const tbody = document.getElementById('transferDetailItemsBody');
+                tbody.innerHTML = '';
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        tbody.innerHTML += `<tr><td>${item.product_name}</td><td>${item.requested_qty}</td><td>${item.transferred_qty}</td></tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-slate-500">No items in this transfer.</td></tr>';
+                }
+                new bootstrap.Modal(document.getElementById('transferDetailModal')).show();
+            })
+            .catch(err => {
+                alert('Error loading transfer details: ' + err);
+                console.error(err);
+            });
+    }
+
+    function addTransferItemRow() {
+        const container = document.getElementById('transferItemsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2';
+        row.innerHTML = `
+            <div class="col-md-6">
+                <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+            </div>
+            <div class="col-md-4">
+                <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    document.getElementById('createTransferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const items = [];
+        const rows = document.querySelectorAll('#transferItemsContainer .row');
+        rows.forEach(row => {
+            const productId = row.querySelector('[name="transferProductId"]').value;
+            const qty = row.querySelector('[name="transferQty"]').value;
+            if (productId && qty > 0) {
+                items.push({
+                    product_id: parseInt(productId),
+                    requested_qty: parseInt(qty)
+                });
+            }
+        });
+        if (items.length === 0) {
+            alert('Add at least one product.');
+            return;
+        }
+        const data = {
+            from_user_id: parseInt(document.getElementById('transferFromUser').value),
+            to_user_id: parseInt(document.getElementById('transferToUser').value),
+            meeting_location: document.getElementById('transferMeetingLocation').value,
+            scheduled_time: document.getElementById('transferScheduledTime').value,
+            items: items
+        };
+        apiFetch('/api/stock-transfers/create', { method: 'POST', body: data })
+            .then(res => {
+                alert(res.message);
+                bootstrap.Modal.getInstance(document.getElementById('createTransferModal')).hide();
+                fetchTransfers();
+                this.reset();
+                document.getElementById('transferItemsContainer').innerHTML = `
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <input type="number" class="form-control rounded-lg" placeholder="Product ID" name="transferProductId">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" class="form-control rounded-lg" placeholder="Qty" name="transferQty">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(err => alert('Error: ' + err));
+    });
+
+    // ============================================================
+    // PERFORMANCE
+    // ============================================================
+    let captainSalesChart = null;
+    let captainDeliveryPie = null;
+
+    function fetchCaptainPerformance() {
+        apiFetch('/dashboard/api/captain/performance')
+            .then(data => {
+                document.getElementById('pendingOrders').textContent = data.pending_orders;
+                document.getElementById('todaySales').textContent = `${window.currency}${data.today_sales.toFixed(2)}`;
+                document.getElementById('deliveredToday').textContent = data.delivered_today;
+                document.getElementById('ontimePercent').textContent = data.on_time_percent + '%';
+                const ctx1 = document.getElementById('captainSalesChart').getContext('2d');
+                if (captainSalesChart) captainSalesChart.destroy();
+                captainSalesChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: data.sales_trend.map(d => d.date),
+                        datasets: [{ label: 'Sales', data: data.sales_trend.map(d => d.total), borderColor: '#0052FF', backgroundColor: 'rgba(0,82,255,0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#0052FF' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+                });
+                const ctx2 = document.getElementById('captainDeliveryPie').getContext('2d');
+                if (captainDeliveryPie) captainDeliveryPie.destroy();
+                captainDeliveryPie = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Delivered', 'In Transit', 'Pending', 'Rejected'],
+                        datasets: [{ data: [data.delivered_count, data.in_transit_count, data.pending_count, data.rejected_count], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            })
+            .catch(err => console.error('Performance error:', err));
+    }
+
+    // ============================================================
+    // AUDIT LOGS
+    // ============================================================
+    function fetchCaptainAudit() {
+        apiFetch('/api/audit-logs?limit=50&order_only=true')
+            .then(data => {
+                const tbody = document.getElementById('captainAuditBody');
+                tbody.innerHTML = data.logs.length ? '' : '<tr><td colspan="7" class="text-center py-8">No audit logs found.</td></tr>';
+                data.logs.forEach(log => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${log.id}</td>
+                            <td>${log.username || 'Unknown'}</td>
+                            <td class="font-bold">${log.action}</td>
+                            <td>${log.order_id || '-'}</td>
+                            <td class="text-xs truncate max-w-[150px]">${log.old_value || '-'}</td>
+                            <td class="text-xs truncate max-w-[150px]">${log.new_value || '-'}</td>
+                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => console.error('Audit error:', err));
+    }
+
+    // ============================================================
+    // NEW: DEVICE MANAGEMENT (View Only)
+    // ============================================================
+    function fetchApiKeys() {
+        apiFetch('/dashboard/api/admin/api-keys')
+            .then(data => {
+                const tbody = document.getElementById('apiKeysBody');
+                if (!data.api_keys || data.api_keys.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No API keys found.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.api_keys.forEach(k => {
+                    const statusBadge = k.status === 'ACTIVE' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Active</span>' :
+                                       k.status === 'REVOKED' ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Revoked</span>' :
+                                       '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Expired</span>';
+                    html += `
+                        <tr>
+                            <td>${k.id}</td>
+                            <td class="font-mono text-sm">${k.device_uuid}</td>
+                            <td>${k.username || 'Unknown'}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-xs">${new Date(k.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : '-'}</td>
+                            <td class="text-xs">${k.expires_at ? new Date(k.expires_at).toLocaleDateString() : 'Never'}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching API keys:', err);
+                document.getElementById('apiKeysBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load API keys.</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // NEW: TOKEN POOL VIEWER (View Only)
+    // ============================================================
+    function populateTokenUserDropdown() {
+        apiFetch('/dashboard/api/users')
+            .then(data => {
+                const users = data.data || [];
+                const select = document.getElementById('tokenUserSelect');
+                const options = '<option value="">Select User</option>' +
+                    users.map(u => `<option value="${u.id}">${u.username} (${u.role})</option>`).join('');
+                select.innerHTML = options;
+            })
+            .catch(err => console.error('Error loading users:', err));
+    }
+
+    function fetchTokenPool() {
+        const userId = document.getElementById('tokenUserSelect').value;
+        if (!userId) {
+            document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8" colspan="7">Select a user to view tokens.</td></tr>';
+            document.getElementById('tokenTotal').textContent = '-';
+            document.getElementById('tokenUnused').textContent = '-';
+            document.getElementById('tokenUsed').textContent = '-';
+            document.getElementById('tokenExpired').textContent = '-';
+            return;
+        }
+        apiFetch(`/dashboard/api/admin/tokens/${userId}`)
+            .then(data => {
+                document.getElementById('tokenTotal').textContent = data.stats.total || 0;
+                document.getElementById('tokenUnused').textContent = data.stats.unused || 0;
+                document.getElementById('tokenUsed').textContent = data.stats.used || 0;
+                document.getElementById('tokenExpired').textContent = data.stats.expired || 0;
+
+                const tbody = document.getElementById('tokenBody');
+                if (!data.tokens || data.tokens.length === 0) {
+                    tbody.innerHTML = '<tr><td class="text-center py-8" colspan="7">No tokens found for this user.</td></tr>';
+                    return;
+                }
+                let html = '';
+                data.tokens.forEach(t => {
+                    const statusBadge = t.token_status === 'UNUSED' ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Unused</span>' :
+                                       t.token_status === 'USED' ? '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">Used</span>' :
+                                       '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Expired</span>';
+                    html += `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td class="font-mono text-sm">${t.session_id}</td>
+                            <td class="font-mono text-sm">${t.cipher_token}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-xs">${new Date(t.expiry_timestamp).toLocaleDateString()}</td>
+                            <td class="text-xs">${new Date(t.created_at).toLocaleDateString()}</td>
+                            <td class="text-xs">${t.used_at ? new Date(t.used_at).toLocaleDateString() : '-'}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error fetching token pool:', err);
+                document.getElementById('tokenBody').innerHTML = '<tr><td class="text-center py-8 text-red-500" colspan="7">Failed to load tokens.</td></tr>';
+            });
+    }
+
+    // ============================================================
+    // WEBSOCKET
+    // ============================================================
+    function setupWebSocket() {
+        var socket = io();
+        socket.on('connect', () => { socket.emit('join_captain_room'); });
+        socket.on('new_order', (data) => {
+            var toastEl = document.getElementById('orderToast');
+            document.getElementById('toastBody').innerHTML = `<b>New Order #${data.order_id}</b><br>${data.customer_name} - Total: ${window.currency}${data.net_total}`;
+            new bootstrap.Toast(toastEl).show();
+            fetchOrders();
+        });
+    }
+
+    // ============================================================
+    // HIDE LOADING OVERLAY
+    // ============================================================
+    let loadingCompleted = 0;
+    const totalLoadingSteps = 1;
+
+    function checkLoadingComplete() {
+        loadingCompleted++;
+        if (loadingCompleted >= totalLoadingSteps) {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+    }
+    setTimeout(function() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.classList.add('hidden');
+    }, 3000);
+
+    // ============================================================
+    // SETTINGS (View Only)
+    // ============================================================
+    window.currency = '$';
+
+    function fetchSettings() {
+        fetch('/dashboard/api/settings', {credentials: 'same-origin'})
+            .then(r => r.json())
+            .then(data => {
+                window.currency = data.currency || '$';
+                document.getElementById('currencyInput').value = window.currency;
+                document.getElementById('taxRateInput').value = data.tax_rate || 0;
+                document.getElementById('taxLabelInput').value = data.tax_label || 'Tax';
+                document.getElementById('autoApproveEnabled').checked = data.auto_approve_enabled || false;
+                document.getElementById('autoApproveThreshold').value = data.auto_approve_threshold || 10;
+                document.getElementById('autoApproveTimeWindow').value = data.auto_approve_time_window || 1;
+                document.getElementById('autoApproveMaxTotal').value = data.auto_approve_max_total || 20;
+                // NEW token settings (read-only)
+                document.getElementById('maxTokenCap').value = data.max_token_cap || 15;
+                document.getElementById('tokenRenewalThreshold').value = data.token_renewal_threshold || 2;
+                document.getElementById('defaultExpiryDays').value = data.default_expiry_days || 7;
+                fetchOrders();
+                fetchCaptainPerformance();
+            })
+            .catch(() => {});
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    window.onload = function() {
+        fetchSettings();
+        fetchOrders();
+        fetchDeliveries();
+        fetchTransfers();
+        fetchCaptainPerformance();
+        fetchCaptainAudit();
+        setupWebSocket();
+        // NEW: populate dropdowns for token pool
+        populateTokenUserDropdown();
+        // If devices tab is active, load keys
+        if (window.location.hash === '#devices') fetchApiKeys();
+        // If tokens tab, populate dropdown
+        if (window.location.hash === '#tokens') populateTokenUserDropdown();
+        checkLoadingComplete();
+        setInterval(fetchOrders, 30000);
+        setInterval(fetchDeliveries, 30000);
+        setInterval(fetchTransfers, 30000);
+    };
+</script>
+</body>
+</html>
