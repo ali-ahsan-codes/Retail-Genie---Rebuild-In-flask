@@ -30,6 +30,8 @@ def create_app():
     Application Factory for Gyro Pulse Flask API.
     """
     app = Flask(__name__)
+    from dedicated import configure, register as register_dedicated
+    deployment_mode = configure(app)
 
     # --------------------------------------------------------------------------
     # Configuration
@@ -80,16 +82,15 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', '*').split(',')
+    allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', '*' if deployment_mode == 'standalone' else app.config['GYRO_PUBLIC_BASE_URL']).split(',')
+    if deployment_mode == 'dedicated':
+        from dedicated import origin
+        allowed_origins = [origin(value.strip()) for value in allowed_origins]
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app, 
-        x_for=1, 
-        x_proto=1, 
-        x_host=1, 
-        x_prefix=1
-    )
+    if deployment_mode == 'standalone':
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    # Dedicated mode does NOT blindly trust client-supplied forwarding headers.
 
     # --------------------------------------------------------------------------
     # Register Blueprints
@@ -119,7 +120,9 @@ def create_app():
             'status': 'healthy',
             'service': 'Gyro Pulse Backend',
             'version': '4.0',
-            'features': ['offline-first', 'token-based-security', 'device-binding', 'gpc-encryption', 'media-sync']
+            'deployment_mode': deployment_mode,
+            'business_sync_enabled': False,
+            'features': (['dedicated-isolation-only'] if deployment_mode == 'dedicated' else ['offline-first', 'token-based-security', 'device-binding', 'gpc-encryption', 'media-sync'])
         }), 200
 
     @app.errorhandler(404)
@@ -140,6 +143,7 @@ def create_app():
 
     from fulfillment import register_fulfillment
     register_fulfillment(app)
+    register_dedicated(app)
     return app
 
 

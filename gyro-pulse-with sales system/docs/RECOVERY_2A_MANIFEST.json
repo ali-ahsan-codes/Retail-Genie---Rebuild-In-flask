@@ -1,0 +1,41 @@
+{
+  "phase": "recovery-2A",
+  "description": "Reimplementation from actual Phase 1 checkout only; no claims that later lost code or tests were recovered.",
+  "files": {
+    "README.md": {
+      "sha256": "06d2fab43e346e951d65787414dc0083f5df95b6b8d11b9d411365dc9e52c27d"
+    },
+    "docs/ROADMAP.md": {
+      "sha256": "636ebf8791237609b1c87301fe2c68e302479cf748700b89f391383fa9224402"
+    },
+    "docs/RECOVERY_2A.md": {
+      "sha256": "244f4bb81f44f3399b34d2cfe5baca1dc233032e4aa90bf302eab918b9b54f61"
+    },
+    "integration/phase-status.json": {
+      "sha256": "3b1cf45e89dd1516e304de84f9ed6955bb26ef76ab77c043c48bd454df3825c7"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "45f9a9d45565159c6ec51523e7fe780ec2cc4c9c645790b527dc39d6321a5aa5"
+    },
+    "integration/tests/test_recovery_readiness.py": {
+      "sha256": "76981d6c1b275ec1827a68746f1e51ca4492999b6cdca26df3de7274e4f81b2b"
+    },
+    "integration/recovery_readiness.py": {
+      "sha256": "d81b375870c69fa1377fd933c5f32253ee0cfa35bc7331ddee5e78c50a40272e"
+    },
+    "gyro-pulse/server/.env.example": {
+      "sha256": "e405aba4e7c57d9f3c433d328ca6476f9661cdd41ee9733ae2b506ea481e971d",
+      "baseline_sha256": "cd1681600f44468bb826b3f85981dbe1a4029234a1ce790d023a40961501f10f"
+    },
+    "gyro-pulse/server/app.py": {
+      "sha256": "97ead16e408cddae9f945a715cd2f4df4d9262aa4db0523d085bb08d0cd9a780",
+      "baseline_sha256": "e36ecf309698b6d36c61feef2a75aa12313d8882b9f99123c126e24912098f00"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "a23a28e0ad0a4c6d2b54c95582a0586325a1164b9e3839cc7e5348d67654a2be"
+    },
+    "gyro-pulse/server/tests/test_dedicated_recovery.py": {
+      "sha256": "604c60c24636f6d9e3874f0c44cd9527e246d3b7aac2c6f4e758cc61c924d2e8"
+    }
+  }
+}

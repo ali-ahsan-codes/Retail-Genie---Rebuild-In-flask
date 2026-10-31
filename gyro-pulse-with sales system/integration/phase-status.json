@@ -4,6 +4,10 @@
   "production_ready": false,
   "inventory_authority": "retail-genie",
   "field_hub": "gyro-pulse",
-  "next_phase": "2: versioned API contract, scoped credentials and pairing",
-  "note": "Documentation/status only. No app reads this file or enables integration from it."
+  "next_phase": "Rebuild 2B pairing, then transport/catalog/native-order/mobile adapters; run Phase 7 only against recovered, tested source",
+  "note": "Current checkout had Phase 1 only. Git/local recovery found no later implementation. Dedicated-company isolation is reimplemented and tested; 2B-7 are NOT recovered/verified. Earlier chat test counts are not current-checkout evidence. No business sync or release enabled.",
+  "active_phase": 2,
+  "recovery_in_progress": true,
+  "recovered_subphase": "2A dedicated-company guard",
+  "previous_conversation_evidence_available": false
 }

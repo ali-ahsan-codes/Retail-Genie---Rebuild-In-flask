@@ -13,7 +13,7 @@ gates. No phase automatically migrates or replaces a live database. Status is ex
 | Phase | Scope | Implementation status |
 |---|---|---|
 | 1 | Clean copies, isolated config, baseline and roadmap | Implemented; see baseline report |
-| 2 | Versioned API contract, company pairing, scoped integrations and API-release UI | Not started |
+| 2 | Versioned API contract, company pairing, scoped integrations and API-release UI | Recovery 2A dedicated guard implemented/tested; pairing/UI/credentials still missing |
 | 3 | Durable inbox/outbox, identity, acknowledgements and reconciliation foundation | Not started |
 | 4 | Catalog/stock snapshots from Retail Genie to cloud/mobile | Not started |
 | 5 | Field orders into Retail Genie + authority-side validation/reservation | Not started |
@@ -116,3 +116,9 @@ Separate design, migration, test and approval gates; never silently overwrite fi
 Initial pilot targets ONE authoritative office deployment per company, possibly multiple warehouses.
 Multiple independently writable offline office replicas are NOT supported by assumption. Before
 extending to that topology, design per-branch authority, allocations and partition conflict rules.
+
+## Checkout recovery notice
+
+The current branch contained only Phase 1, not the later source described in earlier chat.
+Recovery 2A is recorded in RECOVERY_2A.md and a separate hash overlay. Later phases remain missing
+until code is recovered/rebuilt and tested; no historical chat count is accepted as current evidence.
