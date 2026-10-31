@@ -1,0 +1,6 @@
+{
+  "name": "Gyro Pulse",
+  "description": "Gyro Pulse client-side Logistics and Sync Dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

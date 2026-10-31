@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Move company · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">SUPER-ADMIN · GUARDED TRANSFER</p>
+    <h1>Move {{ company.name }}</h1>
+    <p class="muted">The company remains the same entity. Its scoped stores, memberships, operational records, and supported history move in one database transaction.</p>
+  </div>
+  <a class="button button-secondary" href="{{ url_for('tenancy_admin.containers') }}">Back to containers</a>
+</section>
+
+{% if errors %}
+  <section class="card transfer-alert transfer-alert-error" role="alert">
+    <h2>Transfer needs attention</h2>
+    <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  </section>
+{% endif %}
+
+<section class="admin-grid transfer-grid">
+  <section class="card">
+    <div class="card-heading"><p class="eyebrow">PRE-FLIGHT</p><h2>Choose destination</h2></div>
+    <form method="get" class="stacked-form">
+      <div class="field">
+        <label for="destination_container_id">Destination container</label>
+        <select class="control" id="destination_container_id" name="destination_container_id" required>
+          <option value="">Select a container</option>
+          {% for item in destination_containers %}
+            <option value="{{ item.id }}" {{ 'selected' if destination_container_id == item.id else '' }}>{{ item.name }} ({{ item.slug }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="destination_parent_company_id">Parent company (optional)</label>
+        <select class="control" id="destination_parent_company_id" name="destination_parent_company_id">
+          <option value="">No parent — keep this company at the top level</option>
+          {% for parent in destination_companies %}
+            {% if parent.id != company.id %}
+              <option value="{{ parent.id }}" {{ 'selected' if destination_parent_company_id == parent.id else '' }}>{{ parent.name }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+        <small class="muted">For example, place Company B alongside Company A by choosing A as its parent. The companies still have separate users, stores, and records.</small>
+      </div>
+      <button class="button button-secondary" type="submit">Run or refresh preflight</button>
+    </form>
+  </section>
+
+  <section class="card transfer-summary">
+    <div class="card-heading"><p class="eyebrow">SOURCE</p><h2>{{ source_container.name }}</h2><p class="muted">{{ source_container.slug }} · {{ source_container.id }}</p></div>
+    <dl>
+      <div><dt>Company</dt><dd>{{ company.name }} <small>({{ company.slug }})</small></dd></div>
+      <div><dt>Company ID</dt><dd><code>{{ company.id }}</code></dd></div>
+      <div><dt>Parent now</dt><dd>{{ company.parent.name if company.parent else 'None' }}</dd></div>
+      <div><dt>Source after transfer</dt><dd>{% if plan and plan.source_will_archive and plan.can_move %}Will be archived{% elif plan and plan.source_will_archive %}Would be archived after blockers are resolved{% else %}Remains active{% endif %}</dd></div>
+    </dl>
+  </section>
+</section>
+
+{% if plan %}
+  <section class="card transfer-preflight">
+    <div class="card-heading">
+      <p class="eyebrow">READ-ONLY IMPACT REPORT</p>
+      <h2>{{ 'Ready for explicit confirmation' if plan.can_move else 'Blocked until dependencies are resolved' }}</h2>
+      <p class="muted">{{ plan.destination_container_name }}{% if plan.destination_parent_company_name %} · under {{ plan.destination_parent_company_name }}{% endif %}. No data changes occur from running this preflight.</p>
+    </div>
+    {% if plan.blockers %}
+      <ul class="transfer-blockers">{% for blocker in plan.blockers %}<li>{{ blocker }}</li>{% endfor %}</ul>
+    {% endif %}
+    <div class="transfer-stats">
+      <div><strong>{{ plan.store_count }}</strong><span>stores</span></div>
+      <div><strong>{{ plan.member_count }}</strong><span>company memberships</span></div>
+      <div><strong>{{ plan.total_rows }}</strong><span>company &amp; scoped rows</span></div>
+    </div>
+    <h3>Destination data policies</h3>
+    <div class="table-wrap">
+      <table class="compact-table">
+        <thead><tr><th>Data domain</th><th>Sharing mode</th></tr></thead>
+        <tbody>{% for domain, mode in plan.destination_policy_modes|dictsort %}<tr><td>{{ domain|replace('_', ' ')|title }}</td><td>{{ mode|replace('_', ' ')|title }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% if 'container' in plan.destination_policy_modes.values() %}
+      <p class="warning-note"><strong>Container-wide sharing is enabled for at least one domain.</strong> Depending on that domain's policy, eligible Company B data may become visible to other companies in the destination. Narrow the policy first if that exposure is not approved.</p>
+    {% endif %}
+    {% if plan.row_counts %}
+      <div class="table-wrap">
+        <table class="compact-table">
+          <thead><tr><th>Table</th><th>Rows moving</th></tr></thead>
+          <tbody>{% for table_name, count in plan.row_counts|dictsort %}<tr><td><code>{{ table_name }}</code></td><td>{{ count }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">No additional company-scoped rows were found in the source container.</p>
+    {% endif %}
+  </section>
+
+  <section class="card transfer-confirmation">
+    <div class="card-heading"><p class="eyebrow">EXPLICIT CONFIRMATION</p><h2>Commit this transfer</h2></div>
+    <p>This operation keeps the company ID and supported history, moves records in place, revalidates foreign keys, revokes affected user sessions, and writes audit events. If a blocker appears or the transaction fails, all changes roll back.</p>
+    <p class="warning-note"><strong>Important:</strong> container-level subscriptions, invoices, backup settings, policies, and platform history stay with their original container. If the source becomes empty, it is archived rather than deleted. Reconcile billing and container policies separately.</p>
+    <form method="post" class="stacked-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="destination_container_id" value="{{ destination_container_id }}">
+      <input type="hidden" name="destination_parent_company_id" value="{{ destination_parent_company_id or '' }}">
+      <div class="field">
+        <label for="reason">Business reason (10–500 characters)</label>
+        <textarea class="control" id="reason" name="reason" rows="3" minlength="10" maxlength="500" required>{{ reason }}</textarea>
+      </div>
+      <div class="field">
+        <label for="confirmation">Type <code>{{ confirmation }}</code> to confirm</label>
+        <input class="control" id="confirmation" name="confirmation" autocomplete="off" required>
+      </div>
+      <label class="checkline transfer-policy-ack">
+        <input type="checkbox" name="policies_reviewed" value="yes" required>
+        <span>I reviewed the destination data policies and customer-approved sharing scope.</span>
+      </label>
+      <button class="button button-danger" type="submit" {{ 'disabled' if not plan.can_move else '' }}>Move company and preserve history</button>
+    </form>
+  </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Audit report · {{ audit.audit_number }}{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Inventory control · Audit report</p><h1>{{ audit.audit_number }}</h1><p class="muted">{{ audit.title }} · Store {{ audit.store_id }} · {{ audit.status|title }}</p></div><button class="button button-secondary" type="button" id="print-report">Print report</button></section>
+<section class="panel"><dl class="summary-grid"><div><dt>Auditor</dt><dd>{{ audit.auditor_id or '—' }}</dd></div><div><dt>Started</dt><dd>{{ audit.started_at or '—' }}</dd></div><div><dt>Completed</dt><dd>{{ audit.completed_at or '—' }}</dd></div></dl><div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>SKU</th><th>System quantity</th><th>Counted quantity</th><th>Variance</th></tr></thead><tbody>{% for item in audit['items'] %}{% set counted=item.final_audited_qty if item.final_audited_qty is not none else item.latest_count %}<tr><td>{{ item.product_name }}</td><td>{{ item.product_sku or '—' }}</td><td>{{ item.current_stock }}</td><td>{{ counted if counted is not none else 'Not counted' }}</td><td>{{ (counted - item.current_stock) if counted is not none else '—' }}</td></tr>{% else %}<tr><td colspan="5">No items in this audit.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}
+{% block scripts %}<script nonce="{{ csp_nonce }}">document.getElementById('print-report')?.addEventListener('click',()=>window.print());</script>{% endblock %}

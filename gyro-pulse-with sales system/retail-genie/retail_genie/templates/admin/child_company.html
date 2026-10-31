@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Add company · Retail Genie{% endblock %}
+{% block content %}
+<section class="narrow-page">
+  <div class="page-heading">
+    <p class="eyebrow">TENANT CONTAINER · {{ container.name }}</p>
+    <h1>Add a related company</h1>
+    <p class="muted">This company will be nested under {{ parent_company.name }} in the same tenant container. Domain-sharing policies remain controlled separately.</p>
+  </div>
+  <div class="card">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {% for field in [form.company_name, form.slug, form.timezone, form.store_name, form.store_code, form.admin_username, form.admin_password] %}
+        <div class="field">
+          {{ field.label }}
+          {{ field(class="control", autocomplete="off" if field.name != 'admin_password' else "new-password") }}
+          {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+      <button class="button button-primary button-full" type="submit">Add company and admin</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

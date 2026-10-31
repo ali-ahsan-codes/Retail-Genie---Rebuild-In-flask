@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Tenant containers · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">PLATFORM CONTROL</p>
+    <h1>Tenant containers</h1>
+    <p class="muted">A container is the SaaS isolation and billing boundary. Companies remain separate inside a shared container.</p>
+  </div>
+  <div class="inline-actions">
+    <a class="button button-secondary" href="{{ url_for('tenancy_admin.companies') }}">Companies</a>
+    <a class="button button-primary" href="{{ url_for('tenancy_admin.company_container_guide') }}">Open the guide</a>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-heading">
+    <p class="eyebrow">CONTAINER DIRECTORY</p>
+    <h2>{{ containers|length }} container{{ '' if containers|length == 1 else 's' }}</h2>
+    <p class="muted">Moving a company preserves its ID and company-scoped history. Empty source containers are archived, never automatically deleted.</p>
+  </div>
+  {% if containers %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Container</th><th>Status</th><th>Companies</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for container in containers %}
+            {% set container_companies = companies_by_container.get(container.id, []) %}
+            <tr>
+              <td>
+                <strong>{{ container.name }}</strong>
+                <small class="table-subtext">{{ container.slug }} · {{ container.timezone }} · {{ container.id }}</small>
+              </td>
+              <td><span class="pill {{ 'pill-success' if container.is_active else 'pill-muted' }}">{{ 'Active' if container.is_active else 'Archived' }}</span></td>
+              <td>
+                <strong>{{ company_counts.get(container.id, 0) }}</strong>
+                {% if container_companies %}
+                  <ul class="container-company-list">
+                    {% for company in container_companies %}
+                      <li>
+                        <span>{{ company.name }} <small>({{ company.slug }})</small></span>
+                        <span class="inline-actions">
+                          <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.stores', company_id=company.id) }}">Inventory &amp; stores</a>
+                          {% if container.is_active and company.is_active %}
+                            <a class="button button-small button-secondary" href="{{ url_for('tenancy_admin.move_company', company_id=company.id) }}">Move company</a>
+                          {% endif %}
+                        </span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </td>
+              <td>
+                {% if container.is_active and not container_companies %}
+                  <form method="post" action="{{ url_for('tenancy_admin.archive_empty_container', tenant_container_id=container.id) }}" onsubmit="return confirm('Archive this empty container? Its history will be retained.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-small button-secondary" type="submit">Archive empty container</button>
+                  </form>
+                {% elif not container.is_active %}
+                  <span class="muted">History retained</span>
+                {% else %}
+                  <span class="muted">Move companies before archiving</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No tenant containers were found.</p>
+  {% endif %}
+</section>
+{% endblock %}

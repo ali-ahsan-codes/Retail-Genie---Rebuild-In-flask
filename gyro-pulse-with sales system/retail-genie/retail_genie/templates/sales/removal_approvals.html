@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Removal approvals · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">{{ company.name if company else 'PLATFORM' }} · AUDIT WORKFLOW</p><h1>Item removal approvals</h1><p class="muted">Every removal or cancellation requires an authorized manager's review and is recorded in the audit trail.</p></div><span class="pill">Manager approval</span></section>
+{% if current_user.is_super_admin and not company %}
+  <section class="card company-picker-card"><h2>Select company</h2><div class="company-choice-list">{% for item in companies %}<a class="button button-secondary" href="{{ url_for('sales.removal_approvals_page', company_id=item.id) }}">{{ item.name }}</a>{% else %}<p class="empty-state">No active companies exist yet.</p>{% endfor %}</div></section>
+{% elif not company %}
+  <section class="card empty-state">This account is not associated with an active company.</section>
+{% else %}
+  <div id="removal-approvals-app" data-company-id="{{ company.id if current_user.is_super_admin else '' }}">
+    <input type="hidden" id="approval-csrf-token" value="{{ csrf_token() }}">
+    <section class="card approval-list-card">
+      <div class="panel-heading"><div><p class="eyebrow">PENDING REQUESTS</p><h2>Awaiting review</h2><p class="muted">Requests are scoped to {{ company.name }} and the stores you are authorized to manage.</p></div><button id="refresh-removals" class="button button-secondary" type="button">Refresh</button></div>
+      <label class="field approval-store-filter"><span>Filter by store</span><select id="approval-store-id" class="control"><option value="">All accessible stores</option>{% for store in stores %}<option value="{{ store.id }}">{{ store.code }} — {{ store.name }}</option>{% endfor %}</select></label>
+      <div id="removal-approval-message" class="approval-message" aria-live="polite"></div>
+      <div id="removal-approval-list" class="approval-list"><p class="empty-state">Loading requests…</p></div>
+    </section>
+  </div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/removal-approvals.js') }}" defer></script>{% endblock %}

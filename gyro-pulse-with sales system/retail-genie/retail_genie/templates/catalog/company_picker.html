@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Retail Genie{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">PLATFORM ADMINISTRATION · COMPANY SCOPE</p>
+    <h1>{{ title }}</h1>
+    <p class="muted">{{ description }}</p>
+  </div>
+</section>
+<section class="panel narrow-page">
+  {% if companies %}
+  <form method="get" action="{{ endpoint_url }}" class="form-grid">
+    <label for="company_id">Company
+      <select id="company_id" name="company_id" required>
+        <option value="">Choose a company</option>
+        {% for company in companies %}<option value="{{ company.id }}">{{ company.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="button button-primary" type="submit">Continue</button>
+  </form>
+  {% else %}
+  <p class="muted">There are no active companies in the selected tenant workspace.</p>
+  {% endif %}
+</section>
+{% endblock %}

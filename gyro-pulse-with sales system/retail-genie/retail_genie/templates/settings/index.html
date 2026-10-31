@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Settings · Retail Genie{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Phase 3 · Settings</p>
+    <h1>Company settings</h1>
+    <p class="muted">Tax rates, commission targets, global discounts, attendance rules, and document numbering for {{ company.name if company else "a company" }}.</p>
+  </div>
+</section>
+
+{% if not company %}
+  <section class="panel empty-state">
+    {% if current_user.is_super_admin and companies %}
+      <h2>Select a company</h2>
+      <p>Choose the company whose settings you want to review. The active tenant will follow your selection.</p>
+      <form method="get" class="catalog-filter-form">
+        <label for="settings-company">Company</label>
+        <select id="settings-company" name="company_id" class="control" required>
+          {% for item in companies %}<option value="{{ item.id }}">{{ item.name }} · {{ item.slug }}</option>{% endfor %}
+        </select>
+        <button class="button button-primary" type="submit">Open settings</button>
+      </form>
+    {% else %}
+      <h2>No company selected</h2>
+      <p>Sign in as a Main Admin and select a company, or use a company administrator account.</p>
+    {% endif %}
+  </section>
+{% else %}
+  <section class="panel">
+    <h2>Tax rates</h2>
+    <p class="muted">Enabled rates are offered at checkout and printed on receipts.</p>
+    <form id="tax-form" data-api="{{ url_for('settings.update_tax') }}">
+      <input type="hidden" name="company_id" value="{{ company.id }}">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Rate %</th><th>Enabled</th><th></th></tr></thead>
+        <tbody id="tax-rows"></tbody>
+      </table>
+      <button type="button" class="button button-secondary" id="tax-add">Add tax rate</button>
+      <button class="button button-primary" type="submit">Save tax rates</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Sales commission</h2>
+    <p class="muted">Commission accrues when a salesperson's interval sales meet the target.</p>
+    <form id="commission-form" data-api="{{ url_for('settings.update_commission') }}">
+      <input type="hidden" name="company_id" value="{{ company.id }}">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="commission-target">Sales target (OMR)</label>
+          <input id="commission-target" name="sales_target" class="form-control" type="number" min="0" step="0.001" value="{{ summary.commission.sales_target if summary.commission else '0' }}">
+        </div>
+        <div class="form-field">
+          <label for="commission-interval">Interval</label>
+          <select id="commission-interval" name="commission_interval" class="form-control">
+            {% set interval = summary.commission.commission_interval if summary.commission else 'monthly' %}
+            <option value="daily" {% if interval == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if interval == 'weekly' %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if interval == 'monthly' %}selected{% endif %}>Monthly</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="commission-percentage">Commission %</label>
+          <input id="commission-percentage" name="commission_percentage" class="form-control" type="number" min="0" max="100" step="0.00000001" value="{{ summary.commission.commission_percentage if summary.commission else '0' }}">
+        </div>
+        <div class="form-field form-checkbox-field">
+          <input id="commission-active" name="is_active" type="checkbox" value="true" {% if summary.commission and summary.commission.is_active %}checked{% endif %}>
+          <label for="commission-active">Active</label>
+        </div>
+      </div>
+      <button class="button button-primary" type="submit">Save commission settings</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Global discount</h2>
+    <p class="muted">Automatically applied to new orders while the date window is active. Current effective rate: <strong>{{ '%.2f' | format(effective_discount) }}%</strong></p>
+    <form id="discount-form" data-api="{{ url_for('settings.update_global_discount') }}">
+      <input type="hidden" name="company_id" value="{{ company.id }}">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="discount-percentage">Percentage</label>
+          <input id="discount-percentage" name="percentage" class="form-control" type="number" min="0" max="100" step="0.00000001" value="{{ summary.global_discount.percentage if summary.global_discount else '0' }}">
+        </div>
+        <div class="form-field">
+          <label for="discount-start">Start date</label>
+          <input id="discount-start" name="start_date" class="form-control" type="date" value="{{ summary.global_discount.start_date if summary.global_discount else '' }}">
+        </div>
+        <div class="form-field">
+          <label for="discount-end">End date</label>
+          <input id="discount-end" name="end_date" class="form-control" type="date" value="{{ summary.global_discount.end_date if summary.global_discount else '' }}">
+        </div>
+        <div class="form-field">
+          <label for="discount-description">Description</label>
+          <input id="discount-description" name="description" class="form-control" maxlength="500" value="{{ summary.global_discount.description if summary.global_discount else '' }}">
+        </div>
+        <div class="form-field form-checkbox-field">
+          <input id="discount-active" name="is_active" type="checkbox" value="true" {% if summary.global_discount and summary.global_discount.is_active %}checked{% endif %}>
+          <label for="discount-active">Active</label>
+        </div>
+      </div>
+      <button class="button button-primary" type="submit">Save global discount</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Attendance</h2>
+    <p class="muted">Mandatory punch-in time and the maximum number of concurrent breaks per staff member.</p>
+    <form id="attendance-form" data-api="{{ url_for('settings.update_attendance') }}">
+      <input type="hidden" name="company_id" value="{{ company.id }}">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="attendance-time">Mandatory attendance time</label>
+          <input id="attendance-time" name="mandatory_attendance_time" class="form-control" type="time" value="{{ summary.attendance.mandatory_attendance_time if summary.attendance else '' }}">
+        </div>
+        <div class="form-field">
+          <label for="attendance-breaks">Max concurrent breaks</label>
+          <input id="attendance-breaks" name="max_concurrent_breaks" class="form-control" type="number" min="1" max="10" step="1" value="{{ summary.attendance.max_concurrent_breaks if summary.attendance else '1' }}">
+        </div>
+        <div class="form-field form-checkbox-field">
+          <input id="attendance-mandatory" name="is_mandatory_attendance_active" type="checkbox" value="true" {% if summary.attendance and summary.attendance.is_mandatory_attendance_active %}checked{% endif %}>
+          <label for="attendance-mandatory">Mandatory attendance active</label>
+        </div>
+      </div>
+      <button class="button button-primary" type="submit">Save attendance settings</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Document numbering</h2>
+    <p class="muted">Invoice numbers are allocated per tender series when a bill settles. Order references are allocated at creation.</p>
+    <table class="data-table">
+      <thead><tr><th>Document</th><th>Prefix</th><th>Next number</th><th></th></tr></thead>
+      <tbody>
+        {% for row in series %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td>{{ row.prefix }}</td>
+            <td>{{ row.next_number }}</td>
+            <td>
+              <form class="series-form" data-id="{{ row.id }}" data-api="{{ url_for('settings.update_series_next_number', series_id=row.id) }}">
+                <input type="hidden" name="company_id" value="{{ company.id }}">
+                <input class="form-control" name="next_number" type="number" min="1" step="1" value="{{ row.next_number }}" required>
+                <button class="button button-secondary" type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <p class="muted">Business date today: {{ today.isoformat() }} ({{ company.timezone }}).</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if company %}
+<script nonce="{{ csp_nonce }}">
+(function () {
+  const taxSummary = {{ summary.taxes | tojson }};
+  const rows = document.getElementById('tax-rows');
+  function addRow(name, rate, enabled) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><input class="form-control" name="name" maxlength="120" value="' + (name || '') + '" required></td>' +
+      '<td><input class="form-control" name="rate" type="number" min="0" max="100" step="0.00000001" value="' + (rate || '') + '" required></td>' +
+      '<td><input type="checkbox" name="is_enabled" value="true"' + (enabled ? ' checked' : '') + '></td>' +
+      '<td><button type="button" class="button button-secondary tax-remove">Remove</button></td>';
+    tr.querySelector('.tax-remove').addEventListener('click', function () { tr.remove(); });
+    rows.appendChild(tr);
+  }
+  document.getElementById('tax-add').addEventListener('click', function () { addRow('', '', true); });
+  taxSummary.forEach(function (tax) { addRow(tax.name, tax.rate, tax.is_enabled); });
+
+  function wire(formId, onDone) {
+    const form = document.getElementById(formId);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const data = new FormData(form);
+      const body = {};
+      data.forEach(function (value, key) { body[key] = value; });
+      const response = await fetch(form.dataset.api, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) { alert((await response.json()).message || 'Save failed'); return; }
+      onDone(await response.json());
+    });
+  }
+  wire('tax-form', function () { location.reload(); });
+  wire('commission-form', function () { location.reload(); });
+  wire('discount-form', function () { location.reload(); });
+  wire('attendance-form', function () { location.reload(); });
+  document.querySelectorAll('.series-form').forEach(function (form) {
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const data = new FormData(form);
+      const response = await fetch(form.dataset.api, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({company_id: data.get('company_id'), next_number: data.get('next_number')}),
+      });
+      if (!response.ok) { alert((await response.json()).message || 'Update failed'); return; }
+      location.reload();
+    });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}
