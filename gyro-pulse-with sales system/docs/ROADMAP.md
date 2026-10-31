@@ -135,3 +135,17 @@ Durable inbox/outbox, retries, lease fencing, duplicate protection, scoped HTTPS
 an explicit one-shot native worker are implemented. See PHASE_3.md for current test evidence.
 Delivery is not business acceptance. Native catalog/order/mobile adapters and real Phase 7
 acceptance are not implemented/approved by this update.
+
+## Phase 4 implementation update
+
+Actual native company-owned products, exact prices and store on-hand balances can now be
+exported to the durable outbox and explicitly applied as read-only Gyro full-store projections.
+See PHASE_4.md for strict pilot limits, source-of-truth semantics, commands and current evidence.
+Native human-approved field orders, Android/offline and real acceptance remain next work.
+
+## Phase 5 implementation update
+
+Cloud-admin-vouched immutable order proposals, native business-ID deduplication, human review
+and atomic native POS posting are implemented as a bounded operator pilot. See PHASE_5.md.
+No mobile agent authorization, cloud decision feedback, actual MySQL concurrency or business
+acceptance is claimed. Android/offline and real acceptance remain the next phases.

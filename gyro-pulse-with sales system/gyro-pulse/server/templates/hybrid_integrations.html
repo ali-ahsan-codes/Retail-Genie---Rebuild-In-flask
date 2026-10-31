@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><title>Hybrid API Release</title></head><body>
-<h1>Office pairing · metadata permission only</h1><p>Retail remains stock/accounting authority. No catalog, orders or transport permission is granted.</p>
+<p><a href="/integrations/orders">Operator field-order proposals</a></p><h1>Office pairing · metadata permission only</h1><p>Retail remains stock/accounting authority. No catalog, orders or transport permission is granted.</p>
 {% if message %}<p>{{ message }}</p>{% endif %}
 <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="action" value="issue"><label>Stable office UUID <input name="office_id" value="{{ office.office_id if office else '' }}" required></label><button>Issue replacement 10-minute pairing grant</button></form>
 {% if bundle %}<p>One-time secret. Move privately; never put in a URL or public logs. Exchange rotates the old bearer. Lost exchange response requires a fresh grant.</p><textarea readonly rows="12" cols="100">{{ bundle }}</textarea>{% endif %}

@@ -147,6 +147,10 @@ def create_app():
     register_pairing(app)
     from sync_core import register as register_transport
     register_transport(app)
+    from catalog_bridge import register as register_catalog_bridge
+    register_catalog_bridge(app)
+    from field_orders import register as register_field_orders
+    register_field_orders(app)
     register_dedicated(app)
     return app
 

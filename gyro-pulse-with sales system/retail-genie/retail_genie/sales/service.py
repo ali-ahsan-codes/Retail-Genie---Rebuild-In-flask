@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -749,6 +750,7 @@ def create_order(
     cashier_notes: str | None = None,
     reminder_date: object | None = None,
     reminder_notes: str | None = None,
+    before_commit: Callable[[SalesOrder], None] | None = None,
 ) -> SalesOrder:
     company = _company_for_actor(actor, company_id)
     store = _require_assigned_store(actor, store_id, company.id)
@@ -1053,6 +1055,10 @@ def create_order(
         payload={"order_id": order.id, "order_number": order.order_number, "status": order.status, "total_amount": format(total, ".3f"), "balance": format(max(total - _paid_amount(order), ZERO), ".3f")},
     )
     event_ids.append(sales_event.id)
+    # Trusted internal integration hook; not exposed through HTTP payloads.
+    # Raising here aborts the same native sale/stock transaction.
+    if before_commit is not None:
+        before_commit(order)
     db.session.commit()
     _publish_inventory_events(event_ids)
     return order

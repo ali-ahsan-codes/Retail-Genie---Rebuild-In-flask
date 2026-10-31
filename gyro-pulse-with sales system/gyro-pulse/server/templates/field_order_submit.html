@@ -1,0 +1,7 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Field proposal</title></head><body>
+<h1>Cloud operator field-order pilot</h1><p>Only active cloud administrators can submit here. This is not mobile/device authorization. No stock or native sale is created until an authorized native human approves.</p>
+{% if message %}<p>{{ message }}</p>{% endif %}
+<h2>Current store snapshots</h2><ul>{% for h in heads %}<li>Store {{ h.store_id }} · snapshot {{ h.message_id }} · sequence {{ h.sequence }}</li>{% endfor %}</ul>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label>Strict immutable proposal JSON <textarea name="proposal" rows="16" cols="100" maxlength="14000" required></textarea></label><button>Submit immutable proposal</button></form>
+<p>Reuse the same order UUID only for an identical retry. Editing requires a new UUID; resubmission does not cancel an earlier pending order. Coordinate rejection in Retail first. No payment or cloud approval is implied.</p>
+</body></html>

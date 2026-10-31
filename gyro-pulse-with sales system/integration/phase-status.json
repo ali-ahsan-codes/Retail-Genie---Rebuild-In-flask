@@ -4,11 +4,11 @@
   "production_ready": false,
   "inventory_authority": "retail-genie",
   "field_hub": "gyro-pulse",
-  "next_phase": "Phase 4 native catalog snapshots; Phase 5 approval; Phase 6 mobile; Phase 7 real acceptance",
-  "note": "Transport implementation tested using SQLite, Flask HTTP clients and mocked native HTTPS. No catalog producer/application, native order posting, Android implementation or real MySQL/TLS/UAT acceptance yet. Receipt means received, not applied.",
-  "active_phase": 3,
+  "next_phase": "Phase 6 scoped Android/offline reconciliation; Phase 7 real MySQL/TLS/security/recovery and human UAT",
+  "note": "Phase 5 bounded operator pilot implemented. Native business-ID deduplication and approval/native-sale mapping share the native POS commit. No automatic posting, payments, device authorization, Android implementation or cloud decision feedback. Production acceptance remains blocked.",
+  "active_phase": 5,
   "recovery_in_progress": true,
-  "recovered_subphase": "2A + 2B + Phase 3 transport implementation",
+  "recovered_subphase": "2A + 2B + 3 transport + 4 bounded catalog + 5 native approval pilot",
   "previous_conversation_evidence_available": false,
   "pairing_implemented": true,
   "business_sync_enabled": false,
@@ -29,6 +29,30 @@
     "foundation_tests_passed": 12,
     "mysql_accepted": false,
     "deployed_tls_accepted": false,
+    "business_uat_accepted": false
+  },
+  "catalog_implemented": true,
+  "catalog_mode": "operator-exported full store snapshots, explicitly applied read-only projections",
+  "phase_4_verification": {
+    "gyro_tests_passed": 98,
+    "retail_tests_passed": 61,
+    "foundation_tests_passed": 12,
+    "offline_two_environment_native_projection_roundtrip": true,
+    "max_products_per_store_snapshot": 200,
+    "currency_mapping": "unspecified",
+    "mysql_accepted": false,
+    "android_accepted": false,
+    "business_uat_accepted": false
+  },
+  "field_orders_implemented": true,
+  "field_orders_mode": "cloud-admin-vouched immutable proposals; explicit native staging and human review; native POS posting in one transaction",
+  "phase_5_verification": {
+    "gyro_tests_passed": 106,
+    "retail_tests_passed": 79,
+    "foundation_tests_passed": 12,
+    "two_environment_actual_native_POS_roundtrip": true,
+    "mysql_accepted": false,
+    "android_accepted": false,
     "business_uat_accepted": false
   }
 }

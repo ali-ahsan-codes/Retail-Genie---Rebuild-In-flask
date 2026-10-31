@@ -471,6 +471,95 @@ def sync_ack():
         return jsonify(error="Invalid receipt or stale lease"), 409
 
 
+@bp.get("/api/v1/catalog/snapshot/<store_id>")
+def catalog_snapshot(store_id):
+    from catalog_bridge import CatalogHead, CatalogApplication, projection
+
+    context, error = transport_context()
+    if error:
+        return error
+    if not all(
+        inspect(db.engine).has_table(model.__tablename__)
+        for model in [CatalogHead, CatalogApplication]
+    ):
+        return jsonify(error="Operator must initialize catalog projection tables"), 503
+    result = projection(context, store_id)
+    if result is None:
+        return jsonify(error="No scoped store snapshot"), 404
+    return jsonify(result)
+
+
+@bp.route("/integrations/orders", methods=["GET", "POST"])
+def orders_manage():
+    from catalog_bridge import CatalogHead
+    from field_orders import SubmittedOrder, enqueue_proposal
+    from order_contract import OrderError
+    from sync_core import Transport, ProtocolError
+
+    if (
+        not current_user.is_authenticated
+        or not current_user.is_active
+        or current_user.role != "admin"
+    ):
+        return jsonify(error="Active cloud administrator required"), 403
+    if not all(
+        inspect(db.engine).has_table(model.__tablename__)
+        for model in [CatalogHead, SubmittedOrder]
+    ):
+        return jsonify(error="Operator must initialize catalog/order tables"), 503
+    slot = db.session.get(Office, 1)
+    if slot is None:
+        return jsonify(error="Pair native office first"), 409
+    context = Transport(
+        "gyro",
+        current_app.config["GYRO_COMPANY_ID"],
+        current_app.config["GYRO_INSTANCE_ID"],
+        slot.office_id,
+    )
+    if "hybrid_csrf" not in session:
+        session["hybrid_csrf"] = secrets.token_urlsafe(32)
+    message = None
+    if request.method == "POST":
+        supplied = request.form.get("csrf_token", "")
+        if not supplied.isascii() or not secrets.compare_digest(
+            supplied, session["hybrid_csrf"]
+        ):
+            return jsonify(error="CSRF validation failed"), 400
+        try:
+            payload = loads(request.form.get("proposal", ""))
+            row = enqueue_proposal(context, payload, current_user.id)
+            db.session.commit()
+            message = (
+                "Submitted "
+                + row.id
+                + ". Delivery only; native human approval is still required."
+            )
+        except (OrderError, ProtocolError, ValueError, IntegrityError):
+            db.session.rollback()
+            return (
+                jsonify(
+                    error="Proposal rejected. Check immutable business ID, current catalog, product, price and schema."
+                ),
+                409,
+            )
+    heads = (
+        CatalogHead.query.filter_by(
+            company_id=context.identity[0],
+            instance_id=context.identity[1],
+            office_id=context.identity[2],
+        )
+        .order_by(CatalogHead.store_id)
+        .limit(20)
+        .all()
+    )
+    return render_template(
+        "field_order_submit.html",
+        csrf=session["hybrid_csrf"],
+        heads=heads,
+        message=message,
+    )
+
+
 def register(app):
     app.register_blueprint(bp)
 
