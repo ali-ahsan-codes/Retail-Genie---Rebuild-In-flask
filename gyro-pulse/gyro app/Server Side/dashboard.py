@@ -30,6 +30,11 @@ def check_role():
 @dashboard_bp.route('/')
 @login_required
 def index():
+    return render_template("operations.html")
+
+@dashboard_bp.route("/legacy")
+@login_required
+def legacy_dashboard():
     role = current_user.role
     if role == 'admin':
         return render_template('admin_dashboard.html')
@@ -1014,7 +1019,13 @@ def order_label(order_id):
         return 'Order not found', 404
     if not order.package_barcode:
         return 'Order not packed yet', 400
-    return render_template('label.html', order=order)
+    if current_user.role != 'admin' and current_user.city_id != order.city_id:
+        return 'Forbidden', 403
+    import qrcode, base64
+    from io import BytesIO
+    image = BytesIO()
+    qrcode.make(order.package_qr).save(image, format='PNG')
+    return render_template('label.html', order=order, qr_image=base64.b64encode(image.getvalue()).decode())
 
 # ============================================================
 # Captain Performance Summary
