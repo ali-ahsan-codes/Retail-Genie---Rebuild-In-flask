@@ -1,6 +1,6 @@
 # Retail Genie + Gyro Pulse — isolated hybrid edition
 
-**Current phase: 1 (foundation only). Integration is NOT enabled.**
+**Recovery state: Phase 1 baseline + reimplemented 2A dedicated-company isolation. Full Phase 2 and later adapters are NOT recovered. Integration and production release remain disabled.**
 
 This directory contains clean, independently configurable copies of the approved source apps.
 Original `Retail Genie Final/` and `gyro-pulse/gyro app/` directories are unchanged.
@@ -45,3 +45,5 @@ in both apps**; use synthetic data only until the connected-mode ownership guard
 No claim of production readiness or Android build validation. Read BASELINE_REPORT.md.
 No production deployment, database initialization or business-data migration is performed
 by the baseline checks. Applying each later phase requires separate approval.
+
+See [current recovery evidence and setup](docs/RECOVERY_2A.md). Earlier conversation results do not verify this checkout.

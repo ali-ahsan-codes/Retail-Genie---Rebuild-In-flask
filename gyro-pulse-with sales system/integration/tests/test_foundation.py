@@ -13,6 +13,7 @@ class FoundationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.manifest = json.loads((ROOT / 'docs/SOURCE_MANIFEST.json').read_text())
+        cls.overlays = json.loads((ROOT / 'docs/RECOVERY_2A_MANIFEST.json').read_text())['files']
 
     def test_original_sources_unchanged(self):
         for item in self.manifest['files']:
@@ -22,7 +23,13 @@ class FoundationTests(unittest.TestCase):
     def test_copy_integrity(self):
         for item in self.manifest['files']:
             with self.subTest(path=item['copy']):
-                self.assertEqual(hashlib.sha256((ROOT / item['copy']).read_bytes()).hexdigest(), item['copy_sha256'])
+                self.assertEqual(hashlib.sha256((ROOT / item['copy']).read_bytes()).hexdigest(), self.overlays.get(item['copy'], {}).get('sha256', item['copy_sha256']))
+
+    def test_recovery_overlay_integrity(self):
+        for name,entry in self.overlays.items():
+            with self.subTest(path=name):
+                self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(),entry['sha256'])
+                if name.endswith('.py'):ast.parse((ROOT/name).read_text())
 
     def test_python_syntax(self):
         for item in self.manifest['files']:
