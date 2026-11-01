@@ -156,7 +156,8 @@ def manage():
             return jsonify(error="CSRF validation failed"), 400
         try:
             device_id = uid(request.form.get("device_id"))
-            now = datetime.utcnow()
+            now = datetime.utcnow().replace(microsecond=0)
+            # Whole seconds survive both SQLite and MySQL DATETIME(0) exactly.
             # Serialize enrollment, rotation and revocation against the persistent office slot.
             Office.query.filter_by(id=1).with_for_update().populate_existing().one()
             row = db.session.get(Device, device_id)

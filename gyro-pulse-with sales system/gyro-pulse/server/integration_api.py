@@ -131,7 +131,9 @@ def manage():
                     slot = Office(id=1, company_id=company, office_id=office_id)
                     db.session.add(slot)
                     db.session.flush()
-                now = datetime.utcnow()
+                # Grant bundle is built before commit: avoid MySQL DATETIME(0)
+                # rounding away fractional seconds and invalidating the exact expiry check.
+                now = datetime.utcnow().replace(microsecond=0)
                 Grant.query.filter_by(
                     company_id=company,
                     office_id=office_id,

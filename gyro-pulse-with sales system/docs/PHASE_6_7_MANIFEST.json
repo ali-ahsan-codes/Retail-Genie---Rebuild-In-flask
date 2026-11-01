@@ -28,10 +28,10 @@
       "sha256": "a3e51078106418f39c1673b449a26299eafbceb3cd3f7ae4c8394992f2231ae9"
     },
     "integration/mysql_acceptance.py": {
-      "sha256": "9432e93ac82303b8f4e315452f3a2725fd6fb51d4071954c2cb5eefa08e92aa1"
+      "sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
     },
     "../.github/workflows/hybrid-mysql-acceptance.yml": {
-      "sha256": "726e8ed8d00c1a323b5dc628680e839a6b05a05a6bc8dbc2be795c44e526d9ba"
+      "sha256": "3d462845330b4fbfaa78c73b5f4ad6ff46da6574b60be385aa80571d4490b9d6"
     },
     "gyro-pulse/server/app.py": {
       "sha256": "e8cfdcac98c1b75fb1153378e9a1d88f6f0e940803aa02fe1588fd58152efb5a",
@@ -46,7 +46,7 @@
       "previous_sha256": "e405aba4e7c57d9f3c433d328ca6476f9661cdd41ee9733ae2b506ea481e971d"
     },
     "gyro-pulse/server/field_mobile.py": {
-      "sha256": "1634597b2bde4dcfffb5b24b9401f1f217206c4340795b40a662f5d1955be40c"
+      "sha256": "84ce6d74f437151384eaea65e489b812a0e1204e6ee962cbc30f5c8ab5701067"
     },
     "gyro-pulse/server/mobile_crypto.py": {
       "sha256": "ad58e268b04f3ee97e7afdaffbe0da1ef3f323cdf3c8fb9deb31ab199b8b54ca"
@@ -128,6 +128,10 @@
     },
     "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
       "sha256": "907f75df6643f8c80d44f420bcb2b58b69f9fdefadf866c256e76ce2d9154c25"
+    },
+    "gyro-pulse/server/integration_api.py": {
+      "previous_sha256": "5434bcbda60e027774398025e356c52381145dd9a77e34bb738977ff6fba982b",
+      "sha256": "d8063029c39ab624d34c36b930df1918f450ce5d2ac9dbda3e803243e36c22e5"
     }
   }
 }

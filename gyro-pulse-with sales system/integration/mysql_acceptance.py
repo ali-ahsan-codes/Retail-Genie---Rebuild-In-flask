@@ -28,6 +28,201 @@ def configuration(side):
     return value, url
 
 
+def gyro_mobile_http(value):
+    """Actual MySQL-backed factory + Flask HTTP pairing/enrollment, not a SQLite fixture."""
+    import html, re
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import serialization, hashes
+
+    if (ROOT / "gyro-pulse/server/.env").exists():
+        raise RuntimeError("Refusing live cloud environment file")
+    os.environ.update(
+        APP_ENV="test",
+        SECRET_KEY="disposable-ci-only-" + "x" * 32,
+        DATABASE_URL=value,
+        GYRO_DEPLOYMENT_MODE="dedicated",
+        GYRO_COMPANY_ID=str(uuid4()),
+        GYRO_INSTANCE_ID=str(uuid4()),
+        GYRO_PUBLIC_BASE_URL="https://company.example.test",
+    )
+    os.environ.pop("CORS_ALLOWED_ORIGINS", None)
+    from app import create_app
+    from models import db, User
+    from field_mobile import Device
+    from mobile_crypto import b64, fingerprint
+    from catalog_bridge import apply_message
+    from sync_core import Transport, Outbox
+
+    app = create_app()
+    app.config["TESTING"] = True
+
+    def bundle(response):
+        assert response.status_code == 200
+        return json.loads(
+            html.unescape(
+                re.search(
+                    r"<textarea[^>]*>(.*?)</textarea>", response.text, re.S
+                ).group(1)
+            )
+        )
+
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        assert (
+            app.test_cli_runner()
+            .invoke(args=["bind-company", "--confirm-empty-database"])
+            .exit_code
+            == 0
+        )
+        user = User(
+            username="acceptance-admin",
+            password_hash="unused",
+            role="admin",
+            is_active=True,
+        )
+        db.session.add(user)
+        db.session.commit()
+        client = app.test_client()
+        with client.session_transaction() as session:
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
+        assert client.get("/integrations").status_code == 200
+        with client.session_transaction() as session:
+            csrf = session["hybrid_csrf"]
+        office = str(uuid4())
+        grant = bundle(
+            client.post(
+                "/integrations",
+                data=dict(action="issue", office_id=office, csrf_token=csrf),
+            )
+        )
+        assert client.post("/api/v1/pairing/exchange", json=grant).status_code == 200
+        key = ec.generate_private_key(ec.SECP256R1())
+        pub = b64(
+            key.public_key().public_bytes(
+                serialization.Encoding.DER,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+        )
+        device_id = str(uuid4())
+        grant = bundle(
+            client.post(
+                "/integrations/devices",
+                data=dict(
+                    action="issue",
+                    device_id=device_id,
+                    owner_id=user.id,
+                    key_fingerprint=fingerprint(pub),
+                    csrf_token=csrf,
+                ),
+            )
+        )
+        proof = b64(
+            key.sign(
+                (
+                    "retail.hybrid.device.enroll.v1|"
+                    + grant["grant_id"]
+                    + "|"
+                    + grant["pairing_code"]
+                ).encode(),
+                ec.ECDSA(hashes.SHA256()),
+            )
+        )
+        data = dict(grant=grant, public_key=pub, proof=proof)
+        response = client.post("/api/v1/devices/enroll", json=data)
+        assert response.status_code == 200
+        token = response.json
+        assert client.post("/api/v1/devices/enroll", json=data).status_code == 401
+        identity = (token["company_id"], token["instance_id"], token["office_id"])
+        context = Transport("gyro", *identity)
+        store_id = str(uuid4())
+        product_id = str(uuid4())
+        catalog = Transport("retail", *identity).envelope(
+            "catalog.snapshot",
+            dict(
+                schema_version=1,
+                mode="full",
+                sequence=1,
+                store=dict(id=store_id, name="Acceptance", code="CI"),
+                captured_at=datetime.utcnow().isoformat() + "Z",
+                currency=None,
+                items=[
+                    dict(
+                        id=product_id,
+                        sku="SYN",
+                        barcode=None,
+                        name="Synthetic",
+                        category=None,
+                        active=True,
+                        price="1.250",
+                        low_stock_price=None,
+                        on_hand=20,
+                        low_stock_threshold=3,
+                    )
+                ],
+            ),
+        )
+        context.accept(catalog)
+        db.session.commit()
+        apply_message(context, catalog["message_id"])
+        db.session.commit()
+        order = dict(
+            schema_version=1,
+            order_id=str(uuid4()),
+            store_id=store_id,
+            catalog_message_id=catalog["message_id"],
+            customer_phone="+96800000000",
+            customer_name="Synthetic",
+            items=[dict(product_id=product_id, quantity=2, unit_price="1.250")],
+        )
+        raw = json.dumps(
+            dict(
+                schema_version=1,
+                company_id=identity[0],
+                instance_id=identity[1],
+                office_id=identity[2],
+                device_id=device_id,
+                order=order,
+            )
+        ).encode()
+        wire = dict(
+            body=b64(raw), signature=b64(key.sign(raw, ec.ECDSA(hashes.SHA256())))
+        )
+        headers = {
+            "Authorization": "Bearer " + token["access_token"],
+            "X-Company-ID": identity[0],
+            "X-Instance-ID": identity[1],
+            "X-Office-ID": identity[2],
+            "X-Device-ID": device_id,
+        }
+        first = client.post("/api/v1/device/orders", json=wire, headers=headers)
+        assert first.status_code == 200
+        assert (
+            client.post("/api/v1/device/orders", json=wire, headers=headers).json
+            == first.json
+        )
+        assert Outbox.query.count() == 1
+        assert (
+            client.post(
+                "/integrations/devices",
+                data=dict(action="revoke", device_id=device_id, csrf_token=csrf),
+            ).status_code
+            == 200
+        )
+        assert (
+            client.post("/api/v1/device/orders", json=wire, headers=headers).status_code
+            == 401
+        )
+    return dict(
+        mysql_office_pairing=True,
+        mysql_device_enrollment=True,
+        mysql_grant_replay_rejected=True,
+        mysql_signed_order_dedup=True,
+        mysql_device_revoke=True,
+    )
+
+
 def run(side):
     value, url = configuration(side)
     from flask import Flask
@@ -125,7 +320,9 @@ def run(side):
         assert (
             len(observed) == 200 and len({row["message_id"] for row in observed}) == 50
         )
+        mobile = gyro_mobile_http(value)
         return dict(
+            **mobile,
             real_mysql_concurrency=True,
             inbox_rows=51,
             concurrent_claims=1,
