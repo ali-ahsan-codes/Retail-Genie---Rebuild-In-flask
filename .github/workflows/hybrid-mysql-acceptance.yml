@@ -1,0 +1,92 @@
+name: Hybrid disposable MySQL acceptance
+on:
+  push:
+    branches: ['arena/**']
+    paths: ['gyro-pulse-with sales system/**', '.github/workflows/hybrid-mysql-acceptance.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mysql:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: disposable_ci_only
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: hybrid_acceptance_gyro
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -pdisposable_ci_only"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Isolated interpreters and actual MySQL client tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y mysql-client
+          python -m venv /tmp/gyro-venv
+          python -m venv /tmp/retail-venv
+          /tmp/gyro-venv/bin/pip install -r 'gyro-pulse-with sales system/gyro-pulse/server/requirements.txt'
+          /tmp/retail-venv/bin/pip install -r 'gyro-pulse-with sales system/retail-genie/requirements.txt'
+          MYSQL_PWD=disposable_ci_only mysql -h 127.0.0.1 -u root -e 'CREATE DATABASE hybrid_acceptance_retail CHARACTER SET utf8mb4;'
+      - name: Actual concurrent inbox/lease claims
+        env:
+          HYBRID_ALLOW_DISPOSABLE_MYSQL: '1'
+          HYBRID_MYSQL_TEST_URL: mysql+pymysql://root:disposable_ci_only@127.0.0.1:3306/hybrid_acceptance_gyro
+          ACCEPTANCE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: /tmp/gyro-venv/bin/python 'gyro-pulse-with sales system/integration/mysql_acceptance.py' gyro --output /tmp/mysql-gyro.json
+      - name: Actual concurrent native approvals and logical backup/restore
+        if: always()
+        env:
+          HYBRID_ALLOW_DISPOSABLE_MYSQL: '1'
+          HYBRID_MYSQL_TEST_URL: mysql+pymysql://root:disposable_ci_only@127.0.0.1:3306/hybrid_acceptance_retail
+          ACCEPTANCE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: /tmp/retail-venv/bin/python 'gyro-pulse-with sales system/integration/mysql_acceptance.py' retail --output /tmp/mysql-retail.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hybrid-mysql-observed-results
+          path: /tmp/mysql-*.json
+          if-no-files-found: warn
+  android-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Compile isolated connected-mode candidate
+        working-directory: gyro-pulse-with sales system/gyro-pulse/android
+        run: gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      - name: Enable hosted emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          working-directory: gyro-pulse-with sales system/gyro-pulse/android
+          script: gradle :app:connectedDebugAndroidTest --stacktrace
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hybrid-android-observed-results
+          path: |
+            gyro-pulse-with sales system/gyro-pulse/android/app/build/outputs/androidTest-results/**
+            gyro-pulse-with sales system/gyro-pulse/android/app/build/reports/androidTests/**
+            gyro-pulse-with sales system/gyro-pulse/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn

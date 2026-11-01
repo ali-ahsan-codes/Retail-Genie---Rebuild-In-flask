@@ -14,6 +14,7 @@ def cloud_request(base, path, headers, payload=None):
     # Caller supplies one of the literal paths below, never a bundle/user-controlled URL.
     if path not in {
         "/api/v1/integration/status",
+        "/api/v1/devices/registry",
         "/api/v1/sync/messages",
         "/api/v1/sync/pull",
         "/api/v1/sync/ack",

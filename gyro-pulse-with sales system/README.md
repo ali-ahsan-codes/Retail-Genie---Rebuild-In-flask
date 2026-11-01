@@ -65,3 +65,8 @@ Phase 5 adds the [immutable proposal and native human-review pilot](docs/PHASE_5
 Cloud submission is administrator-only (not mobile agent auth); native approval uses the
 real POS writer and atomically records the business-ID mapping. No payments, automatic
 posting or Android support are implied. Phases 6–7 remain incomplete/unaccepted.
+
+Phase 6 now has a scoped-device/encrypted Android **candidate** and authenticated encrypted
+LAN/file ingress; Phase 7 gains disposable MySQL/restore/Android CI and a fail-closed evidence
+inventory. See [current implementation, setup and explicit acceptance blockers](docs/PHASE_6_7.md).
+Source/server test passes do not establish Android/device/TLS/business acceptance.

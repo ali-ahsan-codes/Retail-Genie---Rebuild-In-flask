@@ -4,9 +4,9 @@
   "production_ready": false,
   "inventory_authority": "retail-genie",
   "field_hub": "gyro-pulse",
-  "next_phase": "Phase 6 scoped Android/offline reconciliation; Phase 7 real MySQL/TLS/security/recovery and human UAT",
-  "note": "Phase 5 bounded operator pilot implemented. Native business-ID deduplication and approval/native-sale mapping share the native POS commit. No automatic posting, payments, device authorization, Android implementation or cloud decision feedback. Production acceptance remains blocked.",
-  "active_phase": 5,
+  "next_phase": "Observe real MySQL/restore and Android CI; physical-device, deployed TLS/security, full scenario and human UAT remain blocked",
+  "note": "Phase 6 candidate implemented; server tests are not Android acceptance. Offline registry freshness creates an explicit revocation window (15 minutes default, operator selectable up to 24 hours). No automatic approval or release. Phase 7 harness/gate cannot self-authorize production.",
+  "active_phase": 6,
   "recovery_in_progress": true,
   "recovered_subphase": "2A + 2B + 3 transport + 4 bounded catalog + 5 native approval pilot",
   "previous_conversation_evidence_available": false,
@@ -54,5 +54,21 @@
     "mysql_accepted": false,
     "android_accepted": false,
     "business_uat_accepted": false
+  },
+  "mobile_implementation": "candidate: scoped devices, encrypted Android state and signed/encrypted cloud-LAN-file reconciliation",
+  "phase_7_tooling": true,
+  "phase_6_7_verification": {
+    "gyro_tests_passed": 121,
+    "retail_tests_passed": 90,
+    "foundation_and_gate_tests_passed": 15,
+    "android_build_accepted": false,
+    "android_emulator_accepted": false,
+    "android_physical_device_accepted": false,
+    "real_mysql_accepted": false,
+    "backup_restore_accepted": false,
+    "deployed_tls_security_accepted": false,
+    "full_offline_scenario_accepted": false,
+    "human_uat_accepted": false,
+    "ci_status": "pending_observation"
   }
 }

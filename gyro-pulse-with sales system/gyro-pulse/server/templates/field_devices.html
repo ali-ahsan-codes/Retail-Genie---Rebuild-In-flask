@@ -1,0 +1,5 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Device enrollment</title></head><body>
+<h1>Dedicated device enrollment</h1><p>Compare the device UUID and signing-key fingerprint out of band. Grants last 10 minutes; device bearers last 30 days. Revoke disables cloud access immediately; office offline caches have an explicit freshness window.</p>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label>Device UUID <input name="device_id" required></label><label>Active cloud owner user ID <input name="owner_id"></label><label>P-256 signing-key SHA-256 fingerprint <input name="key_fingerprint" maxlength="64"></label><button name="action" value="issue">Issue enrollment / rotate bearer</button><button name="action" value="revoke">Revoke device and pending grants</button></form>
+{% if bundle %}<p>One-time private enrollment JSON; never put it in a URL/log.</p><textarea readonly rows="14" cols="100">{{ bundle }}</textarea>{% endif %}
+</body></html>
