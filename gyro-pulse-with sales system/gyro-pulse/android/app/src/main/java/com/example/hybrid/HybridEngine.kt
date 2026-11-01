@@ -191,12 +191,60 @@ class HybridEngine(context: Context, namespace: String = "v1") {
         var count = 0
         for (id in orders.keys().asSequence().toList()) {
             val entry = orders.getJSONObject(id)
-            if (entry.getString("state") == "cloud_received") continue
+            if (entry.getString("state") in setOf("native_approved", "native_rejected")) continue
             val result = http(profile.getString("base_url"), "/api/v1/device/orders", entry.getJSONObject("wire"), profile)
             check(result.getInt("schema_version") == 1 && result.getString("order_id") == id && result.getString("payload_sha256") == entry.getString("hash") && result.getString("status") == "cloud_received")
-            entry.put("state", "cloud_received"); state.put("orders", orders); write(state); count++
+            val decision = result.getString("native_approval")
+            check(decision in setOf("unknown", "approved", "rejected"))
+            if (decision == "approved") uuid(result.getString("native_order_id"))
+            if (decision == "rejected") check(result.isNull("native_order_id"))
+            entry.put("receipt", result)
+            entry.put("state", if (decision == "unknown") "cloud_received" else "native_$decision")
+            state.put("orders", orders); write(state); count++
         }
-        "$count cloud receipts verified; all orders retained. Native approval status is unknown."
+        "$count scoped cloud receipts verified; all orders retained. Terminal decisions may now be archived explicitly."
+    }
+    private fun archiveData(bytes: ByteArray): JSONObject {
+        check(bytes.size in 29..2097152 && bytes[0] == 2.toByte())
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, keys.getKey(aesAlias, null) as SecretKey, GCMParameterSpec(128, bytes.copyOfRange(1, 13)))
+        cipher.updateAAD(aad + ":terminal-archive".toByteArray(Charsets.UTF_8))
+        val data = JSONObject(String(cipher.doFinal(bytes.copyOfRange(13, bytes.size)), Charsets.UTF_8))
+        val state = read(); val profile = state.getJSONObject("profile")
+        check(data.getInt("schema_version") == 1)
+        for (field in listOf("company_id", "instance_id", "office_id", "device_id")) check(data.getString(field) == profile.getString(field))
+        val orders = data.getJSONObject("orders"); check(orders.length() in 1..100)
+        for (id in orders.keys()) {
+            uuid(id); val entry = orders.getJSONObject(id); val receipt = entry.getJSONObject("receipt")
+            check(entry.getString("state") in setOf("native_approved", "native_rejected"))
+            check(receipt.getString("order_id") == id && receipt.getString("payload_sha256") == entry.getString("hash"))
+            check(entry.getString("state") == "native_" + receipt.getString("native_approval"))
+        }
+        return data
+    }
+    fun prepareArchive(): ByteArray = synchronized(lock) {
+        val state = read(); val profile = state.getJSONObject("profile"); val selected = JSONObject()
+        val orders = state.optJSONObject("orders") ?: JSONObject()
+        for (id in orders.keys()) if (orders.getJSONObject(id).getString("state") in setOf("native_approved", "native_rejected")) selected.put(id, orders.getJSONObject(id))
+        check(selected.length() > 0) { "Only cloud-confirmed terminal decisions can be archived" }
+        val data = JSONObject().put("schema_version", 1).put("orders", selected)
+        for (field in listOf("company_id", "instance_id", "office_id", "device_id")) data.put(field, profile.getString(field))
+        val raw = data.toString().toByteArray(Charsets.UTF_8); check(raw.size <= 2000000)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.ENCRYPT_MODE, keys.getKey(aesAlias, null) as SecretKey)
+        cipher.updateAAD(aad + ":terminal-archive".toByteArray(Charsets.UTF_8))
+        byteArrayOf(2) + cipher.iv + cipher.doFinal(raw)
+    }
+    fun confirmArchive(bytes: ByteArray): Int = synchronized(lock) {
+        // Caller must first write, close, re-read and byte-verify the SAF destination.
+        val archived = archiveData(bytes).getJSONObject("orders"); val state = read(); val orders = state.getJSONObject("orders")
+        for (id in archived.keys()) if (orders.has(id)) check(canonical(orders.getJSONObject(id)) == canonical(archived.getJSONObject(id)))
+        var count = 0
+        for (id in archived.keys().asSequence().toList()) if (orders.has(id)) { orders.remove(id); count++ }
+        state.put("orders", orders); write(state); count
+    }
+    fun inspectArchive(bytes: ByteArray): String = synchronized(lock) {
+        val orders = archiveData(bytes).getJSONObject("orders")
+        "Verified device-bound encrypted archive: " + orders.keys().asSequence().toList().sorted().joinToString(", ") { it + ":" + orders.getJSONObject(it).getString("state") }
     }
     fun officeParcel(orderId: String): String = synchronized(lock) {
         val state = read(); val profile = state.getJSONObject("profile")
@@ -225,7 +273,7 @@ class HybridEngine(context: Context, namespace: String = "v1") {
     }
     fun summary(): String = synchronized(lock) {
         val state = read(); val orders = state.optJSONObject("orders") ?: JSONObject()
-        "Device: ${state.getString("device_id")}\nSigning fingerprint: ${fingerprint()}\nEnrolled: ${state.has("profile")}\nRetained orders: ${orders.length()}"
+        "Device: ${state.getString("device_id")}\nSigning fingerprint: ${fingerprint()}\nEnrolled: ${state.has("profile")}\nRetained orders: ${orders.length()}\n" + orders.keys().asSequence().toList().sorted().joinToString("\n") { it + ": " + orders.getJSONObject(it).getString("state") }
     }
     private fun validateOrder(order: JSONObject) {
         check(order.keys().asSequence().toSet() == setOf("schema_version", "order_id", "store_id", "catalog_message_id", "customer_phone", "customer_name", "items"))

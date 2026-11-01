@@ -6,6 +6,8 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 
 EXPECTED = {
+    "archiveOnlyTerminalAfterVerifiedExportKeepsPending",
+    "corruptArchiveCannotRemoveOrders",
     "encryptedIdentitySurvivesRecreation",
     "modifiedCiphertextFailsClosed",
     "immutableQueueEncryptedAcrossRestart",

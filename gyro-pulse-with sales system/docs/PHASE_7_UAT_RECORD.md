@@ -38,14 +38,20 @@ Observed automated CI evidence is recorded separately in PHASE_7_CI_OBSERVATIONS
 - [ ] Native authorized human approves once; unauthorized approver cannot approve. Verify one sale/movement.
 - [ ] Restore WAN and retry cloud/file/LAN delivery in different orders, including concurrent retries.
 - [ ] Advance the cloud catalog before retrying an offline-first, already-office-approved order.
-      Current cloud submission requires a current catalog; it may reject this retained order as stale.
-      There is NO implemented native-decision return/repair contract. Do not mutate its UUID/content,
-      delete it, or create a replacement sale to force reconciliation. Record and resolve this
-      operational gap before claiming complete offline reconciliation/production acceptance.
+      Run `field-device-decisions-push --company-id <UUID>` from the native office after
+      WAN recovery, then mobile cloud reconcile. Confirm the exact terminal UUID/content hash
+      is recognized even with an advanced catalog, with no additional proposal/sale/stock movement.
+      Unknown/not-yet-decided stale proposals must still fail closed. Never alter UUID/content
+      to force a receipt. Office-token scope/owner/binding and immutable-decision conflicts must fail.
 - [ ] Compare proposal/business UUID, immutable content hash, native order mapping, inventory movement
       and audit counts. Mobile cloud receipt must never be represented as native approval.
-- [ ] Demonstrate a reviewed retained-order/recovery procedure; the candidate's 100-order retention
-      cap and lack of native-decision feedback are not a full production lifecycle.
+- [ ] Confirm mobile shows the verified native approval/rejection, not just cloud receipt.
+- [ ] Archive terminal orders to `.rga`; verify SAF write/close/read-back before freeing capacity.
+      Pending/cloud-only orders cannot be archived/deleted. Cancel, corrupt or interrupt export:
+      queue must survive. Verify archive read-only on the same device, including after re-enrollment.
+      Archive is device-bound and excludes credentials; it is NOT private-key/device-loss backup.
+- [ ] Business/security reviewers approve the 100-live-order cap, archive custodian, durable destination,
+      native record retention, key-loss recovery and remaining UX limitations.
 
 ## Deployed security, load and real restore
 

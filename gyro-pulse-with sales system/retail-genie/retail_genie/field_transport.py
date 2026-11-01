@@ -15,6 +15,7 @@ def cloud_request(base, path, headers, payload=None):
     if path not in {
         "/api/v1/integration/status",
         "/api/v1/devices/registry",
+        "/api/v1/devices/decisions",
         "/api/v1/sync/messages",
         "/api/v1/sync/pull",
         "/api/v1/sync/ack",

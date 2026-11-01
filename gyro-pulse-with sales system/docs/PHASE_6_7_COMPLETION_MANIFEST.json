@@ -1,0 +1,81 @@
+{
+  "phase": "6-7-code-closure-candidate",
+  "production_accepted": false,
+  "files": {
+    "../.github/workflows/hybrid-mysql-acceptance.yml": {
+      "sha256": "2f422e6a8d39e623e7362e55537d4a91d44e8c02329d81ffae9e7c248346f6c1",
+      "previous_sha256": "1e3378f8be70214889a25e6f447d760140d9d95d6e1f5811e9266760270f6caa"
+    },
+    "README.md": {
+      "sha256": "0c66303cd75c02516ac0efa9572296c5ff57cbf61f4ed3aba1d5ab89a6f67113",
+      "previous_sha256": "af7b2b7bf0a96ed99727a052000849f1dc592b7b3a351d79cb68a52ad32aff82"
+    },
+    "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
+      "sha256": "d95c867536c9f357b866393921b5fda67209ad0a28fc1de6777a1703a1995b8c",
+      "previous_sha256": "36e11b673a458a124642544ddc570c44e92cf3e294800170383479a3404d69fa"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridActivity.kt": {
+      "sha256": "ff83e4bfaf905eeccf09e1b74fa52a17e1a75e4aa6fbc62edff2ccd373c30f72",
+      "previous_sha256": "f7acf395f78fd2f37f7703586c29600d0cdd975f03ca76a7c095bde5d8ebe247"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridEngine.kt": {
+      "sha256": "9a6bb71cb95097300e9c6b420d4c16b3953dfb4a31b4dc19b3d2f6580473ad1c",
+      "previous_sha256": "1910bec91f42a2a602c3a171debd3534323cb2f97f68872a60b3c586e6a4365e"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "d7954b771f51c07b1ec339ab9ebd6e361a8559c3ab74735541908dbfdc5fddde",
+      "previous_sha256": "02a35a610e1b4145fb437922f298a0d77459cd1e53082c4b0da397682fec598f"
+    },
+    "gyro-pulse/server/field_mobile.py": {
+      "sha256": "5194a14542ec4c805c5433bf6d05e852a4992101f8f625a7fca03723921fa13c",
+      "previous_sha256": "834ec2ca3bf3fa8512152f268deb1f7050f54f8a2d002f269a3b996c201944d2"
+    },
+    "integration/android_acceptance.py": {
+      "sha256": "3dbda25e83881b12860501fc3957ffca6bc1ce5bfbc0e4f01ff7d919fbde2637",
+      "previous_sha256": "8228b812ab2634e8a67fc83982ada59549bf18ac169d1990ec12bf5736d79e3a"
+    },
+    "integration/mysql_acceptance.py": {
+      "sha256": "4562027a4594a1a54b50ba2cbf698707bd98bde9c8bd1770278f6cc0e8007302",
+      "previous_sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
+    },
+    "integration/phase-status.json": {
+      "sha256": "c4def9c0ef2a0d5d67711e82b162654e7b321e862af844561ce974674b3d4044",
+      "previous_sha256": "69e1a9c409aa981dd50b1235b9640aee9c122fc1c55a5e06a58994a1f8a4eb2b"
+    },
+    "integration/tests/test_android_evidence.py": {
+      "sha256": "4fddd333ed88be4231e1f154f52f4482a6f54e1ba68456ff5285258cd775b1c9",
+      "previous_sha256": "6c12f114bd67fd7605473e2504b55a0841c36732f498e5d7a0a45f52ac8eb80b"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "3e16b514fda316509e9e536dd3364e87b220c69a32afdf736594d3c147f8a923",
+      "previous_sha256": "88850dd74d8d9c4e7e2aa71ba2e40095f623690170271827b0434f2532250b84"
+    },
+    "retail-genie/retail_genie/field_mobile.py": {
+      "sha256": "7c65e199de022c82d5ce293d5aabab58a5574b1299d01ad474f1061d0f487e6e",
+      "previous_sha256": "9f7b91703520b222d66cf2d7b8af63f64628e55294cc0db5863b3287f128a549"
+    },
+    "retail-genie/retail_genie/field_transport.py": {
+      "sha256": "7707421dbe89cb3951062ff08aa2e3801029d6fbd0237b952872e47790d67f85",
+      "previous_sha256": "41f43d13c1d6e2093dace459870cd23c004f8a01d70515ac4f581efddf145ab4"
+    },
+    "docs/PHASE_6_7_COMPLETION.md": {
+      "sha256": "16a565e012b25dac1104c695fa3d33dc1451b6d55cb8a58e5d4ab37b9596e626"
+    },
+    "gyro-pulse/server/tests/test_native_decisions.py": {
+      "sha256": "5d5476739f098358c909df4826967492f4cf67f0602213c2ec49ae29c9110593"
+    },
+    "retail-genie/tests/test_decision_delivery.py": {
+      "sha256": "07cdfc844bf6090fdb1cb0d891e6f5acdeb388fadfb66ce896a29d143b7b5c6d"
+    },
+    "docs/PHASE_6_7_COMPLETION_CI.json": {
+      "sha256": "858877e7ae80b8023443ea50cc2b5bebdf38a65ad4789fe3a9fcf483958fd4dd"
+    },
+    "docs/PHASE_6_7_COMPLETION_EVIDENCE.json": {
+      "sha256": "6974e9604d21eee879b2c71187e6d7efbfd6a8c8f97bf8beeee9f825aaad9d28"
+    },
+    "docs/PHASE_7_UAT_RECORD.md": {
+      "previous_sha256": "20c803b7788dee9e748d603c09b70f3f9b53c876f2a00b190c4f5aada510dda7",
+      "sha256": "e93c29e13f089ac9296c325b38cb0181f894bb951a32fa555358e0ac18437da1"
+    }
+  }
+}
