@@ -1,0 +1,28 @@
+# Dedicated cloud host only. Never run a shared multi-company hub with this pilot.
+# GYRO_HOST is a real operator-owned DNS hostname (no scheme/path).
+{$GYRO_HOST} {
+    tls {
+        protocols tls1.2 tls1.3
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        X-Frame-Options "SAMEORIGIN"
+        Cache-Control "no-store"
+        -Server
+    }
+    @mobile path /api/v1/devices/enroll /api/v1/device/orders /api/v1/devices/decisions
+    handle @mobile {
+        request_body {
+            max_size 64KB
+        }
+        reverse_proxy 127.0.0.1:5200
+    }
+    handle {
+        request_body {
+            max_size 25MB
+        }
+        reverse_proxy 127.0.0.1:5200
+    }
+}

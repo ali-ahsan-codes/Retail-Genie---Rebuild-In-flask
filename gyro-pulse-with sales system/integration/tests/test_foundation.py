@@ -20,7 +20,8 @@ class FoundationTests(unittest.TestCase):
         cls.phase5_overlays = json.loads((ROOT / 'docs/PHASE_5_MANIFEST.json').read_text())['files']
         cls.phase6_overlays = json.loads((ROOT / 'docs/PHASE_6_7_MANIFEST.json').read_text())['files']
         cls.completion_overlays = json.loads((ROOT / 'docs/PHASE_6_7_COMPLETION_MANIFEST.json').read_text())['files']
-        cls.overlays = {**cls.recovery_overlays, **cls.phase2b_overlays, **cls.phase3_overlays, **cls.phase4_overlays, **cls.phase5_overlays, **cls.phase6_overlays, **cls.completion_overlays}
+        cls.field_overlays = json.loads((ROOT / 'docs/PHASE_7_FIELD_MANIFEST.json').read_text())['files']
+        cls.overlays = {**cls.recovery_overlays, **cls.phase2b_overlays, **cls.phase3_overlays, **cls.phase4_overlays, **cls.phase5_overlays, **cls.phase6_overlays, **cls.completion_overlays, **cls.field_overlays}
 
     def test_original_sources_unchanged(self):
         for item in self.manifest['files']:
@@ -35,7 +36,7 @@ class FoundationTests(unittest.TestCase):
     def test_recovery_overlay_integrity(self):
         # Verify the entire immutable evidence chain, not rewritten earlier manifests.
         previous={item['copy']:item['copy_sha256'] for item in self.manifest['files']}
-        for index,layer in enumerate([self.recovery_overlays,self.phase2b_overlays,self.phase3_overlays,self.phase4_overlays,self.phase5_overlays,self.phase6_overlays,self.completion_overlays]):
+        for index,layer in enumerate([self.recovery_overlays,self.phase2b_overlays,self.phase3_overlays,self.phase4_overlays,self.phase5_overlays,self.phase6_overlays,self.completion_overlays,self.field_overlays]):
             for name,entry in layer.items():
                 if index>0:self.assertEqual(entry.get('previous_sha256'),previous.get(name))
                 elif 'baseline_sha256' in entry:self.assertEqual(entry['baseline_sha256'],previous.get(name))

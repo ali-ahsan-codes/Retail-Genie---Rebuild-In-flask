@@ -1,0 +1,46 @@
+{
+  "phase": "7-field-readiness-tooling-only",
+  "production_accepted": false,
+  "files": {
+    "../.github/workflows/hybrid-mysql-acceptance.yml": {
+      "sha256": "8bd315074d67b53637b8fe6ad89e7d951860156b78519772f65d30efa1aef505",
+      "previous_sha256": "2f422e6a8d39e623e7362e55537d4a91d44e8c02329d81ffae9e7c248346f6c1"
+    },
+    "../.gitignore": {
+      "sha256": "e5d90aa1c81040fc23df617fba2c742bddb6901857838a7ee08440a6a9392723"
+    },
+    "README.md": {
+      "sha256": "8dab7418389a3a4d437d96c135996de43983f008d5de20ae19b9e1bb9b1da8a1",
+      "previous_sha256": "0c66303cd75c02516ac0efa9572296c5ff57cbf61f4ed3aba1d5ab89a6f67113"
+    },
+    "integration/phase-status.json": {
+      "sha256": "d1885f6c08fb4213d08f7dd3dd53af70bc6bcac934f4b47a0ae8cf21a2b34c7a",
+      "previous_sha256": "c4def9c0ef2a0d5d67711e82b162654e7b321e862af844561ce974674b3d4044"
+    },
+    "integration/physical_acceptance.py": {
+      "sha256": "586b0445f1d30ed8b256caa49db52654eb9761d81fa8fba9efe37b174ebe83f5"
+    },
+    "integration/site_preflight.py": {
+      "sha256": "f9aa87a66a4f4e877c42e72d76815629f184b944ef11bccd94e60a82eb1a1952"
+    },
+    "integration/tests/test_external_preflight.py": {
+      "sha256": "342cf9fb222bf25cee2813c33bcbb0687f598ea36ae1c4bfb45febdb93d80e45"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "b14ddac40bcdb24825ee47173caa968ea780e50848b8476fd9e3e5b8ab44354d",
+      "previous_sha256": "3e16b514fda316509e9e536dd3364e87b220c69a32afdf736594d3c147f8a923"
+    },
+    "deploy/cloud.Caddyfile": {
+      "sha256": "05ddf760799fe1c92a5428a3ca1eb25ae877653310aa042c0ac3a33178db9b81"
+    },
+    "deploy/office.Caddyfile": {
+      "sha256": "f1d3021f68783d5a980752c538470a8dded89da9efe2776dc44db7529244530b"
+    },
+    "docs/PHASE_7_FIELD_EXECUTION.md": {
+      "sha256": "a3df3894f367d9f9e1edc368c9f1023d5bd561421e92defe7ea1f324217ce503"
+    },
+    "docs/PHASE_7_FIELD_CI.json": {
+      "sha256": "e02d6c64848b6be773731cfe2027b02dd60e7e1385c24b583505765bf740fcb5"
+    }
+  }
+}

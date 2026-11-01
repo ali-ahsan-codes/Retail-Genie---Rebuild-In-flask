@@ -1,0 +1,30 @@
+# Authoritative office only, installed on the OFFICE host, not on the cloud machine.
+# OFFICE_HOST must match FIELD_OFFICE_GATEWAY_URL. Provision a SYSTEM-TRUSTED certificate
+# separately (e.g. reviewed public-CA DNS validation for LAN DNS). Never use `tls internal`
+# or a trust-all client workaround. Private key files stay in protected secret storage.
+{$OFFICE_HOST} {
+    tls {$OFFICE_TLS_CERT_FILE} {$OFFICE_TLS_KEY_FILE} {
+        protocols tls1.2 tls1.3
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        X-Frame-Options "SAMEORIGIN"
+        Cache-Control "no-store"
+        -Server
+    }
+    @mobile path /api/v1/field-device/orders
+    handle @mobile {
+        request_body {
+            max_size 64KB
+        }
+        reverse_proxy 127.0.0.1:5100
+    }
+    handle {
+        request_body {
+            max_size 25MB
+        }
+        reverse_proxy 127.0.0.1:5100
+    }
+}

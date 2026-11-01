@@ -1,3 +1,6 @@
+> **Field acceptance tooling:** [safe phone/site execution and recovery runbook](docs/PHASE_7_FIELD_EXECUTION.md).
+> Operator-owned phone/hosting/site/UAT are still unavailable; prepared tools do not constitute acceptance.
+
 > **Current follow-up:** [Phase 6–7 code closure and fresh verification](docs/PHASE_6_7_COMPLETION.md).
 > Native decision feedback, stale-catalog terminal reconciliation and verified terminal archiving
 > are now implemented. Historical Phase 6 CI below does not verify these new changes.
