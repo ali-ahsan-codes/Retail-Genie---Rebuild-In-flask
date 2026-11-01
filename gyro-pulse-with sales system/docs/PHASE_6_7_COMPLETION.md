@@ -43,8 +43,23 @@ New negative/positive cases cover offline-first stale-head recovery, approved/re
 unauthorized publishers, scope/device/hash/state conflicts, native audit linkage and outage retry.
 Android instrumentation expanded from four to six cases, adding terminal-only encrypted archive,
 credential exclusion, pending retention, authenticated tamper rejection and idempotent cleanup.
-Fresh MySQL/Android CI is REQUIRED; old four-case CI evidence does not verify these changes.
-Current remote execution status will be recorded separately after observation.
+Fresh CI **passed** for code `e42e9f99f102a9bfb8e47849231ec03e7afd3505`:
+[run 41289201599](https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41289201599).
+Both server suites passed in CI; MySQL8.4 additionally verified first-time offline stale-head
+reconciliation using a trusted terminal fact, and actual native terminal-record/audit linkage.
+Existing real concurrency/load and SQL backup/restore checks also passed.
+**Six API35 emulator tests executed, zero failed/skipped**, including actual encrypted archive
+credential exclusion, AEAD tamper rejection, pending retention and cleanup idempotency.
+APK SHA256: `c918af9bce61ed37bee09fd0d2f9d6e0b28aec01b3c3d510f7ca53be43e2d61f`.
+Reports/debug APK are CI artifacts, not Git files. Provenance is in
+`PHASE_6_7_COMPLETION_CI.json`. Old four-case evidence remains historical and is not overwritten.
+
+Inspect the current fail-closed inventory from repository root:
+```sh
+python 'gyro-pulse-with sales system/integration/release_gate.py' --evidence 'gyro-pulse-with sales system/docs/PHASE_6_7_COMPLETION_EVIDENCE.json'
+```
+It deliberately exits nonzero: real physical-device, deployed security, full site outage/recovery
+and human UAT evidence are still missing. This is not blanket Phase 7 or production approval.
 
 ## Still requires real acceptance, not fabricated completion
 

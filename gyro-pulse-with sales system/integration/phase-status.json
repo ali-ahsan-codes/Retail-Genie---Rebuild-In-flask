@@ -4,8 +4,8 @@
   "production_ready": false,
   "inventory_authority": "retail-genie",
   "field_hub": "gyro-pulse",
-  "next_phase": "Physical-device and deployed TLS/security/load review, full outage/stale-catalog/native-decision recovery, site/key restore and human UAT remain blocked",
-  "note": "230 local tests plus 4 real API35 emulator tests and bounded actual MySQL/SQL restore evidence; NOT completion of all Phase 6/7 requirements. Offline registry default 15 minutes, explicitly selectable up to 24 hours. Physical device, deployed TLS/security/business load, full outage and native-decision/stale-catalog recovery, site/key recovery and human UAT remain gated. Production/Phase 8 not authorized.",
+  "next_phase": "Actual physical-device, deployed TLS/security/business load, full site/key outage/restore and human UAT acceptance; code closure candidate verified in fresh CI",
+  "note": "Current follow-up: 240 local tests + six real API35 emulator cases, real MySQL reconciliation/concurrency/load and SQL restore passed. Historical baseline fields below are explicitly historical. Native decision feedback, stale terminal recovery and terminal archive lifecycle now implemented. No physical device/site/human acceptance fabricated; production and Phase 8 remain gated.",
   "active_phase": 6,
   "recovery_in_progress": true,
   "recovered_subphase": "2A + 2B + 3 transport + 4 bounded catalog + 5 native approval pilot",
@@ -78,7 +78,8 @@
     "production_load_sla_accepted": false,
     "native_decision_feedback_implemented": false,
     "full_retained_order_lifecycle_implemented": false,
-    "site_key_restore_accepted": false
+    "site_key_restore_accepted": false,
+    "historical_baseline_only": true
   },
   "phase_6_completion_candidate": {
     "native_decision_feedback_implemented": true,
@@ -86,10 +87,18 @@
     "verified_terminal_archive_implemented": true,
     "local_tests": 240,
     "android_cases_expected": 6,
-    "remote_ci": "pending",
+    "remote_ci": "passed bounded checks",
     "physical_device": false,
     "deployed_tls_security": false,
     "human_uat": false,
-    "production_accepted": false
+    "production_accepted": false,
+    "ci_run_url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41289201599",
+    "tested_code_commit": "e42e9f99f102a9bfb8e47849231ec03e7afd3505",
+    "android_cases_passed": 6,
+    "code_gaps_closed": [
+      "native decision feedback",
+      "offline-first terminal stale-catalog reconciliation",
+      "verified terminal archive and capacity cleanup"
+    ]
   }
 }

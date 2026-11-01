@@ -1,3 +1,8 @@
+> **Current follow-up:** [Phase 6–7 code closure and fresh verification](docs/PHASE_6_7_COMPLETION.md).
+> Native decision feedback, stale-catalog terminal reconciliation and verified terminal archiving
+> are now implemented. Historical Phase 6 CI below does not verify these new changes.
+> Physical phone, deployed site/security/recovery and real human UAT still require actual results.
+
 # Retail Genie + Gyro Pulse — isolated hybrid edition
 
 **Recovery state: Phase 1 baseline + reimplemented 2A dedicated-company isolation. Full Phase 2 and later adapters are NOT recovered. Integration and production release remain disabled.**

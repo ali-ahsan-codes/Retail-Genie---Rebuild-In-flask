@@ -7,7 +7,7 @@
       "previous_sha256": "1e3378f8be70214889a25e6f447d760140d9d95d6e1f5811e9266760270f6caa"
     },
     "README.md": {
-      "sha256": "269dc22c6db75f0bc82dc3b83b833bae972027ba3e4ec61c3b100b39e93b2687",
+      "sha256": "0c66303cd75c02516ac0efa9572296c5ff57cbf61f4ed3aba1d5ab89a6f67113",
       "previous_sha256": "af7b2b7bf0a96ed99727a052000849f1dc592b7b3a351d79cb68a52ad32aff82"
     },
     "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
@@ -39,7 +39,7 @@
       "previous_sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
     },
     "integration/phase-status.json": {
-      "sha256": "d06e884aaed1d2f58bd537f51b3338a76643b563f64038875b62c83b09549d9e",
+      "sha256": "416c0d3515739fa576828327d5dbbe75f79cb6644c6ed11867982e475cc9c86a",
       "previous_sha256": "69e1a9c409aa981dd50b1235b9640aee9c122fc1c55a5e06a58994a1f8a4eb2b"
     },
     "integration/tests/test_android_evidence.py": {
@@ -59,13 +59,23 @@
       "previous_sha256": "41f43d13c1d6e2093dace459870cd23c004f8a01d70515ac4f581efddf145ab4"
     },
     "docs/PHASE_6_7_COMPLETION.md": {
-      "sha256": "5ab43c88b80dd488f39eb1ffd3fdfe7ab56201ca9342b277c1fd33aaa7786979"
+      "sha256": "184305b31f0067186ca57dce381786f1f06a71a43820e6bcb38cc8b100dcfb26"
     },
     "gyro-pulse/server/tests/test_native_decisions.py": {
       "sha256": "5d5476739f098358c909df4826967492f4cf67f0602213c2ec49ae29c9110593"
     },
     "retail-genie/tests/test_decision_delivery.py": {
       "sha256": "07cdfc844bf6090fdb1cb0d891e6f5acdeb388fadfb66ce896a29d143b7b5c6d"
+    },
+    "docs/PHASE_6_7_COMPLETION_CI.json": {
+      "sha256": "858877e7ae80b8023443ea50cc2b5bebdf38a65ad4789fe3a9fcf483958fd4dd"
+    },
+    "docs/PHASE_6_7_COMPLETION_EVIDENCE.json": {
+      "sha256": "6974e9604d21eee879b2c71187e6d7efbfd6a8c8f97bf8beeee9f825aaad9d28"
+    },
+    "docs/PHASE_7_UAT_RECORD.md": {
+      "previous_sha256": "20c803b7788dee9e748d603c09b70f3f9b53c876f2a00b190c4f5aada510dda7",
+      "sha256": "e93c29e13f089ac9296c325b38cb0181f894bb951a32fa555358e0ac18437da1"
     }
   }
 }

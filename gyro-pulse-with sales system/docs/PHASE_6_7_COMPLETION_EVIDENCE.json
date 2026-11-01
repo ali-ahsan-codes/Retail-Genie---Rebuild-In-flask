@@ -1,0 +1,20 @@
+{
+  "real_mysql_concurrency": {
+    "passed": true,
+    "artifact": "gyro-pulse-with sales system/docs/PHASE_6_7_COMPLETION_CI.json",
+    "sha256": "858877e7ae80b8023443ea50cc2b5bebdf38a65ad4789fe3a9fcf483958fd4dd",
+    "scope": "Bounded CI only; independent site/device/human review still required"
+  },
+  "backup_restore": {
+    "passed": true,
+    "artifact": "gyro-pulse-with sales system/docs/PHASE_6_7_COMPLETION_CI.json",
+    "sha256": "858877e7ae80b8023443ea50cc2b5bebdf38a65ad4789fe3a9fcf483958fd4dd",
+    "scope": "Bounded CI only; independent site/device/human review still required"
+  },
+  "android_emulator": {
+    "passed": true,
+    "artifact": "gyro-pulse-with sales system/docs/PHASE_6_7_COMPLETION_CI.json",
+    "sha256": "858877e7ae80b8023443ea50cc2b5bebdf38a65ad4789fe3a9fcf483958fd4dd",
+    "scope": "Bounded CI only; independent site/device/human review still required"
+  }
+}
