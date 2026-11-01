@@ -99,6 +99,13 @@
       "native decision feedback",
       "offline-first terminal stale-catalog reconciliation",
       "verified terminal archive and capacity cleanup"
-    ]
+    ],
+    "user_confirmed_acceptance_availability": {
+      "dedicated_physical_phone_available": false,
+      "deployed_https_pilot_available": false,
+      "business_operator_available_now": false,
+      "business_uat_deferred": true,
+      "acceptance_waived": false
+    }
   }
 }

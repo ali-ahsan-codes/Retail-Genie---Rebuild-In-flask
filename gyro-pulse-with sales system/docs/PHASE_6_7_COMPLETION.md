@@ -73,3 +73,10 @@ Physical tests MUST use a dedicated empty test phone. Gradle connected tests may
 package during cleanup: never run them on a phone containing real pilot data, and never clear/reset
 app data to recover capacity. A successful emulator run is not physical-device or human acceptance.
 Production and Phase 8 remain blocked until real evidence and independent sign-off exist.
+
+## User-confirmed acceptance availability
+
+The user confirmed: no physical test phone currently available; no deployed HTTPS pilot currently
+available; business operator/UAT available later. These are real acceptance blockers, NOT waived
+requirements. No physical-device, deployed-site, full field-outage or business UAT pass is claimed.
+The implemented candidate and automated results are saved/pushed; production/Phase 8 stay blocked.

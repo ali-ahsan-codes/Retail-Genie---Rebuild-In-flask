@@ -39,7 +39,7 @@
       "previous_sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
     },
     "integration/phase-status.json": {
-      "sha256": "416c0d3515739fa576828327d5dbbe75f79cb6644c6ed11867982e475cc9c86a",
+      "sha256": "c4def9c0ef2a0d5d67711e82b162654e7b321e862af844561ce974674b3d4044",
       "previous_sha256": "69e1a9c409aa981dd50b1235b9640aee9c122fc1c55a5e06a58994a1f8a4eb2b"
     },
     "integration/tests/test_android_evidence.py": {
@@ -59,7 +59,7 @@
       "previous_sha256": "41f43d13c1d6e2093dace459870cd23c004f8a01d70515ac4f581efddf145ab4"
     },
     "docs/PHASE_6_7_COMPLETION.md": {
-      "sha256": "184305b31f0067186ca57dce381786f1f06a71a43820e6bcb38cc8b100dcfb26"
+      "sha256": "16a565e012b25dac1104c695fa3d33dc1451b6d55cb8a58e5d4ab37b9596e626"
     },
     "gyro-pulse/server/tests/test_native_decisions.py": {
       "sha256": "5d5476739f098358c909df4826967492f4cf67f0602213c2ec49ae29c9110593"
