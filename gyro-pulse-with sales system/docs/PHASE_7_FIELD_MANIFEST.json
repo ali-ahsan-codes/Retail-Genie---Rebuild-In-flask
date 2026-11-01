@@ -14,7 +14,7 @@
       "previous_sha256": "0c66303cd75c02516ac0efa9572296c5ff57cbf61f4ed3aba1d5ab89a6f67113"
     },
     "integration/phase-status.json": {
-      "sha256": "51190e8208f923ba9b5f6d40557234caed5616951d4e3f5ea75862c0eecaf858",
+      "sha256": "d1885f6c08fb4213d08f7dd3dd53af70bc6bcac934f4b47a0ae8cf21a2b34c7a",
       "previous_sha256": "c4def9c0ef2a0d5d67711e82b162654e7b321e862af844561ce974674b3d4044"
     },
     "integration/physical_acceptance.py": {
@@ -37,7 +37,10 @@
       "sha256": "f1d3021f68783d5a980752c538470a8dded89da9efe2776dc44db7529244530b"
     },
     "docs/PHASE_7_FIELD_EXECUTION.md": {
-      "sha256": "842f0fc1c3c3cb4efdb904b14abf502de106fcc413f2e4fa14ece1fbd5d39cba"
+      "sha256": "a3df3894f367d9f9e1edc368c9f1023d5bd561421e92defe7ea1f324217ce503"
+    },
+    "docs/PHASE_7_FIELD_CI.json": {
+      "sha256": "e02d6c64848b6be773731cfe2027b02dd60e7e1385c24b583505765bf740fcb5"
     }
   }
 }

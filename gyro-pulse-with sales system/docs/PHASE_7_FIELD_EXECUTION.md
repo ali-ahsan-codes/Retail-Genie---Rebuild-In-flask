@@ -101,3 +101,14 @@ Only the real business operator/security/backup custodian can sign their witness
 The release inventory remains fail-closed and does not self-authorize production. Phase 8 remains
 blocked. Required next resources: hosting/DNS/secret provisioning, dedicated test phone/test machine,
 and an available operator—never passwords/tokens/private keys in this conversation.
+
+## 5. Observed tooling CI (not field acceptance)
+
+[Run 41293856860](https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41293856860)
+on `abe5e8f4321d01410eac045aee52b1f1329ca9ef` completed successfully.
+All three jobs passed: MySQL/backend regressions with dependency-free safety checks, API35 Android
+emulator (six executed, zero failed/skipped), and both Caddy templates validated with throwaway
+fixture certificates. Machine-readable job metadata and observed acceptance annotations are in
+`PHASE_7_FIELD_CI.json`. These checks do not test a real public certificate/domain, a physical phone,
+a deployed office/cloud installation, representative business load, full field recovery, or human UAT.
+Existing false acceptance gates remain unchanged.
