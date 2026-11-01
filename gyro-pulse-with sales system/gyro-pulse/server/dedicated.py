@@ -101,7 +101,7 @@ def register(app):
         if not matches:
             return jsonify(error='Dedicated binding absent/mismatched; operator recovery required', production_ready=False), 503
         # Until explicit reviewed adapters exist, NONE of the legacy business endpoints are safe.
-        if request.endpoint not in {'auth.login', 'api.login', 'auth.logout', 'hybrid_status', 'integration.manage', 'integration.exchange', 'integration.status', 'integration.sync_receive', 'integration.sync_pull', 'integration.sync_ack', 'integration.catalog_snapshot', 'integration.orders_manage'} and request.endpoint is not None:
+        if request.endpoint not in {'auth.login', 'api.login', 'auth.logout', 'hybrid_status', 'integration.manage', 'integration.exchange', 'integration.status', 'integration.sync_receive', 'integration.sync_pull', 'integration.sync_ack', 'integration.catalog_snapshot', 'integration.orders_manage', 'mobile.manage', 'mobile.enroll', 'mobile.catalog', 'mobile.submit', 'mobile.registry'} and request.endpoint is not None:
             return jsonify(error='Legacy business access disabled in connected mode', authority='retail-genie'), 409
         return None
 

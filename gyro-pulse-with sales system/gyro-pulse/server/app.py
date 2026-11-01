@@ -151,6 +151,8 @@ def create_app():
     register_catalog_bridge(app)
     from field_orders import register as register_field_orders
     register_field_orders(app)
+    from field_mobile import register as register_field_mobile
+    register_field_mobile(app)
     register_dedicated(app)
     return app
 

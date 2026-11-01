@@ -1,0 +1,156 @@
+{
+  "phase": "6-candidate-7-acceptance-tooling",
+  "production_accepted": false,
+  "files": {
+    "README.md": {
+      "sha256": "af7b2b7bf0a96ed99727a052000849f1dc592b7b3a351d79cb68a52ad32aff82",
+      "previous_sha256": "6d2d1b4b3c9ff1f16483208560e9fc6dea02cb2ab5a760189677ead5a385d3c2"
+    },
+    "docs/ROADMAP.md": {
+      "sha256": "9384ad6acc9140c0a7bbcc96dcf1a826feb8bdeb1764b61246fb53d9bb640748",
+      "previous_sha256": "d4b260ec6b960bfa4e9497610f4928ff2391d5ad6d98ab9a6420bcf020fda194"
+    },
+    "docs/PHASE_6_7.md": {
+      "sha256": "ee85473ebb23b4940d5ba42e993b81d08afd60bc85ec739e5b1ac7eb0f2e0fb5"
+    },
+    "integration/phase-status.json": {
+      "sha256": "69e1a9c409aa981dd50b1235b9640aee9c122fc1c55a5e06a58994a1f8a4eb2b",
+      "previous_sha256": "30faee30bcdf98d57d13a88f847a5d696b38f82fe7ab14f97abd84bd2220c84a"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "88850dd74d8d9c4e7e2aa71ba2e40095f623690170271827b0434f2532250b84",
+      "previous_sha256": "366ee6493bda2ae540e7529072c3edfe247198e5a6f2e8582b4058a49198348a"
+    },
+    "integration/tests/test_release_gate.py": {
+      "sha256": "0295dd3571c85e8a6ee9a85f622f7cac8bb415ceb5ca5996ba53f21c5abe41b2"
+    },
+    "integration/release_gate.py": {
+      "sha256": "a3e51078106418f39c1673b449a26299eafbceb3cd3f7ae4c8394992f2231ae9"
+    },
+    "integration/mysql_acceptance.py": {
+      "sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
+    },
+    "../.github/workflows/hybrid-mysql-acceptance.yml": {
+      "sha256": "1e3378f8be70214889a25e6f447d760140d9d95d6e1f5811e9266760270f6caa"
+    },
+    "gyro-pulse/server/app.py": {
+      "sha256": "e8cfdcac98c1b75fb1153378e9a1d88f6f0e940803aa02fe1588fd58152efb5a",
+      "previous_sha256": "15f060d7979d3469aad800056169448cf1b86f299f86ebbfc86c990ac5d50691"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "02a35a610e1b4145fb437922f298a0d77459cd1e53082c4b0da397682fec598f",
+      "previous_sha256": "52b5cb648d703395e8ebfaf3e3d74538ff47df8f438b2e66a14219d2b60e02d3"
+    },
+    "gyro-pulse/server/.env.example": {
+      "sha256": "8ebc8a803088cdd017906046b16d7ea0c2f85396e9ce39073a7f938754a236e2",
+      "previous_sha256": "e405aba4e7c57d9f3c433d328ca6476f9661cdd41ee9733ae2b506ea481e971d"
+    },
+    "gyro-pulse/server/field_mobile.py": {
+      "sha256": "834ec2ca3bf3fa8512152f268deb1f7050f54f8a2d002f269a3b996c201944d2"
+    },
+    "gyro-pulse/server/mobile_crypto.py": {
+      "sha256": "a225942dc83d4b1d40af393f2c040f178887db10a066e0bb737df55eed2c5f03"
+    },
+    "gyro-pulse/server/sync_core.py": {
+      "sha256": "41e0e7cb74e5923d48320f39dc2b67d2f5a8114017e5ab0cb91416bbfbba7ab2",
+      "previous_sha256": "c2a04ac6bc69bc88b3c9635b9b358ebfad3235e30654b559aa96bc9f8a71fbf1"
+    },
+    "gyro-pulse/server/templates/hybrid_integrations.html": {
+      "sha256": "ce70dbbf98b2cdac2c6de23e3dcaa1fc1ed858eafe40eccbc9fc3f5b23cf1c5b",
+      "previous_sha256": "20934ce46f1385654564a8b8e8885e61343b238c9dfcdf7f6a8df8cc20c55ec7"
+    },
+    "gyro-pulse/server/templates/field_devices.html": {
+      "sha256": "0a2991550c876325519c42ea47f7197d873bb85560095d8c027e11a20f3ed27f"
+    },
+    "gyro-pulse/server/tests/test_field_mobile.py": {
+      "sha256": "ce908b8cf2c7e3dc3ed88cbcf4bf17554c272ab6b7e052b3eb56fd99a9a13215"
+    },
+    "retail-genie/.env.example": {
+      "sha256": "2cb95835e8426cdb54090c647d2400b358fd5d8ece6af33c7d7819ca6d848d5a",
+      "previous_sha256": "f139ce22eea570c1d2436bf0828356da6407c31f822c0545b424b3e20025fffc"
+    },
+    "retail-genie/retail_genie/__init__.py": {
+      "sha256": "a5cf379f1ee1dc3e7a1dfca160304efe2081732f13fc2d674f86d4a0553abd3f",
+      "previous_sha256": "6aa0f06e562c2e8bfffab7a07e86e47a91b3a7ae859dfde91b8ded735d8ebcb4"
+    },
+    "retail-genie/retail_genie/field_transport.py": {
+      "sha256": "41f43d13c1d6e2093dace459870cd23c004f8a01d70515ac4f581efddf145ab4",
+      "previous_sha256": "46d70f3e66b3d7b78322e13debf57222fbd3d54c5fff01990590571bbbc02efc"
+    },
+    "retail-genie/retail_genie/field_mobile.py": {
+      "sha256": "9f7b91703520b222d66cf2d7b8af63f64628e55294cc0db5863b3287f128a549"
+    },
+    "retail-genie/retail_genie/mobile_crypto.py": {
+      "sha256": "2a7218f6ae586fbac2a2da16294a437e789713476000a6154e2949a8a05a6d38"
+    },
+    "retail-genie/retail_genie/field_audit.py": {
+      "sha256": "d22c1bbd94cf99c865421ddda9a977165274c4ababdd5604658d602ced5464c2"
+    },
+    "retail-genie/retail_genie/sync_core.py": {
+      "sha256": "5ae80443eeed54866c0cb00c614b543de9f31b27681143491c798062271c883d",
+      "previous_sha256": "8c55862ec41d028cd05bfa18bd54fce99997fae6fef0f8d55eaf509a87006208"
+    },
+    "retail-genie/tests/test_field_audit.py": {
+      "sha256": "b86ee83f195e70b2bb36661cd77f3870ab5052560944aa44435f4d3a06f2b495"
+    },
+    "retail-genie/tests/test_office_mobile.py": {
+      "sha256": "18e881f374572495832fb0e22b43b199da2232cf021999ff4428174b103c3bf8"
+    },
+    "gyro-pulse/android/build.gradle.kts": {
+      "sha256": "3248a3919cf4c20f6c2859618c670ffef1c3e9c9413babaf1447e7c8dcb1f280",
+      "previous_sha256": "2d3c2b9e7e2cf6a7eede8c67899769ff7d5c1810d29797b74d584f0253df851a"
+    },
+    "gyro-pulse/android/app/build.gradle.kts": {
+      "sha256": "66d8e4d3cdc3244fb0eebd7d11380e0aec0d5cf1db50024977620f918981e1a6",
+      "previous_sha256": "e98132476ca2eaf24636bb2cd79b16d9efac75cc5c05fa3422c9de58f8bf687c"
+    },
+    "gyro-pulse/android/app/src/main/AndroidManifest.xml": {
+      "sha256": "6ecb6fc72c3ba829060e3288826cfd6903af260e9c22bc95c3a5d0119a68914c",
+      "previous_sha256": "6db97861979c52e19d9aa0616c3b0202cbd30e6df7460a47ff8bbfeee431e3b4"
+    },
+    "gyro-pulse/android/app/src/main/res/xml/backup_rules.xml": {
+      "sha256": "e65bcd2a42ab3c673b9ecec790080030e32c95da3daa790aefdc0628b29c765f",
+      "previous_sha256": "173c90cbeb773e6a65b430581a85720dc5c7ddba17d543cfefe3d2aed9b9a7a4"
+    },
+    "gyro-pulse/android/app/src/main/res/xml/data_extraction_rules.xml": {
+      "sha256": "983776bd401b23ceb881137df0bfe93af4274e8e18706d19c213c669b4834e22",
+      "previous_sha256": "30ae995624fd57d839bf0d638900f8d2c17c703d6e7d6c8640708a8a7cac2402"
+    },
+    "gyro-pulse/android/app/src/main/res/xml/network_security_config.xml": {
+      "sha256": "30f0e4a81060a25105a2f36d8a3a255f4ee71955439a72868675e360ee66921b",
+      "previous_sha256": "1c581d8383869cb5f2cf7368fcca7a9d66a90ae25ea323285ca818223ab69259"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridEngine.kt": {
+      "sha256": "1910bec91f42a2a602c3a171debd3534323cb2f97f68872a60b3c586e6a4365e"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridActivity.kt": {
+      "sha256": "f7acf395f78fd2f37f7703586c29600d0cdd975f03ca76a7c095bde5d8ebe247"
+    },
+    "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
+      "sha256": "36e11b673a458a124642544ddc570c44e92cf3e294800170383479a3404d69fa"
+    },
+    "gyro-pulse/server/integration_api.py": {
+      "previous_sha256": "5434bcbda60e027774398025e356c52381145dd9a77e34bb738977ff6fba982b",
+      "sha256": "d8063029c39ab624d34c36b930df1918f450ce5d2ac9dbda3e803243e36c22e5"
+    },
+    "gyro-pulse/android/gradle.properties": {
+      "previous_sha256": "f46953b0506c51c9af9d2bba4e41d36a11f6b2e4e76cc064b73a794a61b248a5",
+      "sha256": "470ff62eead265d74881e1d18a36fa383da1c070c68b320aaf4e869e1e5b7d33"
+    },
+    "integration/android_acceptance.py": {
+      "sha256": "8228b812ab2634e8a67fc83982ada59549bf18ac169d1990ec12bf5736d79e3a"
+    },
+    "integration/tests/test_android_evidence.py": {
+      "sha256": "6c12f114bd67fd7605473e2504b55a0841c36732f498e5d7a0a45f52ac8eb80b"
+    },
+    "docs/PHASE_7_UAT_RECORD.md": {
+      "sha256": "20c803b7788dee9e748d603c09b70f3f9b53c876f2a00b190c4f5aada510dda7"
+    },
+    "docs/PHASE_7_CI_OBSERVATIONS.json": {
+      "sha256": "55773be014eb1468b12be3a9d78b7e424f6e0c57cc14273608784f3e3b5332b9"
+    },
+    "docs/PHASE_7_EVIDENCE_INDEX.json": {
+      "sha256": "25a668027b1abcfe1c1a6a33906974ba8f3c7641be24384be3b6a0dcf238ef8e"
+    }
+  }
+}

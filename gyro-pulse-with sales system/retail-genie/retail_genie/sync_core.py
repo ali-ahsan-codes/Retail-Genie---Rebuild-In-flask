@@ -260,6 +260,9 @@ class Transport:
             old = (
                 self.scoped(model)
                 .filter_by(id=envelope["message_id"])
+                # MySQL REPEATABLE READ: locking current read sees the winning insert,
+                # unlike the transaction's older consistent-read snapshot after duplicate key.
+                .with_for_update()
                 .populate_existing()
                 .first()
             )

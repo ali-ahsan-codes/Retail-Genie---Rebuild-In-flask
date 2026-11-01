@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "source": "GitHub Actions API job/check-run observations",
+  "run_url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244",
+  "commit": "6e0613ca21676d6a85f2ccb799973f6de94d8375",
+  "workflow_conclusion": "success",
+  "jobs": [
+    {
+      "name": "android-candidate",
+      "job_id": 124790935539,
+      "conclusion": "success",
+      "url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244/job/124790935539"
+    },
+    {
+      "name": "mysql",
+      "job_id": 124790935747,
+      "conclusion": "success",
+      "url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244/job/124790935747"
+    }
+  ],
+  "reports": [
+    {
+      "schema_version": 1,
+      "side": "android",
+      "passed": true,
+      "checks": {
+        "tests_executed": 4,
+        "tests_failed": 0,
+        "tests_skipped": 0,
+        "test_names": [
+          "canonicalHashMatchesPythonUnicodeVector",
+          "encryptedIdentitySurvivesRecreation",
+          "immutableQueueEncryptedAcrossRestart",
+          "modifiedCiphertextFailsClosed"
+        ],
+        "apk_sha256": "5fe762d8547c47036e1ce9c5dd56fa2732eaec823eb4c9c59085480c38fa9444",
+        "package_present_after_test_cleanup": false,
+        "android_api": 35,
+        "emulator": true,
+        "physical_device": false,
+        "target_package_verified_by_instrumentation": "com.retailgenie.hybrid.pilot.debug"
+      },
+      "commit": "6e0613ca21676d6a85f2ccb799973f6de94d8375",
+      "run_url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244",
+      "recorded_at": "2026-11-01T08:07:01.034793Z",
+      "production_accepted": false
+    },
+    {
+      "schema_version": 1,
+      "side": "retail",
+      "passed": true,
+      "checks": {
+        "real_mysql_concurrency": true,
+        "native_orders": 1,
+        "stock_deductions": 1,
+        "backup_restore": true,
+        "restored_mapping_matches": true
+      },
+      "commit": "6e0613ca21676d6a85f2ccb799973f6de94d8375",
+      "run_url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244",
+      "recorded_at": "2026-11-01T08:04:43.861715Z",
+      "production_accepted": false
+    },
+    {
+      "schema_version": 1,
+      "side": "gyro",
+      "passed": true,
+      "checks": {
+        "mysql_office_pairing": true,
+        "mysql_device_enrollment": true,
+        "mysql_grant_replay_rejected": true,
+        "mysql_signed_order_dedup": true,
+        "mysql_device_revoke": true,
+        "real_mysql_concurrency": true,
+        "inbox_rows": 51,
+        "concurrent_claims": 1,
+        "load_deliveries": 200,
+        "load_unique_messages": 50,
+        "load_workers": 8,
+        "load_elapsed_seconds": 0.208,
+        "production_load_sla_accepted": false
+      },
+      "commit": "6e0613ca21676d6a85f2ccb799973f6de94d8375",
+      "run_url": "https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244",
+      "recorded_at": "2026-11-01T08:04:40.336134Z",
+      "production_accepted": false
+    }
+  ],
+  "production_accepted": false,
+  "limitations": [
+    "Emulator API35 only; no physical phone or UI/network outage acceptance",
+    "Synthetic disposable MySQL/restore only; not production load SLA or complete key recovery",
+    "No deployed TLS/security or human business UAT sign-off",
+    "Offline-first stale-catalog/native-decision-return gap remains a release blocker"
+  ]
+}

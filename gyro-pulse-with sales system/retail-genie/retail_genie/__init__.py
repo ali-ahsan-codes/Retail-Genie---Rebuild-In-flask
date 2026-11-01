@@ -139,6 +139,10 @@ def create_app(test_config: dict | None = None) -> Flask:
     register_field_catalog(app)
     from .field_orders import register as register_field_orders
     register_field_orders(app)
+    from .field_mobile import register as register_office_mobile
+    register_office_mobile(app)
+    from .field_audit import register as register_field_audit
+    register_field_audit(app)
     app.register_blueprint(settings_bp)
     app.register_blueprint(scm_bp)
     app.register_blueprint(attendance_bp)
