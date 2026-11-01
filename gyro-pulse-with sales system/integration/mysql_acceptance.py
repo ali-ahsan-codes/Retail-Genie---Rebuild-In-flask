@@ -4,7 +4,7 @@ HYBRID_MYSQL_TEST_URL=mysql+pymysql://.../hybrid_acceptance_<side>.
 Native case also requires mysql/mysqldump tools and restores into a separate disposable DB.
 """
 
-import argparse, json, os, sys, subprocess, shutil
+import argparse, json, os, sys, subprocess, shutil, traceback
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
@@ -322,7 +322,22 @@ def main():
         passed = True
     except Exception as error:
         # Never print URL/password or SQL parameter dumps.
-        checks = {"failure_type": type(error).__name__}
+        import traceback
+
+        checks = {
+            "failure_type": type(error).__name__,
+            "frames": [
+                dict(
+                    file=Path(frame.filename).name,
+                    line=frame.lineno,
+                    function=frame.name,
+                )
+                for frame in traceback.extract_tb(error.__traceback__)[-8:]
+            ],
+        }
+        original = getattr(error, "orig", None)
+        if original and original.args and type(original.args[0]) is int:
+            checks["sql_error_code"] = original.args[0]
         passed = False
     report = dict(
         schema_version=1,
@@ -336,6 +351,15 @@ def main():
     )
     Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))
+    annotation = "notice" if passed else "error"
+    print(
+        "::"
+        + annotation
+        + " title=Hybrid observed "
+        + args.side
+        + "::"
+        + json.dumps(report)
+    )
     raise SystemExit(0 if passed else 1)
 
 

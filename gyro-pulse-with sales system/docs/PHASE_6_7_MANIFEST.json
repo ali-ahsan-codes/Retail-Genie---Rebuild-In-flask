@@ -28,10 +28,10 @@
       "sha256": "a3e51078106418f39c1673b449a26299eafbceb3cd3f7ae4c8394992f2231ae9"
     },
     "integration/mysql_acceptance.py": {
-      "sha256": "006e955f198965d0e458ffe4534b5bc3dbf5c3454874d1d57a2299cf5917ac38"
+      "sha256": "4770d8a54f2d65b6dd418a139b780aff10fa16c7a27fc4f30231f0ba52a51d4c"
     },
     "../.github/workflows/hybrid-mysql-acceptance.yml": {
-      "sha256": "92e0f0fd0c41b6a16ed16f14c523757fca4c9b799479268a170614cdb4180a7e"
+      "sha256": "7f14e7e8f866896e607195462423bfa6812b5155da48b7afe62915537aca7b08"
     },
     "gyro-pulse/server/app.py": {
       "sha256": "e8cfdcac98c1b75fb1153378e9a1d88f6f0e940803aa02fe1588fd58152efb5a",
