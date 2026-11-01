@@ -135,6 +135,10 @@ def create_app(test_config: dict | None = None) -> Flask:
     register_transport(app)
     from .field_transport import register as register_transport_worker
     register_transport_worker(app)
+    from .field_catalog import register as register_field_catalog
+    register_field_catalog(app)
+    from .field_orders import register as register_field_orders
+    register_field_orders(app)
     app.register_blueprint(settings_bp)
     app.register_blueprint(scm_bp)
     app.register_blueprint(attendance_bp)

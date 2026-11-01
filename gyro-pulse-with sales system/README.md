@@ -55,3 +55,13 @@ Phases 3–7 and real deployment acceptance are not complete.
 Phase 3 now adds opt-in durable delivery (not catalog/order application). See
 [transport setup, transaction semantics and remaining acceptance](docs/PHASE_3.md).
 Phases 4–7 are still incomplete; production remains blocked.
+
+Phase 4 adds bounded, operator-driven actual native catalog exports and read-only Gyro
+projections. See [Phase 4 setup and verified limits](docs/PHASE_4.md). The catalog pilot
+is limited to 200 company-owned products per store; larger/shared catalogs are rejected,
+not silently truncated. Phases 5–7 remain incomplete; no production acceptance is claimed.
+
+Phase 5 adds the [immutable proposal and native human-review pilot](docs/PHASE_5.md).
+Cloud submission is administrator-only (not mobile agent auth); native approval uses the
+real POS writer and atomically records the business-ID mapping. No payments, automatic
+posting or Android support are implied. Phases 6–7 remain incomplete/unaccepted.
