@@ -84,16 +84,21 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ACCEPTANCE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           api-level: 35
           arch: x86_64
           working-directory: gyro-pulse-with sales system/gyro-pulse/android
-          script: gradle :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            gradle :app:connectedDebugAndroidTest --stacktrace
+            python ../../integration/android_acceptance.py --project . --output /tmp/android-observed.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: hybrid-android-observed-results
           path: |
+            /tmp/android-observed.json
             gyro-pulse-with sales system/gyro-pulse/android/app/build/outputs/androidTest-results/**
             gyro-pulse-with sales system/gyro-pulse/android/app/build/reports/androidTests/**
             gyro-pulse-with sales system/gyro-pulse/android/app/build/outputs/apk/debug/*.apk

@@ -31,7 +31,7 @@
       "sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
     },
     "../.github/workflows/hybrid-mysql-acceptance.yml": {
-      "sha256": "3d462845330b4fbfaa78c73b5f4ad6ff46da6574b60be385aa80571d4490b9d6"
+      "sha256": "1e3378f8be70214889a25e6f447d760140d9d95d6e1f5811e9266760270f6caa"
     },
     "gyro-pulse/server/app.py": {
       "sha256": "e8cfdcac98c1b75fb1153378e9a1d88f6f0e940803aa02fe1588fd58152efb5a",
@@ -136,6 +136,15 @@
     "gyro-pulse/android/gradle.properties": {
       "previous_sha256": "f46953b0506c51c9af9d2bba4e41d36a11f6b2e4e76cc064b73a794a61b248a5",
       "sha256": "470ff62eead265d74881e1d18a36fa383da1c070c68b320aaf4e869e1e5b7d33"
+    },
+    "integration/android_acceptance.py": {
+      "sha256": "fc198a7834b730169936f434d0a087ebd8fcc4faa98fc6376b4873ebe0604caa"
+    },
+    "integration/tests/test_android_evidence.py": {
+      "sha256": "6c12f114bd67fd7605473e2504b55a0841c36732f498e5d7a0a45f52ac8eb80b"
+    },
+    "docs/PHASE_7_UAT_RECORD.md": {
+      "sha256": "20c803b7788dee9e748d603c09b70f3f9b53c876f2a00b190c4f5aada510dda7"
     }
   }
 }
