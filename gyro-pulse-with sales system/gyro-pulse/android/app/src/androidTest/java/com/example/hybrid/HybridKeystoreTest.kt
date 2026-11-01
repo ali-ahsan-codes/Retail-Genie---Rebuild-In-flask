@@ -16,7 +16,7 @@ import org.json.JSONArray
 @RunWith(AndroidJUnit4::class)
 class HybridKeystoreTest {
     @Test fun encryptedIdentitySurvivesRecreation() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = InstrumentationRegistry.getInstrumentation().targetContext.also { assertEquals("com.retailgenie.hybrid.pilot.debug", it.packageName) }
         val namespace = "test-" + UUID.randomUUID().toString()
         val first = HybridEngine(context, namespace)
         val file = File(context.noBackupFilesDir, "hybrid-state.$namespace")
@@ -26,7 +26,7 @@ class HybridKeystoreTest {
         assertEquals(first.fingerprint(), HybridEngine(context, namespace).fingerprint())
     }
     @Test fun modifiedCiphertextFailsClosed() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = InstrumentationRegistry.getInstrumentation().targetContext.also { assertEquals("com.retailgenie.hybrid.pilot.debug", it.packageName) }
         val namespace = "test-" + UUID.randomUUID().toString()
         HybridEngine(context, namespace)
         val file = File(context.noBackupFilesDir, "hybrid-state.$namespace")
@@ -36,7 +36,7 @@ class HybridKeystoreTest {
         assertTrue(rejected)
     }
     @Test fun immutableQueueEncryptedAcrossRestart() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = InstrumentationRegistry.getInstrumentation().targetContext.also { assertEquals("com.retailgenie.hybrid.pilot.debug", it.packageName) }
         val namespace = "test-" + UUID.randomUUID().toString()
         val engine = HybridEngine(context, namespace)
         // Private test setup only, no production provisioning or network/TLS bypass.
@@ -55,7 +55,7 @@ class HybridKeystoreTest {
         assertTrue(rejected)
     }
     @Test fun canonicalHashMatchesPythonUnicodeVector() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = InstrumentationRegistry.getInstrumentation().targetContext.also { assertEquals("com.retailgenie.hybrid.pilot.debug", it.packageName) }
         val engine = HybridEngine(context, "test-" + UUID.randomUUID().toString())
         val value = JSONObject().put("name", "متجر / <p> \u2028 😀").put("amount", "1.250")
             .put("null", JSONObject.NULL).put("qty", 2)

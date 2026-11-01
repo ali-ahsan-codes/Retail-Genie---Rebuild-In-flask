@@ -127,7 +127,7 @@
       "sha256": "f7acf395f78fd2f37f7703586c29600d0cdd975f03ca76a7c095bde5d8ebe247"
     },
     "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
-      "sha256": "b3864b763e1c15bda2408fb756dbd9a397b5c163403b9c04f52c579380b99be0"
+      "sha256": "36e11b673a458a124642544ddc570c44e92cf3e294800170383479a3404d69fa"
     },
     "gyro-pulse/server/integration_api.py": {
       "previous_sha256": "5434bcbda60e027774398025e356c52381145dd9a77e34bb738977ff6fba982b",
@@ -138,7 +138,7 @@
       "sha256": "470ff62eead265d74881e1d18a36fa383da1c070c68b320aaf4e869e1e5b7d33"
     },
     "integration/android_acceptance.py": {
-      "sha256": "fc198a7834b730169936f434d0a087ebd8fcc4faa98fc6376b4873ebe0604caa"
+      "sha256": "8228b812ab2634e8a67fc83982ada59549bf18ac169d1990ec12bf5736d79e3a"
     },
     "integration/tests/test_android_evidence.py": {
       "sha256": "6c12f114bd67fd7605473e2504b55a0841c36732f498e5d7a0a45f52ac8eb80b"
