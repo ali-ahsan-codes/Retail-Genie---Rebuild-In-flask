@@ -79,5 +79,17 @@
     "native_decision_feedback_implemented": false,
     "full_retained_order_lifecycle_implemented": false,
     "site_key_restore_accepted": false
+  },
+  "phase_6_completion_candidate": {
+    "native_decision_feedback_implemented": true,
+    "stale_catalog_terminal_recovery_implemented": true,
+    "verified_terminal_archive_implemented": true,
+    "local_tests": 240,
+    "android_cases_expected": 6,
+    "remote_ci": "pending",
+    "physical_device": false,
+    "deployed_tls_security": false,
+    "human_uat": false,
+    "production_accepted": false
   }
 }

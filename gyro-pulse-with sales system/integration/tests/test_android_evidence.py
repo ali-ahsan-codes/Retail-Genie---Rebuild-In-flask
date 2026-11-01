@@ -45,7 +45,7 @@ class AndroidEvidenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp)
             apk = self.fixture(path)
-            self.assertEqual(module.summarize(path, apk)["tests_executed"], 4)
+            self.assertEqual(module.summarize(path, apk)["tests_executed"], 6)
             (path / "TEST-extra.xml").write_text(
                 '<testsuite><testcase name="unexpected" classname="Legacy" /></testsuite>'
             )

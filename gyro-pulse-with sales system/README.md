@@ -77,3 +77,5 @@ real MySQL8.4 bounded concurrency/load and synthetic native dump/restore passed 
 Physical device, deployed TLS/security/business load, full outage/stale-catalog/native-decision
 recovery, complete retained-order lifecycle and human UAT remain blocked.
 [Operator UAT record](docs/PHASE_7_UAT_RECORD.md) is deliberately unsigned.
+
+Current follow-up: [remaining-code closure candidate](docs/PHASE_6_7_COMPLETION.md) adds trusted native decision feedback, stale-catalog reconciliation and verified encrypted terminal-order archiving. Earlier CI is historical; new CI/device/site/UAT gates still apply.

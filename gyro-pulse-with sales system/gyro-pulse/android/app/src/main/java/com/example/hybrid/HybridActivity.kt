@@ -15,7 +15,8 @@ class HybridActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var orderId: EditText
     private val executor = Executors.newSingleThreadExecutor()
-    private var pendingExport: ByteArray? = null
+    private data class Export(val bytes: ByteArray, val archive: Boolean)
+    @Volatile private var pendingExport: Export? = null
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -52,20 +53,51 @@ class HybridActivity : Activity() {
         button("Send encrypted parcel to enrolled office HTTPS") { engine.sendLan(value(orderId)) }
         button("Export encrypted office parcel (.rgx)") {
             val parcel = engine.officeParcel(value(orderId)).toByteArray(Charsets.UTF_8)
-            pendingExport = parcel
+            check(pendingExport == null)
+            pendingExport = Export(parcel, false)
             runOnUiThread { startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "application/octet-stream"; putExtra(Intent.EXTRA_TITLE, "field-order.rgx") }, 6001) }
             "Choose a controlled destination; encrypted export does not acknowledge/delete the order."
+        }
+        button("Archive terminal orders and free capacity (device-bound encrypted file)") {
+            check(pendingExport == null)
+            pendingExport = Export(engine.prepareArchive(), true)
+            runOnUiThread { startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "application/octet-stream"; putExtra(Intent.EXTRA_TITLE, "terminal-orders.rga") }, 6001) }
+            "Choose durable storage. Cleanup happens only after write/close/read-back verification; keep this device's Keystore."
+        }
+        button("Verify encrypted archive (read only)") {
+            check(pendingExport == null)
+            runOnUiThread { startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "application/octet-stream" }, 6002) }
+            "Select a device-bound .rga archive; this cannot create or restore pending orders."
         }
         button("Show device identity / retained count") { engine.summary() }
     }
     @Deprecated("Pilot uses platform SAF result")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        val bytes = pendingExport; pendingExport = null
-        if (requestCode == 6001 && resultCode == RESULT_OK && data?.data != null && bytes != null) executor.execute {
-            val message = try { contentResolver.openOutputStream(data.data!!, "w").use { output -> check(output != null); output.write(bytes) }; "Encrypted parcel exported; order retained. Native approval unknown." } catch (error: Exception) { "Export failed; order remains encrypted locally." }
+        if (resultCode != RESULT_OK || data?.data == null) { if (requestCode == 6001) pendingExport = null; return }
+        val uri = data.data!!
+        if (requestCode == 6002) executor.execute {
+            val message = try { val bytes = contentResolver.openInputStream(uri)!!.use { it.readBytesBounded() }; engine.inspectArchive(bytes) } catch (error: Exception) { "Archive rejected; queue unchanged." }
             runOnUiThread { if (!isFinishing) status.text = message }
         }
+        if (requestCode != 6001) return
+        val export = pendingExport; pendingExport = null
+        if (export != null) executor.execute {
+            val message = try {
+                contentResolver.openOutputStream(uri, "w").use { output -> check(output != null); output.write(export.bytes) }
+                if (export.archive) {
+                    val stored = contentResolver.openInputStream(uri)!!.use { it.readBytesBounded() }
+                    check(stored.contentEquals(export.bytes))
+                    "Encrypted archive verified; ${engine.confirmArchive(stored)} terminal orders removed. Pending orders retained. Archive requires this device's Keystore."
+                } else "Encrypted parcel exported; order retained, not acknowledged."
+            } catch (error: Exception) { "Export/verification failed; orders retained. Never delete queue to recover capacity." }
+            runOnUiThread { if (!isFinishing) status.text = message }
+        }
+    }
+    private fun java.io.InputStream.readBytesBounded(): ByteArray {
+        val output = java.io.ByteArrayOutputStream(); val buffer = ByteArray(4096)
+        while (true) { val count = read(buffer); if (count < 0) break; check(output.size() + count <= 2097152); output.write(buffer, 0, count) }
+        return output.toByteArray()
     }
     override fun onDestroy() { executor.shutdown(); super.onDestroy() }
 }

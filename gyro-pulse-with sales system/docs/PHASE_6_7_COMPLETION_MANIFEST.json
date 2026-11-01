@@ -1,0 +1,71 @@
+{
+  "phase": "6-7-code-closure-candidate",
+  "production_accepted": false,
+  "files": {
+    "../.github/workflows/hybrid-mysql-acceptance.yml": {
+      "sha256": "2f422e6a8d39e623e7362e55537d4a91d44e8c02329d81ffae9e7c248346f6c1",
+      "previous_sha256": "1e3378f8be70214889a25e6f447d760140d9d95d6e1f5811e9266760270f6caa"
+    },
+    "README.md": {
+      "sha256": "269dc22c6db75f0bc82dc3b83b833bae972027ba3e4ec61c3b100b39e93b2687",
+      "previous_sha256": "af7b2b7bf0a96ed99727a052000849f1dc592b7b3a351d79cb68a52ad32aff82"
+    },
+    "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
+      "sha256": "d95c867536c9f357b866393921b5fda67209ad0a28fc1de6777a1703a1995b8c",
+      "previous_sha256": "36e11b673a458a124642544ddc570c44e92cf3e294800170383479a3404d69fa"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridActivity.kt": {
+      "sha256": "ff83e4bfaf905eeccf09e1b74fa52a17e1a75e4aa6fbc62edff2ccd373c30f72",
+      "previous_sha256": "f7acf395f78fd2f37f7703586c29600d0cdd975f03ca76a7c095bde5d8ebe247"
+    },
+    "gyro-pulse/android/app/src/main/java/com/example/hybrid/HybridEngine.kt": {
+      "sha256": "9a6bb71cb95097300e9c6b420d4c16b3953dfb4a31b4dc19b3d2f6580473ad1c",
+      "previous_sha256": "1910bec91f42a2a602c3a171debd3534323cb2f97f68872a60b3c586e6a4365e"
+    },
+    "gyro-pulse/server/dedicated.py": {
+      "sha256": "d7954b771f51c07b1ec339ab9ebd6e361a8559c3ab74735541908dbfdc5fddde",
+      "previous_sha256": "02a35a610e1b4145fb437922f298a0d77459cd1e53082c4b0da397682fec598f"
+    },
+    "gyro-pulse/server/field_mobile.py": {
+      "sha256": "5194a14542ec4c805c5433bf6d05e852a4992101f8f625a7fca03723921fa13c",
+      "previous_sha256": "834ec2ca3bf3fa8512152f268deb1f7050f54f8a2d002f269a3b996c201944d2"
+    },
+    "integration/android_acceptance.py": {
+      "sha256": "3dbda25e83881b12860501fc3957ffca6bc1ce5bfbc0e4f01ff7d919fbde2637",
+      "previous_sha256": "8228b812ab2634e8a67fc83982ada59549bf18ac169d1990ec12bf5736d79e3a"
+    },
+    "integration/mysql_acceptance.py": {
+      "sha256": "eafe25b5a4ff0145ff3968fedeeb4c9e302c641b53717b1b759d6a20f58aefb3",
+      "previous_sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
+    },
+    "integration/phase-status.json": {
+      "sha256": "d06e884aaed1d2f58bd537f51b3338a76643b563f64038875b62c83b09549d9e",
+      "previous_sha256": "69e1a9c409aa981dd50b1235b9640aee9c122fc1c55a5e06a58994a1f8a4eb2b"
+    },
+    "integration/tests/test_android_evidence.py": {
+      "sha256": "4fddd333ed88be4231e1f154f52f4482a6f54e1ba68456ff5285258cd775b1c9",
+      "previous_sha256": "6c12f114bd67fd7605473e2504b55a0841c36732f498e5d7a0a45f52ac8eb80b"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "3e16b514fda316509e9e536dd3364e87b220c69a32afdf736594d3c147f8a923",
+      "previous_sha256": "88850dd74d8d9c4e7e2aa71ba2e40095f623690170271827b0434f2532250b84"
+    },
+    "retail-genie/retail_genie/field_mobile.py": {
+      "sha256": "7c65e199de022c82d5ce293d5aabab58a5574b1299d01ad474f1061d0f487e6e",
+      "previous_sha256": "9f7b91703520b222d66cf2d7b8af63f64628e55294cc0db5863b3287f128a549"
+    },
+    "retail-genie/retail_genie/field_transport.py": {
+      "sha256": "7707421dbe89cb3951062ff08aa2e3801029d6fbd0237b952872e47790d67f85",
+      "previous_sha256": "41f43d13c1d6e2093dace459870cd23c004f8a01d70515ac4f581efddf145ab4"
+    },
+    "docs/PHASE_6_7_COMPLETION.md": {
+      "sha256": "5ab43c88b80dd488f39eb1ffd3fdfe7ab56201ca9342b277c1fd33aaa7786979"
+    },
+    "gyro-pulse/server/tests/test_native_decisions.py": {
+      "sha256": "5d5476739f098358c909df4826967492f4cf67f0602213c2ec49ae29c9110593"
+    },
+    "retail-genie/tests/test_decision_delivery.py": {
+      "sha256": "684b942d70e77a18430c67cc888e668e746eb3dfcb386e50d4840183a1d1d0a7"
+    }
+  }
+}

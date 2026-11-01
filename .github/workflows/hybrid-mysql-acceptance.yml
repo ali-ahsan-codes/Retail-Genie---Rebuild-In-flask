@@ -32,9 +32,13 @@ jobs:
           sudo apt-get install -y mysql-client
           python -m venv /tmp/gyro-venv
           python -m venv /tmp/retail-venv
-          /tmp/gyro-venv/bin/pip install -r 'gyro-pulse-with sales system/gyro-pulse/server/requirements.txt'
-          /tmp/retail-venv/bin/pip install -r 'gyro-pulse-with sales system/retail-genie/requirements.txt'
+          /tmp/gyro-venv/bin/pip install pytest -r 'gyro-pulse-with sales system/gyro-pulse/server/requirements.txt'
+          /tmp/retail-venv/bin/pip install pytest -r 'gyro-pulse-with sales system/retail-genie/requirements.txt'
           MYSQL_PWD=disposable_ci_only mysql -h 127.0.0.1 -u root -e 'CREATE DATABASE hybrid_acceptance_retail CHARACTER SET utf8mb4;'
+      - name: Separate server regression suites
+        run: |
+          (cd 'gyro-pulse-with sales system/gyro-pulse/server' && /tmp/gyro-venv/bin/python -m pytest -q)
+          (cd 'gyro-pulse-with sales system/retail-genie' && /tmp/retail-venv/bin/python -m pytest -q)
       - name: Actual concurrent inbox/lease claims
         env:
           HYBRID_ALLOW_DISPOSABLE_MYSQL: '1'

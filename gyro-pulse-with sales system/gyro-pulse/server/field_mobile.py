@@ -410,6 +410,22 @@ def submit():
         old = db.session.get(SubmittedOrder, payload["order_id"])
         if old and old.submitted_by != device.owner_id:
             raise MobileError("Business ID belongs to another submitter")
+        if not inspect(db.engine).has_table(NativeDecision.__tablename__):
+            return jsonify(error="Initialize device decision table explicitly"), 503
+        decision = db.session.get(NativeDecision, payload["order_id"])
+        if decision:
+            if (
+                (decision.company_id, decision.instance_id, decision.office_id)
+                != identity()
+                or decision.owner_id != device.owner_id
+                or (decision.device_id is not None and decision.device_id != device.id)
+                or decision.payload_sha256
+                != hashlib.sha256(canonical(payload).encode()).hexdigest()
+            ):
+                raise MobileError("Decision/content/owner mismatch")
+            result = decision_receipt(decision)
+            db.session.commit()
+            return jsonify(result)
         row = enqueue_proposal(Transport("gyro", *identity()), payload, device.owner_id)
         db.session.commit()
         return jsonify(
@@ -470,6 +486,144 @@ def register(app):
 
     @app.cli.command("init-field-devices")
     def initialize():
-        for model in [Device, DeviceGrant]:
+        for model in [Device, DeviceGrant, NativeDecision]:
             model.__table__.create(db.engine, checkfirst=True)
         click.echo("Scoped device tables ready; legacy credentials are not accepted.")
+
+
+class NativeDecision(db.Model):
+    """Office-authoritative terminal facts, never a cloud stock/order posting."""
+
+    __tablename__ = "hybrid_native_device_decisions"
+    order_id = db.Column(db.String(36), primary_key=True)
+    company_id = db.Column(db.String(36), nullable=False)
+    instance_id = db.Column(db.String(36), nullable=False)
+    office_id = db.Column(db.String(36), nullable=False)
+    owner_id = db.Column(db.Integer, nullable=False)
+    device_id = db.Column(db.String(36))
+    payload_sha256 = db.Column(db.String(64), nullable=False)
+    state = db.Column(db.String(16), nullable=False)
+    native_order_id = db.Column(db.String(64))
+    record_sha256 = db.Column(db.String(64), nullable=False)
+    __table_args__ = {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4"}
+
+
+def decision_receipt(decision):
+    return dict(
+        schema_version=1,
+        order_id=decision.order_id,
+        payload_sha256=decision.payload_sha256,
+        status="cloud_received",
+        native_approval=decision.state,
+        native_order_id=decision.native_order_id,
+    )
+
+
+@bp.post("/api/v1/devices/decisions")
+def publish_decision():
+    if office_auth("transport:exchange") is None:
+        return jsonify(error="Scoped authoritative office required"), 401
+    if not inspect(db.engine).has_table(NativeDecision.__tablename__):
+        return jsonify(error="Initialize device decision table explicitly"), 503
+    try:
+        if not request.is_json:
+            raise MobileError("JSON required")
+        data = loads(request.stream.read(16385), limit=16384)
+        if type(data) is not dict or set(data) != {
+            "schema_version",
+            "company_id",
+            "instance_id",
+            "office_id",
+            "order_id",
+            "payload_sha256",
+            "device_id",
+            "state",
+            "native_order_id",
+        }:
+            raise MobileError("Decision schema")
+        if (
+            type(data["schema_version"]) is not int
+            or data["schema_version"] != 1
+            or tuple(uid(data[k]) for k in ["company_id", "instance_id", "office_id"])
+            != identity()
+        ):
+            raise MobileError("Decision scope")
+        order_id = uid(data["order_id"])
+        sha = data["payload_sha256"]
+        if (
+            type(sha) is not str
+            or len(sha) != 64
+            or any(ch not in "0123456789abcdef" for ch in sha)
+        ):
+            raise MobileError("Content hash")
+        if data["state"] == "approved":
+            uid(data["native_order_id"])
+        elif data["state"] != "rejected" or data["native_order_id"] is not None:
+            raise MobileError("Terminal decision required")
+        # Persistent office slot serializes first receipt and conflicting retries on MySQL.
+        Office.query.filter_by(id=1).with_for_update().populate_existing().one()
+        submitted = (
+            SubmittedOrder.query.filter_by(id=order_id)
+            .with_for_update()
+            .populate_existing()
+            .first()
+        )
+        if submitted and (
+            (submitted.company_id, submitted.instance_id, submitted.office_id)
+            != identity()
+            or submitted.payload_sha256 != sha
+        ):
+            raise MobileError("Submitted order conflict")
+        if data["device_id"] is not None:
+            device = db.session.get(Device, uid(data["device_id"]))
+            if (
+                not device
+                or (device.company_id, device.instance_id, device.office_id)
+                != identity()
+            ):
+                raise MobileError("Device scope")
+            owner_id = device.owner_id
+            if submitted and submitted.submitted_by != owner_id:
+                raise MobileError("Owner conflict")
+        else:
+            if not submitted:
+                raise MobileError("Offline-first decision requires device identity")
+            owner_id = submitted.submitted_by
+        record_sha = hashlib.sha256(canonical(data).encode()).hexdigest()
+        previous = (
+            NativeDecision.query.filter_by(order_id=order_id)
+            .with_for_update()
+            .populate_existing()
+            .first()
+        )
+        if previous:
+            if previous.record_sha256 != record_sha:
+                raise MobileError("Immutable decision conflict")
+        else:
+            db.session.add(
+                NativeDecision(
+                    order_id=order_id,
+                    company_id=identity()[0],
+                    instance_id=identity()[1],
+                    office_id=identity()[2],
+                    owner_id=owner_id,
+                    device_id=data["device_id"],
+                    payload_sha256=sha,
+                    state=data["state"],
+                    native_order_id=data["native_order_id"],
+                    record_sha256=record_sha,
+                )
+            )
+            db.session.add(
+                Audit(action="native_device_decision", reference_id=order_id)
+            )
+        db.session.commit()
+        return jsonify(
+            schema_version=1,
+            order_id=order_id,
+            record_sha256=record_sha,
+            status="decision_received",
+        )
+    except (ValueError, TypeError, KeyError, IntegrityError):
+        db.session.rollback()
+        return jsonify(error="Invalid/conflicting native decision"), 409
