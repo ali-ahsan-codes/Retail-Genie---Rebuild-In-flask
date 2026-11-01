@@ -219,13 +219,35 @@ def gyro_mobile_http(value):
 
         CatalogHead.query.one().message_id = str(uuid4())
         db.session.commit()
+        offline_order = dict(order)
+        offline_order["order_id"] = str(uuid4())
+        raw_offline = json.dumps(
+            dict(
+                schema_version=1,
+                company_id=identity[0],
+                instance_id=identity[1],
+                office_id=identity[2],
+                device_id=device_id,
+                order=offline_order,
+            )
+        ).encode()
+        wire = dict(
+            body=b64(raw_offline),
+            signature=b64(key.sign(raw_offline, ec.ECDSA(hashes.SHA256()))),
+        )
+        assert (
+            client.post("/api/v1/device/orders", json=wire, headers=headers).status_code
+            == 409
+        )
         decision = dict(
             schema_version=1,
             company_id=identity[0],
             instance_id=identity[1],
             office_id=identity[2],
-            order_id=order["order_id"],
-            payload_sha256=hashlib.sha256(canonical(order).encode()).hexdigest(),
+            order_id=offline_order["order_id"],
+            payload_sha256=hashlib.sha256(
+                canonical(offline_order).encode()
+            ).hexdigest(),
             device_id=device_id,
             state="approved",
             native_order_id=str(uuid4()),
@@ -394,6 +416,7 @@ def run(side):
     if (ROOT / "retail-genie/.env.retail-genie").exists():
         raise RuntimeError("Refusing live environment file")
     from retail_genie.extensions import db
+    from retail_genie.field_mobile import decision_record
     from retail_genie.models import (
         TenantContainer,
         Company,
@@ -525,6 +548,11 @@ def run(side):
             InventoryBalance.query.one().quantity_on_hand == 18
             and FieldProposal.query.one().native_order_id == ids[0]
         )
+        native_fact = decision_record(company_id, business_id)
+        assert (
+            native_fact["state"] == "approved"
+            and native_fact["native_order_id"] == ids[0]
+        )
         # An actual consistent logical dump and restore, not a copied SQLite fixture.
         if not shutil.which("mysqldump") or not shutil.which("mysql"):
             raise RuntimeError(
@@ -609,6 +637,7 @@ def run(side):
         stock_deductions=1,
         backup_restore=True,
         restored_mapping_matches=True,
+        mysql_native_terminal_record_verified=True,
     )
 
 

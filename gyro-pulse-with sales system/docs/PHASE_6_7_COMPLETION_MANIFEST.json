@@ -35,7 +35,7 @@
       "previous_sha256": "8228b812ab2634e8a67fc83982ada59549bf18ac169d1990ec12bf5736d79e3a"
     },
     "integration/mysql_acceptance.py": {
-      "sha256": "eafe25b5a4ff0145ff3968fedeeb4c9e302c641b53717b1b759d6a20f58aefb3",
+      "sha256": "4562027a4594a1a54b50ba2cbf698707bd98bde9c8bd1770278f6cc0e8007302",
       "previous_sha256": "22b5d6b86eee712e97c1a84ea79cb43cf552ae48807c500a62c062aea32e06cf"
     },
     "integration/phase-status.json": {
@@ -65,7 +65,7 @@
       "sha256": "5d5476739f098358c909df4826967492f4cf67f0602213c2ec49ae29c9110593"
     },
     "retail-genie/tests/test_decision_delivery.py": {
-      "sha256": "684b942d70e77a18430c67cc888e668e746eb3dfcb386e50d4840183a1d1d0a7"
+      "sha256": "07cdfc844bf6090fdb1cb0d891e6f5acdeb388fadfb66ce896a29d143b7b5c6d"
     }
   }
 }

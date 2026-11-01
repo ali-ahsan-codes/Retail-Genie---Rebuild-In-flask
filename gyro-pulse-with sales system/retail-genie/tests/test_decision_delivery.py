@@ -65,6 +65,20 @@ def test_durable_decision_publication_after_review_and_retry(
     db.session.rollback()
     assert DecisionDelivery.query.count() == 1
     assert not DecisionDelivery.query.one().acknowledged
+    # A later file duplicate adds ingress provenance after an accepted-but-lost ACK.
+    # The already-frozen cloud-first record must remain byte-identical on retry.
+    from uuid import uuid4
+
+    db.session.add(
+        mobile.DeviceIngress(
+            company_id=company.id,
+            order_id=proposal.id,
+            device_id=str(uuid4()),
+            owner_id=1,
+            message_id=proposal.message_id,
+        )
+    )
+    db.session.commit()
     monkeypatch.setattr(mobile, "cloud_request", send)
     assert publish_decisions(company.id)["decisions_acknowledged"] == 1
     assert (
