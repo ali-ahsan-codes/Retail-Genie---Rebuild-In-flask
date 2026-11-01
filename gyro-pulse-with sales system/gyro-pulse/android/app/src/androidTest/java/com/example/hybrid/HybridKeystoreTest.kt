@@ -54,4 +54,17 @@ class HybridKeystoreTest {
         try { restarted.queue(order.toString()) } catch (expected: Exception) { rejected = true }
         assertTrue(rejected)
     }
+    @Test fun canonicalHashMatchesPythonUnicodeVector() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val engine = HybridEngine(context, "test-" + UUID.randomUUID().toString())
+        val value = JSONObject().put("name", "متجر / <p> \u2028 😀").put("amount", "1.250")
+            .put("null", JSONObject.NULL).put("qty", 2)
+            .put("items", JSONArray().put(true).put("a\\b\"c"))
+        val method = HybridEngine::class.java.getDeclaredMethod("canonical", Any::class.java).apply { isAccessible = true }
+        val canonical = method.invoke(engine, value) as String
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it.toInt() and 255) }
+        // Generated independently using Python json.dumps(sort_keys=True, ensure_ascii=False, separators=(",", ":")).
+        assertEquals("33fce1f3de37d77f41af215cb10aba999689c2ad58a9886131e572d8e3996a34", digest)
+    }
+
 }

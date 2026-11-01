@@ -10,7 +10,7 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 from models import db, User
 from integration_contract import uid, origin, loads
-from integration_api import Office, Audit, authenticate as office_auth
+from integration_api import Office, Audit, Credential, authenticate as office_auth
 from mobile_crypto import fingerprint, verify, MobileError, public, un64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -78,8 +78,18 @@ def guard():
         return jsonify(error="Request too large"), 413
     if not inspect(db.engine).has_table(Office.__tablename__):
         return jsonify(error="Initialize/pair office first"), 503
-    if db.session.get(Office, 1) is None:
-        return jsonify(error="Pair office first"), 409
+    slot = db.session.get(Office, 1)
+    if slot is None or not slot.current_credential_id:
+        return jsonify(error="Active office pairing required"), 409
+    if not inspect(db.engine).has_table(Credential.__tablename__):
+        return jsonify(error="Initialize office credentials explicitly"), 503
+    credential = db.session.get(Credential, slot.current_credential_id)
+    if (
+        not credential
+        or credential.revoked_at
+        or credential.expires_at <= datetime.utcnow()
+    ):
+        return jsonify(error="Active office pairing required"), 401
     if not all(
         inspect(db.engine).has_table(m.__tablename__) for m in [Device, DeviceGrant]
     ):

@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.exceptions import InvalidSignature, InvalidTag
+from cryptography.exceptions import InvalidSignature, InvalidTag, UnsupportedAlgorithm
 from integration_contract import loads, uid
 from order_contract import validate
 
@@ -44,7 +44,7 @@ def public(value):
         ):
             raise ValueError()
         return key
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, UnsupportedAlgorithm):
         raise MobileError("P-256 public key required") from None
 
 

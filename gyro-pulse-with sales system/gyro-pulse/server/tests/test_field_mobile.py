@@ -9,6 +9,7 @@ from test_dedicated_recovery import dedicated_app
 from test_pairing import paired_app
 from test_field_orders import ready
 from field_mobile import Device, DeviceGrant
+from integration_api import Office
 from mobile_crypto import b64, fingerprint
 from models import db, User
 from sync_core import Outbox, canonical
@@ -100,6 +101,7 @@ def test_separate_scopes_signed_submit_and_business_dedup(enrolled):
     assert grant["pairing_code"] not in str(DeviceGrant.query.one().__dict__)
     assert token["access_token"] not in str(Device.query.one().__dict__)
     assert exchange(enrolled).status_code == 401
+    assert DeviceGrant.query.one().expires_at.microsecond == 0
     assert c.get("/api/v1/sync/pull", headers=h).status_code == 401
     assert c.get("/api/v1/device/catalog/store-1", headers=h).json["read_only"] is True
     signed = wire(key, grant, payload)
@@ -206,3 +208,19 @@ def test_admin_csrf_and_revoke_pending_grant(enrolled):
         == 200
     )
     assert exchange(enrolled).status_code == 401
+
+
+def test_office_revoke_blocks_previously_enrolled_device(enrolled):
+    pair, _, payload, key, _, grant, _ = enrolled
+    c = pair[1]
+    token = exchange(enrolled).json
+    h = headers(token)
+    Office.query.one().current_credential_id = None
+    db.session.commit()
+    assert (
+        c.post(
+            "/api/v1/device/orders", headers=h, json=wire(key, grant, payload)
+        ).status_code
+        == 409
+    )
+    assert Outbox.query.count() == 0

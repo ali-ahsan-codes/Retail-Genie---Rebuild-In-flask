@@ -46,10 +46,10 @@
       "previous_sha256": "e405aba4e7c57d9f3c433d328ca6476f9661cdd41ee9733ae2b506ea481e971d"
     },
     "gyro-pulse/server/field_mobile.py": {
-      "sha256": "84ce6d74f437151384eaea65e489b812a0e1204e6ee962cbc30f5c8ab5701067"
+      "sha256": "834ec2ca3bf3fa8512152f268deb1f7050f54f8a2d002f269a3b996c201944d2"
     },
     "gyro-pulse/server/mobile_crypto.py": {
-      "sha256": "ad58e268b04f3ee97e7afdaffbe0da1ef3f323cdf3c8fb9deb31ab199b8b54ca"
+      "sha256": "a225942dc83d4b1d40af393f2c040f178887db10a066e0bb737df55eed2c5f03"
     },
     "gyro-pulse/server/sync_core.py": {
       "sha256": "41e0e7cb74e5923d48320f39dc2b67d2f5a8114017e5ab0cb91416bbfbba7ab2",
@@ -63,7 +63,7 @@
       "sha256": "0a2991550c876325519c42ea47f7197d873bb85560095d8c027e11a20f3ed27f"
     },
     "gyro-pulse/server/tests/test_field_mobile.py": {
-      "sha256": "121dd06274ec60f130b8ec9f6a98a2b2e071eb49b6b679be13b6a678fe6bf6d6"
+      "sha256": "ce908b8cf2c7e3dc3ed88cbcf4bf17554c272ab6b7e052b3eb56fd99a9a13215"
     },
     "retail-genie/.env.example": {
       "sha256": "2cb95835e8426cdb54090c647d2400b358fd5d8ece6af33c7d7819ca6d848d5a",
@@ -81,7 +81,7 @@
       "sha256": "9f7b91703520b222d66cf2d7b8af63f64628e55294cc0db5863b3287f128a549"
     },
     "retail-genie/retail_genie/mobile_crypto.py": {
-      "sha256": "d36c70efc76ee4bdada0748996b8aba90996a92567e4d07b9e42b8ee15f24206"
+      "sha256": "2a7218f6ae586fbac2a2da16294a437e789713476000a6154e2949a8a05a6d38"
     },
     "retail-genie/retail_genie/field_audit.py": {
       "sha256": "d22c1bbd94cf99c865421ddda9a977165274c4ababdd5604658d602ced5464c2"
@@ -127,11 +127,15 @@
       "sha256": "f7acf395f78fd2f37f7703586c29600d0cdd975f03ca76a7c095bde5d8ebe247"
     },
     "gyro-pulse/android/app/src/androidTest/java/com/example/hybrid/HybridKeystoreTest.kt": {
-      "sha256": "907f75df6643f8c80d44f420bcb2b58b69f9fdefadf866c256e76ce2d9154c25"
+      "sha256": "b3864b763e1c15bda2408fb756dbd9a397b5c163403b9c04f52c579380b99be0"
     },
     "gyro-pulse/server/integration_api.py": {
       "previous_sha256": "5434bcbda60e027774398025e356c52381145dd9a77e34bb738977ff6fba982b",
       "sha256": "d8063029c39ab624d34c36b930df1918f450ce5d2ac9dbda3e803243e36c22e5"
+    },
+    "gyro-pulse/android/gradle.properties": {
+      "previous_sha256": "f46953b0506c51c9af9d2bba4e41d36a11f6b2e4e76cc064b73a794a61b248a5",
+      "sha256": "470ff62eead265d74881e1d18a36fa383da1c070c68b320aaf4e869e1e5b7d33"
     }
   }
 }
