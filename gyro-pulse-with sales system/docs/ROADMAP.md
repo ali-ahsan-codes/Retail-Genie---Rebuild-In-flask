@@ -157,3 +157,7 @@ office parcels are implemented as a candidate. Offline office ingress uses a fre
 device registry; cloud tokens never go to LAN. Disposable MySQL/restore and Android CI plus a
 fail-closed evidence inventory are added. Actual acceptance status is in PHASE_6_7.md; physical
 device, deployed TLS/security, complete outage scenario and human UAT are not self-approved.
+
+Observed CI now proves the bounded MySQL/SQL-restore and four API35 emulator cases; see
+PHASE_7_CI_OBSERVATIONS.json. This does not complete physical-device, deployed TLS/security/load,
+site/key recovery, full offline/stale-catalog/native-decision reconciliation or human business UAT.

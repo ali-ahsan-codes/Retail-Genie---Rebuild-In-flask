@@ -70,3 +70,10 @@ Phase 6 now has a scoped-device/encrypted Android **candidate** and authenticate
 LAN/file ingress; Phase 7 gains disposable MySQL/restore/Android CI and a fail-closed evidence
 inventory. See [current implementation, setup and explicit acceptance blockers](docs/PHASE_6_7.md).
 Source/server test passes do not establish Android/device/TLS/business acceptance.
+
+Observed Phase 6/7 candidate verification: **230 local tests + 4 actual API35 emulator tests**,
+real MySQL8.4 bounded concurrency/load and synthetic native dump/restore passed in
+[CI run 41287247244](https://github.com/ali-ahsan-codes/Retail-Genie-Rebuild-In-flask/actions/runs/41287247244).
+Physical device, deployed TLS/security/business load, full outage/stale-catalog/native-decision
+recovery, complete retained-order lifecycle and human UAT remain blocked.
+[Operator UAT record](docs/PHASE_7_UAT_RECORD.md) is deliberately unsigned.
