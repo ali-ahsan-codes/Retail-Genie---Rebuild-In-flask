@@ -4,11 +4,13 @@ import json
 import click
 from .extensions import db
 from .field_orders import FieldProposal, FieldReviewAudit
-from .models import SalesOrder
+from .models import SalesOrder, Company
 
 
 def audit_company(company_id):
     issues = []
+    if db.session.get(Company, company_id) is None:
+        issues.append(dict(code="unknown_company"))
     rows = FieldProposal.query.filter_by(company_id=company_id).all()
     for row in rows:
         audits = FieldReviewAudit.query.filter_by(

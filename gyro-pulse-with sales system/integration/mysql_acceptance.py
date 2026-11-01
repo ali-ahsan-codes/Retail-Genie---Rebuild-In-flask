@@ -9,7 +9,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from sqlalchemy.engine import make_url
 
@@ -69,7 +69,10 @@ def run(side):
         with app.app_context():
             assert receipts[0] == receipts[1] and Inbox.query.count() == 1
             source = Transport("retail", *identity)
-            source.enqueue(env)
+            row = source.enqueue(env)
+            # MySQL's default DATETIME rounds fractional seconds. Make availability
+            # explicitly past before testing simultaneous eligible lease claims.
+            row.available_at = datetime.utcnow() - timedelta(seconds=2)
             db.session.commit()
         barrier = Barrier(2)
 
@@ -83,8 +86,55 @@ def run(side):
         with ThreadPoolExecutor(max_workers=2) as pool:
             jobs = [pool.submit(claim) for _ in range(2)]
             claims = [f.result(timeout=60) for f in jobs]
-        assert sum(len(rows) for rows in claims) == 1
-        return dict(real_mysql_concurrency=True, inbox_rows=1, concurrent_claims=1)
+        count = sum(len(rows) for rows in claims)
+        assert count == 1, "claims_count_" + str(count)
+        # Bounded real transport load, not a claim of representative business/SLA load.
+        import random, time
+        from sqlalchemy.exc import OperationalError
+
+        messages = [
+            Transport("retail", *identity).envelope("catalog.snapshot", {"items": []})
+            for _ in range(50)
+        ]
+        deliveries = messages * 4
+        random.Random(7).shuffle(deliveries)
+
+        def loaded_receive(message):
+            for attempt in range(6):
+                with app.app_context():
+                    try:
+                        receipt = Transport("gyro", *identity).accept(message)
+                        db.session.commit()
+                        return receipt
+                    except OperationalError as error:
+                        db.session.rollback()
+                        if (
+                            not getattr(error, "orig", None)
+                            or error.orig.args[0] not in (1205, 1213)
+                            or attempt == 5
+                        ):
+                            raise
+                time.sleep(0.02 * (attempt + 1))
+
+        started = time.monotonic()
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            observed = list(pool.map(loaded_receive, deliveries))
+        elapsed = time.monotonic() - started
+        with app.app_context():
+            assert Inbox.query.count() == 51
+        assert (
+            len(observed) == 200 and len({row["message_id"] for row in observed}) == 50
+        )
+        return dict(
+            real_mysql_concurrency=True,
+            inbox_rows=51,
+            concurrent_claims=1,
+            load_deliveries=200,
+            load_unique_messages=50,
+            load_workers=8,
+            load_elapsed_seconds=round(elapsed, 3),
+            production_load_sla_accepted=False,
+        )
     sys.path.insert(0, str(ROOT / "retail-genie"))
     os.environ.update(
         SECRET_KEY="disposable-ci-only-" + "x" * 32,

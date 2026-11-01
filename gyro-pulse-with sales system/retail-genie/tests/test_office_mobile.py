@@ -1,4 +1,4 @@
-import json, os
+import json, os, base64
 from datetime import datetime, timedelta
 from uuid import uuid4
 from copy import deepcopy
@@ -137,9 +137,11 @@ def test_authenticated_parcel_denials_leave_native_unchanged(parcel, bad):
     staged, packet, _, _, identity, registry = parcel
     app, c, *_ = staged
     if bad == "ciphertext":
-        packet["ciphertext"] = b64(b"broken")
+        raw = bytearray(base64.b64decode(packet["ciphertext"]))
+        raw[0] ^= 1
+        packet["ciphertext"] = b64(raw)
     elif bad == "nonce":
-        packet["nonce"] = b64(b"x")
+        packet["nonce"] = b64(b"0" * 12)
     elif bad == "scope":
         packet["office_id"] = str(uuid4())
     elif bad == "stale_registry":
