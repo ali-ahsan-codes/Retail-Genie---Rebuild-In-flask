@@ -107,5 +107,17 @@
       "business_uat_deferred": true,
       "acceptance_waived": false
     }
+  },
+  "phase_7_field_tooling": {
+    "physical_runner_implemented": true,
+    "readonly_https_preflight_implemented": true,
+    "separate_proxy_templates_added": true,
+    "safety_unit_tests_added": 13,
+    "field_ci": "pending",
+    "physical_device_executed": false,
+    "site_security_accepted": false,
+    "human_uat_accepted": false,
+    "production_accepted": false,
+    "local_dependency_free_checks_passed": 31
   }
 }

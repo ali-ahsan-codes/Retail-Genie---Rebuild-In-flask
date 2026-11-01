@@ -9,3 +9,5 @@ instance/
 *.sqlite
 backups/
 uploads/
+# Operator acceptance artifacts may contain site/device metadata; never commit by default.
+gyro-pulse-with sales system/acceptance-results/

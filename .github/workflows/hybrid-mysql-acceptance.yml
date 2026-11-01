@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Dependency-free source and acceptance-tool safety checks
+        run: python -m unittest discover -s 'gyro-pulse-with sales system/integration/tests' -v
       - name: Isolated interpreters and actual MySQL client tools
         run: |
           sudo apt-get update -qq
@@ -107,3 +109,17 @@ jobs:
             gyro-pulse-with sales system/gyro-pulse/android/app/build/reports/androidTests/**
             gyro-pulse-with sales system/gyro-pulse/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
+
+  proxy-template-syntax:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate separate-host proxy templates (fixture certificates only)
+        run: |
+          mkdir -p "$RUNNER_TEMP/caddy-fixtures"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=office.example.test -keyout "$RUNNER_TEMP/caddy-fixtures/key.pem" -out "$RUNNER_TEMP/caddy-fixtures/cert.pem" > /dev/null 2>&1
+          docker run --rm -e GYRO_HOST=cloud.example.test -v "$PWD/gyro-pulse-with sales system/deploy:/config:ro" caddy:2 caddy validate --config /config/cloud.Caddyfile --adapter caddyfile
+          docker run --rm -e OFFICE_HOST=office.example.test -e OFFICE_TLS_CERT_FILE=/fixture/cert.pem -e OFFICE_TLS_KEY_FILE=/fixture/key.pem -v "$PWD/gyro-pulse-with sales system/deploy:/config:ro" -v "$RUNNER_TEMP/caddy-fixtures:/fixture:ro" caddy:2 caddy validate --config /config/office.Caddyfile --adapter caddyfile

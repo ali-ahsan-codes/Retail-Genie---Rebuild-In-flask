@@ -1,0 +1,43 @@
+{
+  "phase": "7-field-readiness-tooling-only",
+  "production_accepted": false,
+  "files": {
+    "../.github/workflows/hybrid-mysql-acceptance.yml": {
+      "sha256": "8bd315074d67b53637b8fe6ad89e7d951860156b78519772f65d30efa1aef505",
+      "previous_sha256": "2f422e6a8d39e623e7362e55537d4a91d44e8c02329d81ffae9e7c248346f6c1"
+    },
+    "../.gitignore": {
+      "sha256": "e5d90aa1c81040fc23df617fba2c742bddb6901857838a7ee08440a6a9392723"
+    },
+    "README.md": {
+      "sha256": "8dab7418389a3a4d437d96c135996de43983f008d5de20ae19b9e1bb9b1da8a1",
+      "previous_sha256": "0c66303cd75c02516ac0efa9572296c5ff57cbf61f4ed3aba1d5ab89a6f67113"
+    },
+    "integration/phase-status.json": {
+      "sha256": "51190e8208f923ba9b5f6d40557234caed5616951d4e3f5ea75862c0eecaf858",
+      "previous_sha256": "c4def9c0ef2a0d5d67711e82b162654e7b321e862af844561ce974674b3d4044"
+    },
+    "integration/physical_acceptance.py": {
+      "sha256": "586b0445f1d30ed8b256caa49db52654eb9761d81fa8fba9efe37b174ebe83f5"
+    },
+    "integration/site_preflight.py": {
+      "sha256": "f9aa87a66a4f4e877c42e72d76815629f184b944ef11bccd94e60a82eb1a1952"
+    },
+    "integration/tests/test_external_preflight.py": {
+      "sha256": "342cf9fb222bf25cee2813c33bcbb0687f598ea36ae1c4bfb45febdb93d80e45"
+    },
+    "integration/tests/test_foundation.py": {
+      "sha256": "b14ddac40bcdb24825ee47173caa968ea780e50848b8476fd9e3e5b8ab44354d",
+      "previous_sha256": "3e16b514fda316509e9e536dd3364e87b220c69a32afdf736594d3c147f8a923"
+    },
+    "deploy/cloud.Caddyfile": {
+      "sha256": "05ddf760799fe1c92a5428a3ca1eb25ae877653310aa042c0ac3a33178db9b81"
+    },
+    "deploy/office.Caddyfile": {
+      "sha256": "f1d3021f68783d5a980752c538470a8dded89da9efe2776dc44db7529244530b"
+    },
+    "docs/PHASE_7_FIELD_EXECUTION.md": {
+      "sha256": "842f0fc1c3c3cb4efdb904b14abf502de106fcc413f2e4fa14ece1fbd5d39cba"
+    }
+  }
+}
